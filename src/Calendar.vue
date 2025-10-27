@@ -423,9 +423,8 @@ export default {
     // Helper functions
     function getStartOfWeek(date) {
       const dayOfWeek = date.dayOfWeek; // 1 = Monday, 7 = Sunday
-      // Start week on Sunday (Google Calendar style)
-      const daysToSubtract = dayOfWeek === 7 ? 0 : dayOfWeek;
-      return date.subtract({ days: daysToSubtract });
+      // Start week on Monday
+      return date.subtract({ days: dayOfWeek - 1 });
     }
 
     function getEndOfWeek(date) {
@@ -453,9 +452,9 @@ export default {
         return t('allDay');
       }
       const timeStr = start.toLocaleString(props.locale, { 
-        hour: 'numeric', 
+        hour: '2-digit', 
         minute: '2-digit',
-        hour12: true
+        hour12: false
       });
       return timeStr;
     }
@@ -463,8 +462,9 @@ export default {
     function formatHour(hour) {
       const time = Temporal.PlainTime.from({ hour });
       return time.toLocaleString(props.locale, { 
-        hour: 'numeric',
-        hour12: true
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
       });
     }
 
@@ -671,7 +671,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 16px 24px;
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #d0d0d0;
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -704,12 +704,12 @@ export default {
 }
 
 .nav-btn:hover {
-  background-color: #f1f3f4;
+  background-color: #e0e0e0;
 }
 
 .today-btn {
   padding: 8px 16px;
-  border: 1px solid #dadce0;
+  border: 1px solid #d0d0d0;
   background: white;
   border-radius: 4px;
   cursor: pointer;
@@ -733,7 +733,7 @@ export default {
 
 .view-selector {
   display: flex;
-  border: 1px solid #dadce0;
+  border: 1px solid #d0d0d0;
   border-radius: 4px;
   overflow: hidden;
 }
@@ -745,7 +745,7 @@ export default {
   cursor: pointer;
   font-size: 14px;
   color: #3c4043;
-  border-right: 1px solid #dadce0;
+  border-right: 1px solid #d0d0d0;
   transition: background-color 0.2s;
 }
 
@@ -784,7 +784,7 @@ export default {
 .day-headers {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #d0d0d0;
   margin-bottom: 4px;
 }
 
@@ -802,8 +802,8 @@ export default {
   grid-template-columns: repeat(7, 1fr);
   grid-auto-rows: minmax(100px, 1fr);
   gap: 1px;
-  background: #dadce0;
-  border: 1px solid #dadce0;
+  background: #d0d0d0;
+  border: 1px solid #d0d0d0;
 }
 
 .calendar-day {
@@ -831,11 +831,12 @@ export default {
   background-color: #1a73e8;
   color: white;
   border-radius: 50%;
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-size: 12px;
 }
 
 .day-number {
@@ -891,18 +892,18 @@ export default {
 
 .time-column {
   width: 60px;
-  border-right: 1px solid #dadce0;
+  border-right: 1px solid #d0d0d0;
   flex-shrink: 0;
 }
 
 .time-header {
   height: 60px;
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 .time-slot {
   height: 60px;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid #e0e0e0;
   padding: 4px 8px;
   font-size: 10px;
   color: #70757a;
@@ -919,7 +920,7 @@ export default {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   height: 60px;
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 .week-day-header {
@@ -927,7 +928,7 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border-right: 1px solid #f1f3f4;
+  border-right: 1px solid #e0e0e0;
   gap: 4px;
 }
 
@@ -943,10 +944,10 @@ export default {
 }
 
 .week-day-number {
-  font-size: 26px;
+  font-size: 20px;
   color: #3c4043;
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -966,7 +967,7 @@ export default {
 }
 
 .week-day-column {
-  border-right: 1px solid #f1f3f4;
+  border-right: 1px solid #e0e0e0;
   position: relative;
 }
 
@@ -976,7 +977,7 @@ export default {
 
 .hour-slot {
   height: 60px;
-  border-bottom: 1px solid #f1f3f4;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .week-event {
@@ -1017,7 +1018,7 @@ export default {
 .day-column {
   flex: 1;
   position: relative;
-  border-right: 1px solid #dadce0;
+  border-right: 1px solid #d0d0d0;
 }
 
 .day-event {
@@ -1153,7 +1154,7 @@ export default {
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  border-bottom: 1px solid #dadce0;
+  border-bottom: 1px solid #d0d0d0;
 }
 
 .modal-header h2 {
@@ -1178,7 +1179,7 @@ export default {
 }
 
 .close-btn:hover {
-  background-color: #f1f3f4;
+  background-color: #e0e0e0;
 }
 
 .close-btn:focus {
@@ -1206,7 +1207,7 @@ export default {
 .form-group select {
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #dadce0;
+  border: 1px solid #d0d0d0;
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
@@ -1236,7 +1237,7 @@ export default {
   justify-content: flex-end;
   gap: 12px;
   padding: 16px 24px;
-  border-top: 1px solid #dadce0;
+  border-top: 1px solid #d0d0d0;
 }
 
 .cancel-btn,
@@ -1251,7 +1252,7 @@ export default {
 
 .cancel-btn {
   background: white;
-  border: 1px solid #dadce0;
+  border: 1px solid #d0d0d0;
   color: #3c4043;
 }
 
