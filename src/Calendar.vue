@@ -1016,7 +1016,8 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
+  /* slightly increased vertical spacing */
+  padding: 20px 24px;
   border-bottom: 1px solid #d0d0d0;
   flex-wrap: wrap;
   gap: 12px;
@@ -1404,7 +1405,8 @@ export default {
 /* Mobile Styles */
 @media (max-width: 768px) {
   .calendar-header {
-    padding: 12px 16px;
+    /* slightly larger mobile header spacing */
+    padding: 16px 12px;
   }
 
   .calendar-title {
@@ -1645,13 +1647,7 @@ a:focus-visible {
   outline-offset: 1px;
 }
 
-/* Remove predefined color classes */
-.event-blue,
-.event-red,
-.event-green,
-.event-yellow {
-  /* These classes are no longer used - colors are now dynamic */
-}
+/* Remove predefined color classes (no-op — classes removed) */
 
 /* Time column without grid lines */
 .time-column.no-border {
@@ -1665,7 +1661,8 @@ a:focus-visible {
   color: #70757a;
   text-align: right;
   position: relative;
-  top: -10px; /* Align with grid line */
+  /* Remove negative offset so 00:00 is visible beneath sticky headers */
+  top: 0;
 }
 
 /* Sticky headers */
@@ -1730,7 +1727,8 @@ a:focus-visible {
 /* Mobile responsive adjustments */
 @media (max-width: 768px) {
   .calendar-header {
-    padding: 8px 12px;
+    /* slightly larger mobile header spacing (duplicate media block adjusted) */
+    padding: 16px 12px;
   }
   
   .calendar-title {
