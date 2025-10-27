@@ -435,45 +435,50 @@
     </div>
     
     <!-- Mobile Sidebar -->
-    <div v-if="isMobile && showMobileSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-40" @click="closeMobileSidebar">
-      <div class="fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl z-50 overflow-y-auto" @click.stop>
-        <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-          <h2 class="text-lg font-medium text-gray-900">{{ t('menu') }}</h2>
-          <button @click="closeMobileSidebar" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-        
-        <!-- View Selector -->
-        <div class="p-4 border-b border-gray-200">
-          <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('view') }}</h3>
-          <div class="space-y-2">
-            <button 
-              v-for="view in views" 
-              :key="view"
-              :class="['w-full text-left px-4 py-2 rounded transition-colors', 
-                      currentView === view ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-700 hover:bg-gray-100']"
-              @click="currentView = view; closeMobileSidebar();"
-            >
-              {{ t(view) }}
-            </button>
-          </div>
-        </div>
-        
-        <!-- Calendars -->
-        <div class="p-4">
-          <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('calendars') }}</h3>
-          <div class="space-y-2">
-            <div v-for="calendar in calendars" :key="calendar.id" class="flex items-center space-x-3 px-2 py-1">
-              <div class="w-4 h-4 rounded-full flex-shrink-0" :style="{ backgroundColor: calendar.color }"></div>
-              <span class="text-sm text-gray-700">{{ calendar.name }}</span>
+    <transition name="fade">
+      <div v-if="isMobile && showMobileSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-50" @click="closeMobileSidebar">
+        <transition name="slide">
+          <div class="fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto" @click.stop>
+            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 class="text-lg font-medium text-gray-900">{{ t('menu') }}</h2>
+              <button @click="closeMobileSidebar" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" :aria-label="t('close')">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+            
+            <!-- View Selector -->
+            <div class="p-4 border-b border-gray-200">
+              <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('view') }}</h3>
+              <div class="space-y-2">
+                <button 
+                  v-for="view in views" 
+                  :key="view"
+                  :class="['w-full text-left px-4 py-2 rounded-md transition-all', 
+                          currentView === view ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100']"
+                  @click="currentView = view; closeMobileSidebar();"
+                  :aria-label="`Switch to ${t(view)} view`"
+                >
+                  {{ t(view) }}
+                </button>
+              </div>
+            </div>
+            
+            <!-- Calendars -->
+            <div class="p-4">
+              <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('calendars') }}</h3>
+              <div class="space-y-2">
+                <div v-for="calendar in calendars" :key="calendar.id" class="flex items-center space-x-3 px-2 py-2 rounded hover:bg-gray-50 transition-colors cursor-pointer">
+                  <div class="w-4 h-4 rounded-full flex-shrink-0 border border-gray-300" :style="{ backgroundColor: calendar.color }"></div>
+                  <span class="text-sm text-gray-800">{{ calendar.name }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        </transition>
       </div>
-    </div>
+    </transition>
   </div>
 </template>
 
@@ -1848,6 +1853,23 @@ a:focus-visible {
   align-items: center;
   justify-content: center;
   border-bottom: 1px solid #e0e0e0;
+}
+
+/* Mobile sidebar transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+
+.slide-enter-active, .slide-leave-active {
+  transition: transform 0.3s ease;
+}
+
+.slide-enter-from, .slide-leave-to {
+  transform: translateX(-100%);
 }
 
 .all-day-events-container {
