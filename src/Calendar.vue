@@ -608,7 +608,7 @@ export default {
     }
 
     function getEventsForDate(date) {
-      return props.events.filter(event => {
+      const events = props.events.filter(event => {
         const eventStart = Temporal.PlainDate.from(event.start);
         const eventEnd = event.end ? Temporal.PlainDate.from(event.end) : eventStart;
         
@@ -619,6 +619,86 @@ export default {
         const bTime = Temporal.PlainDateTime.from(b.start);
         return Temporal.PlainDateTime.compare(aTime, bTime);
       });
+      
+      // Calculate overlap columns for events
+      return calculateEventColumns(events);
+    }
+
+    // Calculate column positions for overlapping events (Google Calendar style)
+    function calculateEventColumns(events) {
+      if (events.length === 0) return [];
+      
+      // Filter out all-day events as they're handled separately
+      const timedEvents = events.filter(e => !e.allDay);
+      
+      // Add column information to each event
+      const eventsWithColumns = timedEvents.map(event => {
+        const start = Temporal.PlainDateTime.from(event.start);
+        const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
+        
+        return {
+          ...event,
+          _start: start,
+          _end: end,
+          _column: 0,
+          _totalColumns: 1
+        };
+      });
+      
+      // Sort by start time, then by duration (longer first)
+      eventsWithColumns.sort((a, b) => {
+        const timeComp = Temporal.PlainDateTime.compare(a._start, b._start);
+        if (timeComp !== 0) return timeComp;
+        
+        const durationA = Temporal.Duration.from(a._end.since(a._start)).total('minutes');
+        const durationB = Temporal.Duration.from(b._end.since(b._start)).total('minutes');
+        return durationB - durationA;
+      });
+      
+      // Detect overlaps and assign columns
+      for (let i = 0; i < eventsWithColumns.length; i++) {
+        const current = eventsWithColumns[i];
+        const overlapping = [current];
+        
+        // Find all events that overlap with current event
+        for (let j = 0; j < eventsWithColumns.length; j++) {
+          if (i === j) continue;
+          const other = eventsWithColumns[j];
+          
+          // Check if events overlap
+          const currentStartsBeforeOtherEnds = Temporal.PlainDateTime.compare(current._start, other._end) < 0;
+          const currentEndsAfterOtherStarts = Temporal.PlainDateTime.compare(current._end, other._start) > 0;
+          
+          if (currentStartsBeforeOtherEnds && currentEndsAfterOtherStarts) {
+            if (!overlapping.find(e => e.id === other.id)) {
+              overlapping.push(other);
+            }
+          }
+        }
+        
+        // Assign column to current event
+        const usedColumns = new Set();
+        for (const event of overlapping) {
+          if (event.id !== current.id && event._column !== undefined) {
+            usedColumns.add(event._column);
+          }
+        }
+        
+        // Find first available column
+        let column = 0;
+        while (usedColumns.has(column)) {
+          column++;
+        }
+        current._column = column;
+        
+        // Update total columns for all overlapping events
+        const maxColumns = Math.max(column + 1, ...overlapping.map(e => e._column + 1));
+        for (const event of overlapping) {
+          event._totalColumns = Math.min(maxColumns, 3); // Max 3 columns for readability
+        }
+      }
+      
+      return eventsWithColumns;
     }
 
     function formatEventTime(event) {
@@ -654,10 +734,22 @@ export default {
       const top = (startMinutes / 60) * PIXELS_PER_HOUR;
       const height = (duration / 60) * PIXELS_PER_HOUR;
       
-      return {
+      // Handle event overlap with column-based positioning
+      const style = {
         top: `${top}px`,
         height: `${height}px`
       };
+      
+      // If event has column information (from calculateEventColumns), apply it
+      if (event._column !== undefined && event._totalColumns !== undefined) {
+        const columnWidth = 100 / event._totalColumns;
+        const leftOffset = event._column * columnWidth;
+        
+        style.left = `${leftOffset}%`;
+        style.width = `${columnWidth - 1}%`; // -1% for small gap between columns
+      }
+      
+      return style;
     }
 
     function getEventColorStyle(hexColor) {
