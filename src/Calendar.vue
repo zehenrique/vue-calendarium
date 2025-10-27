@@ -17,12 +17,6 @@
         <h1 class="calendar-title">{{ currentTitle }}</h1>
       </div>
       <div class="header-right">
-        <button class="create-btn" @click="showCreateEventModal" :aria-label="t('createEvent')">
-          <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;">
-            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          {{ t('createEvent') }}
-        </button>
         <div class="view-selector">
           <button 
             v-for="view in views" 
@@ -252,6 +246,58 @@
         </div>
       </div>
     </div>
+
+    <!-- Event Detail Modal -->
+    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
+      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4" @click.stop>
+        <div class="flex items-center justify-between p-4 border-b">
+          <h2 class="text-xl font-semibold text-gray-900">{{ selectedEvent?.title }}</h2>
+          <button @click="closeEventDetail" class="text-gray-400 hover:text-gray-600 rounded-full p-1 hover:bg-gray-100" :aria-label="t('close')">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="p-6 space-y-4">
+          <div class="flex items-start space-x-3">
+            <svg class="w-6 h-6 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="text-sm text-gray-600">{{ formatEventTimeRange(selectedEvent) }}</p>
+              <p v-if="selectedEvent?.repeat && selectedEvent.repeat !== 'none'" class="text-sm text-gray-500 mt-1">
+                Repeats {{ t('repeat' + selectedEvent.repeat.charAt(0).toUpperCase() + selectedEvent.repeat.slice(1)).toLowerCase() }}
+              </p>
+            </div>
+          </div>
+          <div v-if="selectedEvent?.calendar" class="flex items-start space-x-3">
+            <svg class="w-6 h-6 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <div>
+              <p class="text-sm text-gray-600">{{ getCalendarName(selectedEvent.calendar) }}</p>
+            </div>
+          </div>
+          <div class="flex items-start space-x-3">
+            <div class="w-6 h-6 rounded mt-0.5" :style="{ backgroundColor: selectedEvent?.color || '#1967d2' }"></div>
+            <div>
+              <p class="text-sm text-gray-600">{{ selectedEvent?.color || '#1967d2' }}</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex items-center justify-end space-x-3 p-4 border-t bg-gray-50">
+          <button @click="deleteSelectedEvent" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors">
+            {{ t('delete') }}
+          </button>
+          <button @click="editSelectedEvent" class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors">
+            {{ t('edit') }}
+          </button>
+          <button @click="closeEventDetail" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
+            {{ t('close') }}
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -285,7 +331,7 @@ export default {
       default: () => [{ id: 'default', name: 'My Calendar', color: '#1967d2' }]
     }
   },
-  emits: ['eventClick', 'dateChange', 'viewChange', 'eventCreate'],
+  emits: ['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete'],
   setup(props, { emit }) {
     const { t, locale } = useI18n();
     
@@ -299,6 +345,8 @@ export default {
     const views = ['day', 'week', 'month'];
     const PIXELS_PER_HOUR = 60; // Height in pixels for one hour slot
     const showModal = ref(false);
+    const showEventDetail = ref(false);
+    const selectedEvent = ref(null);
     const newEvent = ref({
       title: '',
       startDate: '',
@@ -618,7 +666,77 @@ export default {
     }
 
     function onEventClick(event) {
+      selectedEvent.value = event;
+      showEventDetail.value = true;
       emit('eventClick', event);
+    }
+
+    function closeEventDetail() {
+      showEventDetail.value = false;
+      selectedEvent.value = null;
+    }
+
+    function deleteSelectedEvent() {
+      if (selectedEvent.value) {
+        emit('eventDelete', selectedEvent.value);
+        closeEventDetail();
+      }
+    }
+
+    function editSelectedEvent() {
+      if (selectedEvent.value) {
+        // Pre-fill the create modal with selected event data
+        const start = Temporal.PlainDateTime.from(selectedEvent.value.start);
+        const end = selectedEvent.value.end ? Temporal.PlainDateTime.from(selectedEvent.value.end) : start.add({ hours: 1 });
+        
+        newEvent.value = {
+          title: selectedEvent.value.title,
+          startDate: start.toPlainDate().toString(),
+          startTime: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
+          endDate: end.toPlainDate().toString(),
+          endTime: `${String(end.hour).padStart(2, '0')}:${String(end.minute).padStart(2, '0')}`,
+          repeat: selectedEvent.value.repeat || 'none',
+          calendar: selectedEvent.value.calendar || 'default',
+          color: selectedEvent.value.color || '#1967d2'
+        };
+        
+        closeEventDetail();
+        showModal.value = true;
+      }
+    }
+
+    function formatEventTimeRange(event) {
+      if (!event) return '';
+      if (event.allDay) return t('allDay');
+      
+      const start = Temporal.PlainDateTime.from(event.start);
+      const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
+      
+      const startStr = start.toLocaleString(props.locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      
+      const endStr = end.toLocaleString(props.locale, {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+      });
+      
+      const dateStr = start.toLocaleString(props.locale, {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+      
+      return `${dateStr}, ${startStr} – ${endStr}`;
+    }
+
+    function getCalendarName(calendarId) {
+      const calendar = props.calendars.find(c => c.id === calendarId);
+      return calendar ? calendar.name : calendarId;
     }
 
     watch(currentView, (newView) => {
@@ -644,9 +762,16 @@ export default {
       getEventColorStyle,
       onEventClick,
       showModal,
+      showEventDetail,
+      selectedEvent,
       newEvent,
       showCreateEventModal,
       closeModal,
+      closeEventDetail,
+      deleteSelectedEvent,
+      editSelectedEvent,
+      formatEventTimeRange,
+      getCalendarName,
       saveEvent,
       calendars: props.calendars,
       t
