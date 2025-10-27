@@ -28,7 +28,8 @@ Example:
 - **Default:** `'en-US'`
 - **Required:** No
 - **Description:** BCP 47 language tag for internationalization
-- **Supported values:** `'en-US'`, `'es-ES'`, `'fr-FR'`, `'de-DE'`, `'pt-BR'`, `'ja-JP'`, `'zh-CN'`
+- **Supported values:** `'en-US'` (English), `'pt-PT'` (Portuguese Portugal)
+- **Note:** Language switching is reactive and updates all UI text and date formatting
 
 #### initialView
 - **Type:** `String`
@@ -129,13 +130,24 @@ start: '2025-10-27T14:30:00-05:00'
 #### allDay
 - **Type:** `Boolean`
 - **Default:** `false`
-- **Description:** Whether event spans entire day(s)
+- **Description:** Whether event spans entire day(s). All-day events display in the calendar header section above time slots.
 
 #### color
+- **Type:** `String` (Hex color code)
+- **Default:** `'#1967d2'` (Google blue)
+- **Description:** Custom hex color for event display (e.g., `'#1967d2'`, `'#137333'`, `'#d93025'`)
+- **Note:** Any valid hex color code is accepted. Component automatically generates lighter background color.
+
+#### calendar
 - **Type:** `String`
-- **Default:** `'blue'`
-- **Allowed values:** `'blue'`, `'red'`, `'green'`, `'yellow'`
-- **Description:** Color theme for event display
+- **Default:** `'default'`
+- **Description:** Calendar/category ID that event belongs to
+
+#### repeat
+- **Type:** `String`
+- **Default:** `'none'`
+- **Allowed values:** `'none'`, `'daily'`, `'weekly'`, `'monthly'`, `'yearly'`
+- **Description:** Recurrence pattern for event. When set, component automatically generates up to 52 recurring instances.
 
 ## Usage Examples
 
