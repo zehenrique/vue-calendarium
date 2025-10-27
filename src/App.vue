@@ -6,12 +6,7 @@
         Language:
         <select v-model="selectedLocale" @change="changeLocale">
           <option value="en-US">English</option>
-          <option value="es-ES">Español</option>
-          <option value="fr-FR">Français</option>
-          <option value="de-DE">Deutsch</option>
-          <option value="pt-BR">Português</option>
-          <option value="ja-JP">日本語</option>
-          <option value="zh-CN">中文</option>
+          <option value="pt-PT">Português</option>
         </select>
       </label>
     </div>
@@ -20,10 +15,12 @@
     <GoogleCalendar
       :events="events"
       :locale="selectedLocale"
+      :calendars="calendars"
       initial-view="month"
       @event-click="handleEventClick"
       @date-change="handleDateChange"
       @view-change="handleViewChange"
+      @event-create="handleEventCreate"
     />
   </div>
 </template>
@@ -40,7 +37,12 @@ export default {
   data() {
     return {
       selectedLocale: 'en-US',
-      events: []
+      events: [],
+      calendars: [
+        { id: 'work', name: 'Work', color: '#1967d2' },
+        { id: 'personal', name: 'Personal', color: '#137333' },
+        { id: 'family', name: 'Family', color: '#d93025' }
+      ]
     };
   },
   created() {
@@ -63,82 +65,77 @@ export default {
           title: 'Team Meeting',
           start: today.toString(),
           end: today.add({ hours: 1 }).toString(),
-          color: 'blue'
+          color: '#1967d2'
         },
         {
           id: '2',
           title: 'Lunch Break',
           start: today.add({ hours: 2 }).toString(),
           end: today.add({ hours: 3 }).toString(),
-          color: 'green'
+          color: '#137333'
         },
         {
           id: '3',
           title: 'Project Review',
           start: today.add({ hours: 4 }).toString(),
           end: today.add({ hours: 5, minutes: 30 }).toString(),
-          color: 'red'
+          color: '#d93025'
         },
         {
           id: '4',
           title: 'Design Discussion',
           start: today.add({ days: 1, hours: 1 }).toString(),
           end: today.add({ days: 1, hours: 2 }).toString(),
-          color: 'yellow'
+          color: '#f9ab00'
         },
         {
           id: '5',
           title: 'Code Review',
           start: today.add({ days: 2, hours: 3 }).toString(),
           end: today.add({ days: 2, hours: 4 }).toString(),
-          color: 'blue'
+          color: '#1967d2'
         },
         {
           id: '6',
           title: 'Sprint Planning',
           start: today.add({ days: 3 }).toString(),
           end: today.add({ days: 3, hours: 2 }).toString(),
-          color: 'red'
+          color: '#d93025'
         },
         {
           id: '7',
           title: 'Client Presentation',
           start: today.add({ days: 5, hours: 2 }).toString(),
           end: today.add({ days: 5, hours: 3 }).toString(),
-          color: 'green'
+          color: '#137333'
         },
         {
           id: '8',
           title: 'Team Building',
           start: today.subtract({ days: 2 }).add({ hours: 5 }).toString(),
           end: today.subtract({ days: 2 }).add({ hours: 7 }).toString(),
-          color: 'yellow'
+          color: '#f9ab00'
         },
         {
           id: '9',
           title: 'Conference',
           start: today.add({ days: 7 }).toString(),
           allDay: true,
-          color: 'blue'
+          color: '#1967d2'
         },
         {
           id: '10',
           title: 'Workshop',
           start: today.subtract({ days: 5 }).add({ hours: 3 }).toString(),
           end: today.subtract({ days: 5 }).add({ hours: 5 }).toString(),
-          color: 'green'
+          color: '#137333'
         }
       ];
     },
     changeLocale() {
       const localeMap = {
         'en-US': 'en',
-        'es-ES': 'es',
-        'fr-FR': 'fr',
-        'de-DE': 'de',
-        'pt-BR': 'pt',
-        'ja-JP': 'ja',
-        'zh-CN': 'zh'
+        'pt-PT': 'pt'
       };
       this.$i18n.locale = localeMap[this.selectedLocale] || 'en';
     },
@@ -151,6 +148,10 @@ export default {
     },
     handleViewChange(view) {
       console.log('View changed:', view);
+    },
+    handleEventCreate(newEvents) {
+      console.log('Events created:', newEvents);
+      this.events.push(...newEvents);
     }
   }
 };
