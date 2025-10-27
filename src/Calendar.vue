@@ -240,70 +240,84 @@
     </div>
 
     <!-- Event Creation Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ t('newEvent') }}</h2>
-          <button class="close-btn" @click="closeModal" :aria-label="t('close')">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
+      <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full mx-4 overflow-hidden" @click.stop>
+        <!-- Modal header with color -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
+          <h2 class="text-xl font-medium text-gray-900">{{ t('newEvent') }}</h2>
+          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" :aria-label="t('close')">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
           </button>
         </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="event-title">{{ t('eventTitle') }}</label>
+        
+        <!-- Modal body -->
+        <div class="p-6 space-y-5 max-h-96 overflow-y-auto">
+          <!-- Event title -->
+          <div class="space-y-1">
+            <label for="event-title" class="block text-sm font-medium text-gray-700">{{ t('eventTitle') }}</label>
             <input 
               id="event-title"
               v-model="newEvent.title" 
               type="text" 
               :placeholder="t('eventTitle')"
+              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
               required
             />
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="start-date">{{ t('startDate') }}</label>
+          
+          <!-- Date and time inputs -->
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label for="start-date" class="block text-sm font-medium text-gray-700">{{ t('startDate') }}</label>
               <input 
                 id="start-date"
                 v-model="newEvent.startDate" 
                 type="date"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
-            <div class="form-group">
-              <label for="start-time">{{ t('startTime') }}</label>
+            <div class="space-y-1">
+              <label for="start-time" class="block text-sm font-medium text-gray-700">{{ t('startTime') }}</label>
               <input 
                 id="start-time"
                 v-model="newEvent.startTime" 
                 type="time"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="end-date">{{ t('endDate') }}</label>
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label for="end-date" class="block text-sm font-medium text-gray-700">{{ t('endDate') }}</label>
               <input 
                 id="end-date"
                 v-model="newEvent.endDate" 
                 type="date"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
-            <div class="form-group">
-              <label for="end-time">{{ t('endTime') }}</label>
+            <div class="space-y-1">
+              <label for="end-time" class="block text-sm font-medium text-gray-700">{{ t('endTime') }}</label>
               <input 
                 id="end-time"
                 v-model="newEvent.endTime" 
                 type="time"
+                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
           </div>
-          <div class="form-group">
-            <label for="event-repeat">{{ t('repeat') }}</label>
-            <select id="event-repeat" v-model="newEvent.repeat">
+          
+          <!-- Repeat -->
+          <div class="space-y-1">
+            <label for="event-repeat" class="block text-sm font-medium text-gray-700">{{ t('repeat') }}</label>
+            <select id="event-repeat" v-model="newEvent.repeat" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option value="none">{{ t('repeatNone') }}</option>
               <option value="daily">{{ t('repeatDaily') }}</option>
               <option value="weekly">{{ t('repeatWeekly') }}</option>
@@ -311,27 +325,43 @@
               <option value="yearly">{{ t('repeatYearly') }}</option>
             </select>
           </div>
-          <div class="form-group">
-            <label for="event-calendar">{{ t('calendar') }}</label>
-            <select id="event-calendar" v-model="newEvent.calendar">
+          
+          <!-- Calendar selection -->
+          <div class="space-y-1">
+            <label for="event-calendar" class="block text-sm font-medium text-gray-700">{{ t('calendar') }}</label>
+            <select id="event-calendar" v-model="newEvent.calendar" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
               <option v-for="cal in calendars" :key="cal.id" :value="cal.id">
                 {{ cal.name }}
               </option>
             </select>
           </div>
-          <div class="form-group">
-            <label for="event-color">{{ t('color') }}</label>
-            <input 
-              id="event-color"
-              v-model="newEvent.color" 
-              type="color"
-              :title="t('color')"
-            />
+          
+          <!-- Color picker -->
+          <div class="space-y-1">
+            <label for="event-color" class="block text-sm font-medium text-gray-700">{{ t('color') }}</label>
+            <div class="flex items-center space-x-3">
+              <input 
+                id="event-color"
+                v-model="newEvent.color" 
+                type="color"
+                class="h-10 w-20 border border-gray-300 rounded cursor-pointer"
+                :title="t('color')"
+              />
+              <div class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 font-mono">
+                {{ newEvent.color }}
+              </div>
+            </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="closeModal">{{ t('cancel') }}</button>
-          <button class="save-btn" @click="saveEvent">{{ t('save') }}</button>
+        
+        <!-- Modal footer -->
+        <div class="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
+          <button @click="closeModal" class="px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors">
+            {{ t('cancel') }}
+          </button>
+          <button @click="saveEvent" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
+            {{ t('save') }}
+          </button>
         </div>
       </div>
     </div>
@@ -1667,161 +1697,6 @@ export default {
 }
 
 /* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #d0d0d0;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
-  color: #3c4043;
-}
-
-.close-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5f6368;
-  transition: background-color 0.2s;
-}
-
-.close-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.close-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #3c4043;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-}
-
-.form-group input[type="color"] {
-  height: 44px;
-  cursor: pointer;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #d0d0d0;
-}
-
-.cancel-btn,
-.save-btn {
-  padding: 8px 24px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-
-.cancel-btn {
-  background: white;
-  border: 1px solid #d0d0d0;
-  color: #3c4043;
-}
-
-.cancel-btn:hover {
-  background: #f8f9fa;
-}
-
-.cancel-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-.save-btn {
-  background: #1a73e8;
-  border: none;
-  color: white;
-}
-
-.save-btn:hover {
-  background: #1557b0;
-  box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-}
-
-.save-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
 /* Accessibility improvements */
 button:focus-visible,
 a:focus-visible {
