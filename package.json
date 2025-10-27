@@ -1,0 +1,32 @@
+{
+  "name": "vue-google-calendar",
+  "version": "1.0.0",
+  "description": "A Google Calendar-like component for Vue.js with Temporal API support",
+  "main": "src/Calendar.vue",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "keywords": [
+    "vue",
+    "calendar",
+    "google-calendar",
+    "temporal",
+    "i18n"
+  ],
+  "author": "",
+  "license": "MIT",
+  "peerDependencies": {
+    "vue": "^3.3.0"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "^0.4.4",
+    "vue": "^3.3.4",
+    "vue-i18n": "^9.5.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "vite": "^4.5.0"
+  }
+}
