@@ -1421,8 +1421,12 @@ export default {
 }
 
 .time-header {
-  height: 60px;
+  min-height: 60px;
   border-bottom: 1px solid #d0d0d0;
+  padding-bottom: 8px; /* Adds spacing for all-day section */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
 }
 
 .time-slot {
@@ -1443,17 +1447,19 @@ export default {
 .week-day-headers {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  height: 60px;
+  min-height: 60px;
   border-bottom: 1px solid #d0d0d0;
+  padding-bottom: 8px; /* Adds spacing before time grid */
 }
 
 .week-day-header {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   border-right: 1px solid #e0e0e0;
   gap: 4px;
+  padding-top: 8px;
 }
 
 .week-day-header:last-child {
@@ -1488,6 +1494,8 @@ export default {
   grid-template-columns: repeat(7, 1fr);
   position: relative;
   flex: 1;
+  margin-top: 8px; /* Creates visible gap between header and time grid */
+  border-top: 1px solid #d0d0d0; /* Grid line divider */
 }
 
 .week-day-column {
@@ -1549,6 +1557,8 @@ export default {
   flex: 1;
   position: relative;
   border-right: 1px solid #d0d0d0;
+  margin-top: 8px; /* Creates visible gap between header and time grid */
+  border-top: 1px solid #d0d0d0; /* Grid line divider */
 }
 
 .day-event {
