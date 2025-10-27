@@ -5,9 +5,10 @@ import messages from './i18n.js';
 import './style.css';
 
 // Create i18n instance
+// Default locale is 'en', but Calendar component can override via props
 const i18n = createI18n({
   legacy: false,
-  locale: 'en',
+  locale: 'en', // Default: en-US
   fallbackLocale: 'en',
   messages
 });

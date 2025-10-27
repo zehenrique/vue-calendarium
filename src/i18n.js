@@ -30,7 +30,12 @@ export default {
     close: 'Close',
     eventDetails: 'Event details',
     calendars: 'Calendars',
-    menu: 'Menu'
+    menu: 'Menu',
+    view: 'view',
+    confirmDelete: 'Are you sure you want to delete this event?',
+    confirmDeleteTitle: 'Delete event',
+    yes: 'Yes',
+    no: 'No'
   },
   pt: {
     today: 'Hoje',
@@ -63,6 +68,11 @@ export default {
     close: 'Fechar',
     eventDetails: 'Detalhes do evento',
     calendars: 'Calendários',
-    menu: 'Menu'
+    menu: 'Menu',
+    view: 'vista',
+    confirmDelete: 'Tem certeza de que deseja eliminar este evento?',
+    confirmDeleteTitle: 'Eliminar evento',
+    yes: 'Sim',
+    no: 'Não'
   }
 };
