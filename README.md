@@ -6,12 +6,15 @@ A fully-featured calendar component for Vue.js that looks and feels like Google 
 
 ✨ **Google Calendar Look & Feel** - Closely matches Google Calendar's design
 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-🌍 **Internationalization** - Built-in support for multiple languages (English, Spanish, French, German, Portuguese, Japanese, Chinese)
+🌍 **Internationalization** - English and Portuguese (Portugal)
 📅 **Multiple Views** - Month, Week, and Day views
 ⏰ **Temporal API** - Uses modern Temporal API for date/time handling
-🎨 **Customizable Events** - Color-coded events with multiple color options
+🎨 **Custom Hex Colors** - Events accept any hex color code
 💻 **Vue 3 Compatible** - Built with Vue 3 Composition API
-📊 **Event Management** - Create and manage events programmatically
+📊 **Event Management** - Create and manage events via UI and programmatically
+🔁 **Recurring Events** - Daily, weekly, monthly, and yearly recurring events
+📂 **Multiple Calendars** - Support for event categories/calendars
+♿ **Accessibility** - ARIA labels and keyboard navigation
 
 ## Installation
 
@@ -80,13 +83,24 @@ export default {
 ```javascript
 import { Temporal } from '@js-temporal/polyfill';
 
-// Create a simple event
+// Create a simple event with custom color
 const event = {
   id: 'unique-id',
   title: 'My Event',
   start: '2025-10-27T14:00:00',
   end: '2025-10-27T15:00:00',
-  color: 'blue' // Options: blue, red, green, yellow
+  color: '#1967d2' // Any hex color code
+};
+
+// Create a recurring weekly event
+const recurringEvent = {
+  id: 'weekly-1',
+  title: 'Weekly Standup',
+  start: '2025-10-27T09:00:00',
+  end: '2025-10-27T09:30:00',
+  color: '#137333',
+  repeat: 'weekly',
+  calendar: 'work'
 };
 
 // Create an all-day event
@@ -95,7 +109,7 @@ const allDayEvent = {
   title: 'Conference',
   start: '2025-10-28',
   allDay: true,
-  color: 'green'
+  color: '#d93025'
 };
 
 // Create event using Temporal API
@@ -105,8 +119,45 @@ const temporalEvent = {
   title: 'Future Meeting',
   start: now.add({ days: 5, hours: 2 }).toString(),
   end: now.add({ days: 5, hours: 3 }).toString(),
-  color: 'red'
+  color: '#f9ab00'
 };
+```
+
+### Creating Events via UI
+
+Users can click the "Create event" button to open a modal dialog with:
+- Event title
+- Start and end date/time
+- Recurring options (none, daily, weekly, monthly, yearly)
+- Calendar selection
+- Custom color picker
+
+```vue
+<GoogleCalendar
+  :events="events"
+  :calendars="calendars"
+  @event-create="handleEventCreate"
+/>
+
+<script>
+export default {
+  data() {
+    return {
+      events: [],
+      calendars: [
+        { id: 'work', name: 'Work', color: '#1967d2' },
+        { id: 'personal', name: 'Personal', color: '#137333' }
+      ]
+    };
+  },
+  methods: {
+    handleEventCreate(newEvents) {
+      // newEvents is an array (multiple for recurring events)
+      this.events.push(...newEvents);
+    }
+  }
+};
+</script>
 ```
 
 ## Props
@@ -114,7 +165,8 @@ const temporalEvent = {
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `events` | Array | `[]` | Array of event objects to display |
-| `locale` | String | `'en-US'` | Locale for date/time formatting (e.g., 'en-US', 'es-ES', 'fr-FR') |
+| `locale` | String | `'en-US'` | Locale: 'en-US' or 'pt-PT' |
+| `calendars` | Array | `[{id:'default', name:'My Calendar', color:'#1967d2'}]` | Array of calendar objects |
 | `initialView` | String | `'month'` | Initial view mode: 'month', 'week', or 'day' |
 | `initialDate` | String/Object | Current date | Initial date to display (Temporal PlainDate or ISO string) |
 
@@ -125,29 +177,27 @@ const temporalEvent = {
 | `eventClick` | `event` | Emitted when an event is clicked |
 | `dateChange` | `date` | Emitted when the displayed date changes |
 | `viewChange` | `view` | Emitted when the view mode changes |
+| `eventCreate` | `events[]` | Emitted when events are created via UI |
 
 ## Event Object Structure
 
 ```javascript
 {
-  id: String,        // Unique identifier (required)
-  title: String,     // Event title (required)
-  start: String,     // Start date/time in ISO format (required)
-  end: String,       // End date/time in ISO format (optional)
-  allDay: Boolean,   // Whether event is all-day (optional)
-  color: String      // Color theme: 'blue', 'red', 'green', 'yellow' (optional)
+  id: String,          // Unique identifier (required)
+  title: String,       // Event title (required)
+  start: String,       // Start date/time in ISO format (required)
+  end: String,         // End date/time in ISO format (optional)
+  allDay: Boolean,     // Whether event is all-day (optional)
+  color: String,       // Hex color code like '#1967d2' (optional)
+  repeat: String,      // 'none', 'daily', 'weekly', 'monthly', 'yearly' (optional)
+  calendar: String     // Calendar ID (optional)
 }
 ```
 
 ## Supported Locales
 
-- `en-US` - English (United States)
-- `es-ES` - Spanish (Spain)
-- `fr-FR` - French (France)
-- `de-DE` - German (Germany)
-- `pt-BR` - Portuguese (Brazil)
-- `ja-JP` - Japanese (Japan)
-- `zh-CN` - Chinese (China)
+- `en-US` - English
+- `pt-PT` - Portuguese (Portugal)
 
 ## Temporal API
 
@@ -189,12 +239,9 @@ const event = {
 
 ### Event Colors
 
-The component supports four color themes matching Google Calendar:
+### Event Colors
 
-- **blue** - Default blue theme
-- **red** - Red theme for important events
-- **green** - Green theme for confirmed/completed events
-- **yellow** - Yellow theme for tentative events
+Events accept any hex color code (e.g., `#1967d2`, `#137333`, `#d93025`). The component automatically generates a lighter background color for better readability.
 
 ### Styling
 
