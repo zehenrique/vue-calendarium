@@ -21,6 +21,7 @@
       @date-change="handleDateChange"
       @view-change="handleViewChange"
       @event-create="handleEventCreate"
+      @event-delete="handleEventDelete"
     />
   </div>
 </template>
@@ -141,7 +142,6 @@ export default {
     },
     handleEventClick(event) {
       console.log('Event clicked:', event);
-      alert(`Event: ${event.title}\nTime: ${event.start}`);
     },
     handleDateChange(date) {
       console.log('Date changed:', date.toString());
@@ -152,6 +152,16 @@ export default {
     handleEventCreate(newEvents) {
       console.log('Events created:', newEvents);
       this.events.push(...newEvents);
+    },
+    handleEventDelete(event) {
+      console.log('Event deleted:', event);
+      // Remove the event and all its recurring instances
+      this.events = this.events.filter(e => {
+        // Remove the exact event or any recurring instance (has same base ID)
+        const baseId = e.id.split('-')[0];
+        const eventBaseId = event.id.split('-')[0];
+        return baseId !== eventBaseId;
+      });
     }
   }
 };
