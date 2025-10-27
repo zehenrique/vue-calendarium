@@ -240,8 +240,8 @@
     </div>
 
     <!-- Event Creation Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full mx-4 overflow-hidden" @click.stop>
+    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
+      <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full overflow-hidden" @click.stop>
         <!-- Modal header with color -->
         <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
           <h2 class="text-xl font-medium text-gray-900">{{ t('newEvent') }}</h2>
@@ -367,8 +367,8 @@
     </div>
 
     <!-- Event Detail Modal -->
-    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden" @click.stop>
+    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
+      <div class="bg-white rounded-lg shadow-2xl max-w-md w-full overflow-hidden" @click.stop>
         <!-- Color bar -->
         <div class="h-2" :style="{ backgroundColor: selectedEvent?.color || '#1967d2' }"></div>
         
@@ -419,8 +419,8 @@
     </div>
     
     <!-- Delete Confirmation Dialog -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" @click="cancelDelete" role="dialog" aria-modal="true" :aria-label="t('confirmDeleteTitle')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full mx-4 p-6" @click.stop>
+    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="cancelDelete" role="dialog" aria-modal="true" :aria-label="t('confirmDeleteTitle')">
+      <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full p-6" @click.stop>
         <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('confirmDeleteTitle') }}</h3>
         <p class="text-sm text-gray-600 mb-6">{{ t('confirmDelete') }}</p>
         <div class="flex justify-end space-x-3">
@@ -436,9 +436,9 @@
     
     <!-- Mobile Sidebar -->
     <transition name="fade">
-      <div v-if="isMobile && showMobileSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-50" @click="closeMobileSidebar">
+      <div v-if="isMobile && showMobileSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-60" @click="closeMobileSidebar">
         <transition name="slide">
-          <div class="fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto" @click.stop>
+          <div class="fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto z-70" @click.stop>
             <div class="p-4 border-b border-gray-200 flex items-center justify-between">
               <h2 class="text-lg font-medium text-gray-900">{{ t('menu') }}</h2>
               <button @click="closeMobileSidebar" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" :aria-label="t('close')">
@@ -567,8 +567,11 @@ export default {
       };
       const timeInterval = setInterval(updateTime, 60000); // Update every minute
       
-      // Setup swipe gestures for mobile with proper timing
+      // Setup swipe gestures for mobile with proper timing and retry logic
+      let swipeInitialized = false;
       const initializeSwipeGestures = () => {
+        if (swipeInitialized) return true;
+        
         if (typeof window !== 'undefined' && window.Hammer && isMobile.value) {
           const calendarEl = document.querySelector('.google-calendar');
           if (calendarEl) {
@@ -576,29 +579,42 @@ export default {
               const hammer = new window.Hammer(calendarEl);
               
               // Configure hammer for better swipe detection
-              hammer.get('swipe').set({ direction: window.Hammer.DIRECTION_HORIZONTAL });
+              hammer.get('swipe').set({ 
+                direction: window.Hammer.DIRECTION_HORIZONTAL,
+                threshold: 30, // Lower threshold for easier swipes
+                velocity: 0.3  // Lower velocity requirement
+              });
               
               hammer.on('swipeleft', () => {
+                console.log('Swipe left detected');
                 nextPeriod();
               });
               
               hammer.on('swiperight', () => {
+                console.log('Swipe right detected');
                 previousPeriod();
               });
               
-              console.log('Swipe gestures initialized successfully');
+              swipeInitialized = true;
+              console.log('✅ Swipe gestures initialized successfully');
+              return true;
             } catch (error) {
               console.error('Failed to initialize swipe gestures:', error);
             }
+          } else {
+            console.log('Calendar element not found for swipe initialization');
           }
+        } else {
+          console.log('Hammer.js not available or not on mobile');
         }
+        return false;
       };
       
-      // Try to initialize immediately
+      // Try multiple times with increasing delays
       initializeSwipeGestures();
-      
-      // Also try after a short delay in case Hammer.js loads late
       setTimeout(initializeSwipeGestures, 100);
+      setTimeout(initializeSwipeGestures, 500);
+      setTimeout(initializeSwipeGestures, 1000);
       
       // Cleanup on unmount
       return () => {
@@ -1236,6 +1252,9 @@ export default {
   display: flex;
   flex-direction: column;
   color: #3c4043;
+  touch-action: pan-y; /* Allow vertical scrolling, enable horizontal swipes */
+  user-select: none; /* Prevent text selection during swipes */
+  -webkit-user-select: none;
 }
 
 /* Header */
@@ -1641,9 +1660,14 @@ export default {
 
 /* Mobile Styles */
 @media (max-width: 768px) {
+  .google-calendar {
+    overflow-x: hidden; /* Prevent horizontal scroll */
+  }
+  
   .calendar-header {
     /* slightly larger mobile header spacing */
     padding: 16px 12px;
+    flex-wrap: wrap;
   }
 
   .calendar-title {
@@ -1653,6 +1677,7 @@ export default {
   .view-btn {
     padding: 6px 12px;
     font-size: 13px;
+    min-height: 44px; /* Touch target size */
   }
 
   .calendar-days {
@@ -1662,16 +1687,30 @@ export default {
   .week-grid,
   .day-grid {
     min-height: calc(24 * 50px); /* Smaller height on mobile */
+    overflow-x: auto; /* Allow horizontal scroll if needed */
   }
 
   .time-column {
     width: 50px;
+    font-size: 10px;
   }
 
   .week-day-number {
     font-size: 20px;
     width: 36px;
     height: 36px;
+  }
+  
+  /* Improve touch targets */
+  button, .event, .calendar-day {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Better modal sizing on mobile */
+  .fixed.inset-0 > div {
+    max-width: calc(100% - 32px); /* Leave space on sides */
+    max-height: calc(100vh - 32px); /* Leave space top/bottom */
   }
 }
 
