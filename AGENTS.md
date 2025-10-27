@@ -9,6 +9,7 @@
 
 2. **Technology Stack**:
    - **Framework**: Vue.js (Vue 3 with Composition API)
+      - Composition API only: Use the Composition API and avoid the Options API for all new/updated components.
    - **Styling**: Tailwind CSS for all styling needs
    - **Date/Time Handling**: Temporal API for all date and time operations
    - **Internationalization**: vue-i18n with full support for en-US and pt-PT
@@ -18,6 +19,7 @@
    - Avoid over-engineering
    - Use clear, descriptive variable and function names
    - Follow Vue.js best practices from Context7
+   - Component decomposition: split large files into smaller, focused components when possible. For example, break `src/Calendar.vue` into `DayView.vue`, `WeekView.vue`, `EventModal.vue`, and `EventList.vue` to keep logic and templates manageable.
 
 4. **Documentation**:
    - Always update ALL documentation to reflect any changes made to the code
@@ -51,8 +53,17 @@
 ## Development Workflow
 
 1. Before making changes, check Context7 for Vue.js and Tailwind CSS best practices
-2. Test changes locally with `npm run dev`
-3. Update documentation immediately after code changes
+2. Use Makefile targets for common workflows (preferred):
+   - Start dev server: `make dev` (runs `npm run dev`)
+   - Run unit tests: `make test`
+   - Run Playwright UI tests: `make test-ui` (runs `npm run test:ui`)
+   - Build production: `make build`
+   - Lint/format: `make lint` / `make format`
+   Prefer `make <target>` over calling `npm` scripts directly to keep workflows consistent.
+
+3. Always run Playwright UI tests for UI changes. Use `make test-ui` as part of your change verification and CI. Failures in Playwright tests must be addressed before merging UI changes.
+
+4. Update documentation immediately after code changes
 4. Ensure mobile responsiveness before committing
 5. Verify internationalization works for both locales
 6. Check that all times display in 24-hour format
