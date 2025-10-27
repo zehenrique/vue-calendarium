@@ -17,20 +17,12 @@
         <h1 class="calendar-title">{{ currentTitle }}</h1>
       </div>
       <div class="header-right">
-        <button class="create-btn" @click="showCreateEventModal" :aria-label="t('createEvent')">
-          <svg width="20" height="20" viewBox="0 0 24 24" style="margin-right: 8px;">
-            <path fill="currentColor" d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
-          </svg>
-          {{ t('createEvent') }}
-        </button>
         <div class="view-selector">
           <button 
             v-for="view in views" 
             :key="view"
             :class="['view-btn', { active: currentView === view }]"
             @click="currentView = view"
-            :aria-label="`${t(view)} ${t('view')}`"
-            :aria-pressed="currentView === view"
           >
             {{ t(view) }}
           </button>
@@ -63,14 +55,8 @@
               <div 
                 v-for="event in day.events.slice(0, 3)" 
                 :key="event.id"
-                class="event"
-                :style="getEventColorStyle(event.color)"
+                :class="['event', `event-${event.color || 'blue'}`]"
                 @click="onEventClick(event)"
-                role="button"
-                :aria-label="`${event.title} at ${formatEventTime(event)}`"
-                tabindex="0"
-                @keydown.enter="onEventClick(event)"
-                @keydown.space.prevent="onEventClick(event)"
               >
                 <span class="event-time">{{ formatEventTime(event) }}</span>
                 <span class="event-title">{{ event.title }}</span>
@@ -106,14 +92,9 @@
               <div 
                 v-for="event in day.events" 
                 :key="event.id"
-                class="week-event"
-                :style="{ ...getEventStyle(event), ...getEventColorStyle(event.color) }"
+                :class="['week-event', `event-${event.color || 'blue'}`]"
+                :style="getEventStyle(event)"
                 @click="onEventClick(event)"
-                role="button"
-                :aria-label="`${event.title} at ${formatEventTime(event)}`"
-                tabindex="0"
-                @keydown.enter="onEventClick(event)"
-                @keydown.space.prevent="onEventClick(event)"
               >
                 <div class="event-title">{{ event.title }}</div>
                 <div class="event-time">{{ formatEventTime(event) }}</div>
@@ -139,116 +120,14 @@
             <div 
               v-for="event in dayEvents" 
               :key="event.id"
-              class="day-event"
-              :style="{ ...getEventStyle(event), ...getEventColorStyle(event.color) }"
+              :class="['day-event', `event-${event.color || 'blue'}`]"
+              :style="getEventStyle(event)"
               @click="onEventClick(event)"
-              role="button"
-              :aria-label="`${event.title} at ${formatEventTime(event)}`"
-              tabindex="0"
-              @keydown.enter="onEventClick(event)"
-              @keydown.space.prevent="onEventClick(event)"
             >
               <div class="event-title">{{ event.title }}</div>
               <div class="event-time">{{ formatEventTime(event) }}</div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Event Creation Modal -->
-    <div v-if="showModal" class="modal-overlay" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
-      <div class="modal-content" @click.stop>
-        <div class="modal-header">
-          <h2>{{ t('newEvent') }}</h2>
-          <button class="close-btn" @click="closeModal" :aria-label="t('close')">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-            </svg>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="event-title">{{ t('eventTitle') }}</label>
-            <input 
-              id="event-title"
-              v-model="newEvent.title" 
-              type="text" 
-              :placeholder="t('eventTitle')"
-              required
-            />
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="start-date">{{ t('startDate') }}</label>
-              <input 
-                id="start-date"
-                v-model="newEvent.startDate" 
-                type="date"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="start-time">{{ t('startTime') }}</label>
-              <input 
-                id="start-time"
-                v-model="newEvent.startTime" 
-                type="time"
-                required
-              />
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="end-date">{{ t('endDate') }}</label>
-              <input 
-                id="end-date"
-                v-model="newEvent.endDate" 
-                type="date"
-                required
-              />
-            </div>
-            <div class="form-group">
-              <label for="end-time">{{ t('endTime') }}</label>
-              <input 
-                id="end-time"
-                v-model="newEvent.endTime" 
-                type="time"
-                required
-              />
-            </div>
-          </div>
-          <div class="form-group">
-            <label for="event-repeat">{{ t('repeat') }}</label>
-            <select id="event-repeat" v-model="newEvent.repeat">
-              <option value="none">{{ t('repeatNone') }}</option>
-              <option value="daily">{{ t('repeatDaily') }}</option>
-              <option value="weekly">{{ t('repeatWeekly') }}</option>
-              <option value="monthly">{{ t('repeatMonthly') }}</option>
-              <option value="yearly">{{ t('repeatYearly') }}</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="event-calendar">{{ t('calendar') }}</label>
-            <select id="event-calendar" v-model="newEvent.calendar">
-              <option v-for="cal in calendars" :key="cal.id" :value="cal.id">
-                {{ cal.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="event-color">{{ t('color') }}</label>
-            <input 
-              id="event-color"
-              v-model="newEvent.color" 
-              type="color"
-              :title="t('color')"
-            />
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="cancel-btn" @click="closeModal">{{ t('cancel') }}</button>
-          <button class="save-btn" @click="saveEvent">{{ t('save') }}</button>
         </div>
       </div>
     </div>
@@ -279,13 +158,9 @@ export default {
     initialDate: {
       type: [String, Object],
       default: null
-    },
-    calendars: {
-      type: Array,
-      default: () => [{ id: 'default', name: 'My Calendar', color: '#1967d2' }]
     }
   },
-  emits: ['eventClick', 'dateChange', 'viewChange', 'eventCreate'],
+  emits: ['eventClick', 'dateChange', 'viewChange'],
   setup(props, { emit }) {
     const { t, locale } = useI18n();
     
@@ -298,24 +173,18 @@ export default {
     const isMobile = ref(false);
     const views = ['day', 'week', 'month'];
     const PIXELS_PER_HOUR = 60; // Height in pixels for one hour slot
-    const showModal = ref(false);
-    const newEvent = ref({
-      title: '',
-      startDate: '',
-      startTime: '09:00',
-      endDate: '',
-      endTime: '10:00',
-      repeat: 'none',
-      calendar: 'default',
-      color: '#1967d2'
-    });
 
     // Update locale when prop changes
     watch(() => props.locale, (newLocale) => {
       // Map BCP 47 language tags to i18n locale codes
       const localeMap = {
         'en-US': 'en',
-        'pt-PT': 'pt'
+        'es-ES': 'es',
+        'fr-FR': 'fr',
+        'de-DE': 'de',
+        'pt-BR': 'pt',
+        'ja-JP': 'ja',
+        'zh-CN': 'zh'
       };
       locale.value = localeMap[newLocale] || 'en';
     });
@@ -485,110 +354,6 @@ export default {
       };
     }
 
-    function getEventColorStyle(hexColor) {
-      if (!hexColor) hexColor = '#1967d2';
-      
-      // Convert hex to RGB for lighter background
-      const r = parseInt(hexColor.slice(1, 3), 16);
-      const g = parseInt(hexColor.slice(3, 5), 16);
-      const b = parseInt(hexColor.slice(5, 7), 16);
-      
-      return {
-        backgroundColor: `rgba(${r}, ${g}, ${b}, 0.15)`,
-        color: hexColor,
-        borderLeft: `3px solid ${hexColor}`
-      };
-    }
-
-    // Modal functions
-    function showCreateEventModal() {
-      const today = Temporal.Now.plainDateISO();
-      newEvent.value = {
-        title: '',
-        startDate: today.toString(),
-        startTime: '09:00',
-        endDate: today.toString(),
-        endTime: '10:00',
-        repeat: 'none',
-        calendar: props.calendars[0]?.id || 'default',
-        color: props.calendars[0]?.color || '#1967d2'
-      };
-      showModal.value = true;
-    }
-
-    function closeModal() {
-      showModal.value = false;
-    }
-
-    function saveEvent() {
-      if (!newEvent.value.title) {
-        alert('Please enter an event title');
-        return;
-      }
-
-      const startDateTime = `${newEvent.value.startDate}T${newEvent.value.startTime}:00`;
-      const endDateTime = `${newEvent.value.endDate}T${newEvent.value.endTime}:00`;
-
-      const eventData = {
-        id: Date.now().toString(),
-        title: newEvent.value.title,
-        start: startDateTime,
-        end: endDateTime,
-        color: newEvent.value.color,
-        calendar: newEvent.value.calendar,
-        repeat: newEvent.value.repeat
-      };
-
-      // If recurring, generate recurring events
-      if (newEvent.value.repeat !== 'none') {
-        const recurringEvents = generateRecurringEvents(eventData, newEvent.value.repeat);
-        emit('eventCreate', recurringEvents);
-      } else {
-        emit('eventCreate', [eventData]);
-      }
-
-      closeModal();
-    }
-
-    function generateRecurringEvents(baseEvent, repeatType) {
-      const events = [baseEvent];
-      const start = Temporal.PlainDate.from(baseEvent.start.split('T')[0]);
-      const maxOccurrences = 52; // Generate up to 1 year of recurring events
-
-      for (let i = 1; i < maxOccurrences; i++) {
-        let nextDate;
-        
-        switch (repeatType) {
-          case 'daily':
-            nextDate = start.add({ days: i });
-            break;
-          case 'weekly':
-            nextDate = start.add({ weeks: i });
-            break;
-          case 'monthly':
-            nextDate = start.add({ months: i });
-            break;
-          case 'yearly':
-            nextDate = start.add({ years: i });
-            break;
-          default:
-            return events;
-        }
-
-        const timeStart = baseEvent.start.split('T')[1];
-        const timeEnd = baseEvent.end.split('T')[1];
-
-        events.push({
-          ...baseEvent,
-          id: `${baseEvent.id}-${i}`,
-          start: `${nextDate.toString()}T${timeStart}`,
-          end: `${nextDate.toString()}T${timeEnd}`
-        });
-      }
-
-      return events;
-    }
-
     // Navigation functions
     function previousPeriod() {
       if (currentView.value === 'month') {
@@ -641,14 +406,7 @@ export default {
       formatEventTime,
       formatHour,
       getEventStyle,
-      getEventColorStyle,
       onEventClick,
-      showModal,
-      newEvent,
-      showCreateEventModal,
-      closeModal,
-      saveEvent,
-      calendars: props.calendars,
       t
     };
   }
@@ -870,6 +628,30 @@ export default {
 .event-time {
   font-weight: 500;
   margin-right: 4px;
+}
+
+.event-blue {
+  background-color: #e8f0fe;
+  color: #1967d2;
+  border-left: 3px solid #1967d2;
+}
+
+.event-red {
+  background-color: #fce8e6;
+  color: #d93025;
+  border-left: 3px solid #d93025;
+}
+
+.event-green {
+  background-color: #e6f4ea;
+  color: #137333;
+  border-left: 3px solid #137333;
+}
+
+.event-yellow {
+  background-color: #fef7e0;
+  color: #f9ab00;
+  border-left: 3px solid #f9ab00;
 }
 
 .more-events {
@@ -1097,206 +879,5 @@ export default {
   .view-btn {
     flex: 1;
   }
-}
-
-/* Create Event Button */
-.create-btn {
-  padding: 8px 16px;
-  background: #1a73e8;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-
-.create-btn:hover {
-  background: #1557b0;
-  box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-}
-
-.create-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-/* Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow: auto;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #dadce0;
-}
-
-.modal-header h2 {
-  margin: 0;
-  font-size: 20px;
-  font-weight: 500;
-  color: #3c4043;
-}
-
-.close-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5f6368;
-  transition: background-color 0.2s;
-}
-
-.close-btn:hover {
-  background-color: #f1f3f4;
-}
-
-.close-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-.modal-body {
-  padding: 24px;
-}
-
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  color: #3c4043;
-}
-
-.form-group input,
-.form-group select {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: inherit;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #1a73e8;
-  box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
-}
-
-.form-group input[type="color"] {
-  height: 44px;
-  cursor: pointer;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
-.modal-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid #dadce0;
-}
-
-.cancel-btn,
-.save-btn {
-  padding: 8px 24px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-
-.cancel-btn {
-  background: white;
-  border: 1px solid #dadce0;
-  color: #3c4043;
-}
-
-.cancel-btn:hover {
-  background: #f8f9fa;
-}
-
-.cancel-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-.save-btn {
-  background: #1a73e8;
-  border: none;
-  color: white;
-}
-
-.save-btn:hover {
-  background: #1557b0;
-  box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-}
-
-.save-btn:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-/* Accessibility improvements */
-button:focus-visible,
-a:focus-visible {
-  outline: 2px solid #1a73e8;
-  outline-offset: 2px;
-}
-
-.event:focus {
-  outline: 2px solid #1a73e8;
-  outline-offset: 1px;
-}
-
-/* Remove predefined color classes */
-.event-blue,
-.event-red,
-.event-green,
-.event-yellow {
-  /* These classes are no longer used - colors are now dynamic */
 }
 </style>
