@@ -172,10 +172,21 @@ export default {
     );
     const isMobile = ref(false);
     const views = ['day', 'week', 'month'];
+    const PIXELS_PER_HOUR = 60; // Height in pixels for one hour slot
 
     // Update locale when prop changes
     watch(() => props.locale, (newLocale) => {
-      locale.value = newLocale;
+      // Map BCP 47 language tags to i18n locale codes
+      const localeMap = {
+        'en-US': 'en',
+        'es-ES': 'es',
+        'fr-FR': 'fr',
+        'de-DE': 'de',
+        'pt-BR': 'pt',
+        'ja-JP': 'ja',
+        'zh-CN': 'zh'
+      };
+      locale.value = localeMap[newLocale] || 'en';
     });
 
     // Detect mobile screen size
@@ -281,7 +292,8 @@ export default {
     // Helper functions
     function getStartOfWeek(date) {
       const dayOfWeek = date.dayOfWeek; // 1 = Monday, 7 = Sunday
-      const daysToSubtract = dayOfWeek === 7 ? 6 : dayOfWeek - 1; // Start on Sunday
+      // Start week on Sunday (Google Calendar style)
+      const daysToSubtract = dayOfWeek === 7 ? 0 : dayOfWeek;
       return date.subtract({ days: daysToSubtract });
     }
 
@@ -333,8 +345,8 @@ export default {
       const endMinutes = end.hour * 60 + end.minute;
       const duration = endMinutes - startMinutes;
       
-      const top = (startMinutes / 60) * 60; // 60px per hour
-      const height = (duration / 60) * 60;
+      const top = (startMinutes / 60) * PIXELS_PER_HOUR;
+      const height = (duration / 60) * PIXELS_PER_HOUR;
       
       return {
         top: `${top}px`,
@@ -656,7 +668,7 @@ export default {
 .week-grid {
   display: flex;
   height: 100%;
-  min-height: 1440px; /* 24 hours * 60px */
+  min-height: calc(24 * 60px); /* 24 hours * 60px per hour */
 }
 
 .time-column {
@@ -775,7 +787,7 @@ export default {
 .day-grid {
   display: flex;
   height: 100%;
-  min-height: 1440px;
+  min-height: calc(24 * 60px); /* 24 hours * 60px per hour */
 }
 
 .day-column-container {
@@ -839,7 +851,7 @@ export default {
 
   .week-grid,
   .day-grid {
-    min-height: 1200px;
+    min-height: calc(24 * 50px); /* Smaller height on mobile */
   }
 
   .time-column {
