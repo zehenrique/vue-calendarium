@@ -51,9 +51,11 @@
               'today': day.isToday,
               'has-events': day.events.length > 0
             }]"
+            @click.self="onMonthCellClick(day.date)"
+            :title="`Create event on ${day.date.toString()}`"
           >
-            <div class="day-number">{{ day.day }}</div>
-            <div class="day-events">
+            <div class="day-number" @click="onMonthCellClick(day.date)">{{ day.day }}</div>
+            <div class="day-events" @click.self="onMonthCellClick(day.date)">
               <div 
                 v-for="event in day.events.slice(0, 3)" 
                 :key="event.id"
@@ -96,7 +98,13 @@
           </div>
           <div class="week-day-columns">
             <div v-for="day in weekViewDays" :key="day.key" class="week-day-column">
-              <div v-for="hour in 24" :key="hour" class="hour-slot"></div>
+              <div 
+                v-for="hour in 24" 
+                :key="hour" 
+                class="hour-slot"
+                @click="onTimeSlotClick(day.date, hour - 1)"
+                :title="`Create event at ${formatHour(hour - 1)}`"
+              ></div>
               <div 
                 v-for="event in day.events" 
                 :key="event.id"
@@ -129,7 +137,13 @@
         </div>
         <div class="day-column-container">
           <div class="day-column">
-            <div v-for="hour in 24" :key="hour" class="hour-slot"></div>
+            <div 
+              v-for="hour in 24" 
+              :key="hour" 
+              class="hour-slot"
+              @click="onTimeSlotClick(currentDate, hour - 1)"
+              :title="`Create event at ${formatHour(hour - 1)}`"
+            ></div>
             <div 
               v-for="event in dayEvents" 
               :key="event.id"
@@ -248,52 +262,52 @@
     </div>
 
     <!-- Event Detail Modal -->
-    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
-      <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4" @click.stop>
-        <div class="flex items-center justify-between p-4 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">{{ selectedEvent?.title }}</h2>
-          <button @click="closeEventDetail" class="text-gray-400 hover:text-gray-600 rounded-full p-1 hover:bg-gray-100" :aria-label="t('close')">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
+    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
+      <div class="bg-white rounded-lg shadow-2xl max-w-md w-full mx-4 overflow-hidden" @click.stop>
+        <!-- Color bar -->
+        <div class="h-2" :style="{ backgroundColor: selectedEvent?.color || '#1967d2' }"></div>
+        
+        <!-- Header -->
+        <div class="p-6">
+          <div class="flex items-start justify-between mb-4">
+            <h2 class="text-2xl font-normal text-gray-900 flex-1">{{ selectedEvent?.title }}</h2>
+            <button @click="closeEventDetail" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100 -mt-2 -mr-2" :aria-label="t('close')">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+          </div>
+          
+          <!-- Event details -->
+          <div class="space-y-3">
+            <div class="flex items-start">
+              <svg class="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 leading-relaxed">{{ formatEventTimeRange(selectedEvent) }}</p>
+                <p v-if="selectedEvent?.repeat && selectedEvent.repeat !== 'none'" class="text-xs text-gray-500 mt-1">
+                  Repeats {{ t('repeat' + selectedEvent.repeat.charAt(0).toUpperCase() + selectedEvent.repeat.slice(1)).toLowerCase() }}
+                </p>
+              </div>
+            </div>
+            
+            <div v-if="selectedEvent?.calendar" class="flex items-start">
+              <svg class="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              <p class="text-sm text-gray-700">{{ getCalendarName(selectedEvent.calendar) }}</p>
+            </div>
+          </div>
         </div>
-        <div class="p-6 space-y-4">
-          <div class="flex items-start space-x-3">
-            <svg class="w-6 h-6 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-            </svg>
-            <div>
-              <p class="text-sm text-gray-600">{{ formatEventTimeRange(selectedEvent) }}</p>
-              <p v-if="selectedEvent?.repeat && selectedEvent.repeat !== 'none'" class="text-sm text-gray-500 mt-1">
-                Repeats {{ t('repeat' + selectedEvent.repeat.charAt(0).toUpperCase() + selectedEvent.repeat.slice(1)).toLowerCase() }}
-              </p>
-            </div>
-          </div>
-          <div v-if="selectedEvent?.calendar" class="flex items-start space-x-3">
-            <svg class="w-6 h-6 text-gray-400 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-            </svg>
-            <div>
-              <p class="text-sm text-gray-600">{{ getCalendarName(selectedEvent.calendar) }}</p>
-            </div>
-          </div>
-          <div class="flex items-start space-x-3">
-            <div class="w-6 h-6 rounded mt-0.5" :style="{ backgroundColor: selectedEvent?.color || '#1967d2' }"></div>
-            <div>
-              <p class="text-sm text-gray-600">{{ selectedEvent?.color || '#1967d2' }}</p>
-            </div>
-          </div>
-        </div>
-        <div class="flex items-center justify-end space-x-3 p-4 border-t bg-gray-50">
-          <button @click="deleteSelectedEvent" class="px-4 py-2 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md transition-colors">
+        
+        <!-- Actions -->
+        <div class="flex items-center justify-end space-x-2 px-6 py-4 bg-gray-50 border-t">
+          <button @click="deleteSelectedEvent" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded transition-colors">
             {{ t('delete') }}
           </button>
-          <button @click="editSelectedEvent" class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-md transition-colors">
+          <button @click="editSelectedEvent" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">
             {{ t('edit') }}
-          </button>
-          <button @click="closeEventDetail" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors">
-            {{ t('close') }}
           </button>
         </div>
       </div>
@@ -568,6 +582,51 @@ export default {
       showModal.value = false;
     }
 
+    function onTimeSlotClick(date, hour) {
+      // Get the PlainDate object for the clicked date
+      const clickedDate = typeof date === 'string' ? 
+        Temporal.PlainDate.from(date) : 
+        Temporal.PlainDate.from({ year: date.year, month: date.month, day: date.day });
+      
+      // Set start time to the clicked hour
+      const startTime = `${String(hour).padStart(2, '0')}:00`;
+      // Set end time to one hour later
+      const endTime = `${String((hour + 1) % 24).padStart(2, '0')}:00`;
+      
+      // Pre-fill the new event form
+      newEvent.value = {
+        title: '',
+        startDate: clickedDate.toString(),
+        startTime: startTime,
+        endDate: clickedDate.toString(),
+        endTime: endTime,
+        repeat: 'none',
+        calendar: 'default',
+        color: '#1967d2'
+      };
+      
+      showModal.value = true;
+    }
+
+    function onMonthCellClick(date) {
+      // Handle clicks on month view cells
+      const clickedDate = Temporal.PlainDate.from({ year: date.year, month: date.month, day: date.day });
+      
+      // Default to 9:00 AM for month view clicks
+      newEvent.value = {
+        title: '',
+        startDate: clickedDate.toString(),
+        startTime: '09:00',
+        endDate: clickedDate.toString(),
+        endTime: '10:00',
+        repeat: 'none',
+        calendar: 'default',
+        color: '#1967d2'
+      };
+      
+      showModal.value = true;
+    }
+
     function saveEvent() {
       if (!newEvent.value.title) {
         alert('Please enter an event title');
@@ -761,6 +820,8 @@ export default {
       getEventStyle,
       getEventColorStyle,
       onEventClick,
+      onTimeSlotClick,
+      onMonthCellClick,
       showModal,
       showEventDetail,
       selectedEvent,
@@ -1103,6 +1164,12 @@ export default {
 .hour-slot {
   height: 60px;
   border-bottom: 1px solid #e0e0e0;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.hour-slot:hover {
+  background-color: #f1f3f4;
 }
 
 .week-event {
