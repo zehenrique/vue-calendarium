@@ -562,23 +562,38 @@ export default {
       };
       const timeInterval = setInterval(updateTime, 60000); // Update every minute
       
-      // Setup swipe gestures for mobile
-      if (typeof window !== 'undefined' && window.Hammer) {
-        const calendarEl = document.querySelector('.google-calendar');
-        if (calendarEl) {
-          const hammer = new window.Hammer(calendarEl);
-          hammer.on('swipeleft', () => {
-            if (isMobile.value) {
-              nextPeriod();
+      // Setup swipe gestures for mobile with proper timing
+      const initializeSwipeGestures = () => {
+        if (typeof window !== 'undefined' && window.Hammer && isMobile.value) {
+          const calendarEl = document.querySelector('.google-calendar');
+          if (calendarEl) {
+            try {
+              const hammer = new window.Hammer(calendarEl);
+              
+              // Configure hammer for better swipe detection
+              hammer.get('swipe').set({ direction: window.Hammer.DIRECTION_HORIZONTAL });
+              
+              hammer.on('swipeleft', () => {
+                nextPeriod();
+              });
+              
+              hammer.on('swiperight', () => {
+                previousPeriod();
+              });
+              
+              console.log('Swipe gestures initialized successfully');
+            } catch (error) {
+              console.error('Failed to initialize swipe gestures:', error);
             }
-          });
-          hammer.on('swiperight', () => {
-            if (isMobile.value) {
-              previousPeriod();
-            }
-          });
+          }
         }
-      }
+      };
+      
+      // Try to initialize immediately
+      initializeSwipeGestures();
+      
+      // Also try after a short delay in case Hammer.js loads late
+      setTimeout(initializeSwipeGestures, 100);
       
       // Cleanup on unmount
       return () => {
