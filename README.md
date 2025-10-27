@@ -1,20 +1,26 @@
 # Vue Google Calendar Component
 
-A fully-featured calendar component for Vue.js that looks and feels like Google Calendar, with Temporal API support and internationalization.
+A production-ready calendar component for Vue.js that replicates Google Calendar's UI/UX with full internationalization, event overlap handling, all-day events, mobile support, and modern date handling via Temporal API.
 
 ## Features
 
-✨ **Google Calendar Look & Feel** - Closely matches Google Calendar's design
-📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile
-🌍 **Internationalization** - English and Portuguese (Portugal)
-📅 **Multiple Views** - Month, Week, and Day views
-⏰ **Temporal API** - Uses modern Temporal API for date/time handling
+✨ **Google Calendar Look & Feel** - Closely matches Google Calendar's design and interactions
+📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile with swipe gestures
+🌍 **Internationalization** - Full support for English (en-US) and Portuguese Portugal (pt-PT)
+📅 **Multiple Views** - Month, Week, and Day views with smooth transitions
+⏰ **Temporal API** - Uses modern Temporal API for all date/time handling
 🎨 **Custom Hex Colors** - Events accept any hex color code
-💻 **Vue 3 Compatible** - Built with Vue 3 Composition API
-📊 **Event Management** - Create and manage events via UI and programmatically
-🔁 **Recurring Events** - Daily, weekly, monthly, and yearly recurring events
-📂 **Multiple Calendars** - Support for event categories/calendars
-♿ **Accessibility** - ARIA labels and keyboard navigation
+💻 **Vue 3 Composition API** - Built with Vue 3 Composition API best practices
+📊 **Event Management** - Create, view, edit, and delete events via UI and programmatically
+🔁 **Recurring Events** - Daily, weekly, monthly, and yearly recurring events (up to 52 occurrences)
+📂 **Multiple Calendars** - Support for event categories/calendars with color coding
+♿ **Accessibility** - Full ARIA labels, keyboard navigation, and screen reader support
+🎯 **Event Overlap Handling** - Column-based layout for overlapping events (Google Calendar style)
+☀️ **All-Day Events** - Dedicated header section for all-day events
+🕐 **Current Time Indicator** - Red line showing current time in week/day views
+📱 **Mobile Swipe Gestures** - Navigate with left/right swipes on mobile
+☰ **Mobile Sidebar** - Full-featured navigation sidebar for mobile devices
+💅 **Tailwind CSS** - Modern, beautiful styling with Tailwind CSS
 
 ## Installation
 
