@@ -27,7 +27,10 @@ export default {
     cancel: 'Cancel',
     delete: 'Delete',
     edit: 'Edit',
-    close: 'Close'
+    close: 'Close',
+    eventDetails: 'Event details',
+    calendars: 'Calendars',
+    menu: 'Menu'
   },
   pt: {
     today: 'Hoje',
@@ -57,6 +60,9 @@ export default {
     cancel: 'Cancelar',
     delete: 'Eliminar',
     edit: 'Editar',
-    close: 'Fechar'
+    close: 'Fechar',
+    eventDetails: 'Detalhes do evento',
+    calendars: 'Calendários',
+    menu: 'Menu'
   }
 };
