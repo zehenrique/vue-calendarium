@@ -91,6 +91,10 @@
       <div class="week-grid">
         <div class="time-column no-border">
           <div class="time-header sticky-header"></div>
+          <!-- All-day label -->
+          <div class="all-day-label">
+            {{ t('allDay') }}
+          </div>
           <div v-for="hour in 24" :key="hour" class="time-slot-label">
             {{ formatHour(hour - 1) }}
           </div>
@@ -100,6 +104,27 @@
             <div v-for="day in weekViewDays" :key="day.key" class="week-day-header">
               <div class="week-day-name">{{ day.dayName }}</div>
               <div :class="['week-day-number', { today: day.isToday }]">{{ day.day }}</div>
+              <!-- All-day events section in header -->
+              <div 
+                class="all-day-events-container"
+                @click="onAllDaySlotClick(day.date)"
+                :title="`Create all-day event`"
+              >
+                <div 
+                  v-for="event in day.allDayEvents" 
+                  :key="event.id"
+                  class="all-day-event"
+                  :style="getEventColorStyle(event.color)"
+                  @click.stop="onEventClick(event)"
+                  role="button"
+                  :aria-label="`All-day event: ${event.title}`"
+                  tabindex="0"
+                  @keydown.enter="onEventClick(event)"
+                  @keydown.space.prevent="onEventClick(event)"
+                >
+                  {{ event.title }}
+                </div>
+              </div>
             </div>
           </div>
           <div class="week-day-columns">
@@ -145,12 +170,38 @@
     <div v-if="currentView === 'day'" class="calendar-body day-view">
       <div class="day-grid">
         <div class="time-column no-border">
-          <div class="time-header"></div>
+          <div class="time-header">
+            <!-- All-day label -->
+            <div class="all-day-label">
+              {{ t('allDay') }}
+            </div>
+          </div>
           <div v-for="hour in 24" :key="hour" class="time-slot-label">
             {{ formatHour(hour - 1) }}
           </div>
         </div>
         <div class="day-column-container">
+          <!-- All-day events section -->
+          <div 
+            class="day-all-day-section"
+            @click="onAllDaySlotClick(currentDate)"
+            :title="`Create all-day event`"
+          >
+            <div 
+              v-for="event in dayAllDayEvents" 
+              :key="event.id"
+              class="all-day-event"
+              :style="getEventColorStyle(event.color)"
+              @click.stop="onEventClick(event)"
+              role="button"
+              :aria-label="`All-day event: ${event.title}`"
+              tabindex="0"
+              @keydown.enter="onEventClick(event)"
+              @keydown.space.prevent="onEventClick(event)"
+            >
+              {{ event.title }}
+            </div>
+          </div>
           <div class="day-column">
             <div 
               v-for="hour in 24" 
@@ -578,7 +629,11 @@ export default {
         const date = startOfWeek.add({ days: i });
         const isToday = Temporal.PlainDate.compare(date, Temporal.Now.plainDateISO()) === 0;
         const dayName = date.toLocaleString(props.locale, { weekday: 'short' });
-        const dayEvents = getEventsForDate(date);
+        const allEvents = getEventsForDate(date);
+        
+        // Separate all-day and timed events
+        const allDayEvents = allEvents.filter(e => e.allDay);
+        const timedEvents = allEvents.filter(e => !e.allDay);
         
         return {
           key: date.toString(),
@@ -586,13 +641,20 @@ export default {
           date,
           dayName,
           isToday,
-          events: dayEvents
+          events: timedEvents,
+          allDayEvents: allDayEvents
         };
       });
     });
 
     const dayEvents = computed(() => {
-      return getEventsForDate(currentDate.value);
+      const allEvents = getEventsForDate(currentDate.value);
+      return allEvents.filter(e => !e.allDay);
+    });
+
+    const dayAllDayEvents = computed(() => {
+      const allEvents = getEventsForDate(currentDate.value);
+      return allEvents.filter(e => e.allDay);
     });
 
     // Helper functions
@@ -832,6 +894,28 @@ export default {
       showModal.value = true;
     }
 
+    function onAllDaySlotClick(date) {
+      // Handle clicks on all-day event slots
+      const clickedDate = typeof date === 'string' ? 
+        Temporal.PlainDate.from(date) : 
+        Temporal.PlainDate.from({ year: date.year, month: date.month, day: date.day });
+      
+      // Pre-fill for all-day event (no times needed)
+      newEvent.value = {
+        title: '',
+        startDate: clickedDate.toString(),
+        startTime: '00:00',
+        endDate: clickedDate.toString(),
+        endTime: '23:59',
+        repeat: 'none',
+        calendar: 'default',
+        color: '#1967d2',
+        allDay: true
+      };
+      
+      showModal.value = true;
+    }
+
     function saveEvent() {
       if (!newEvent.value.title) {
         alert('Please enter an event title');
@@ -848,7 +932,8 @@ export default {
         end: endDateTime,
         color: newEvent.value.color,
         calendar: newEvent.value.calendar,
-        repeat: newEvent.value.repeat
+        repeat: newEvent.value.repeat,
+        allDay: newEvent.value.allDay || false
       };
 
       // If recurring, generate recurring events
@@ -1850,5 +1935,59 @@ a:focus-visible {
   .hour-slot {
     height: 50px;
   }
+}
+
+/* All-day events styling */
+.all-day-label {
+  font-size: 11px;
+  color: #70757a;
+  padding: 4px 8px;
+  text-align: center;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.all-day-events-container {
+  min-height: 40px;
+  padding: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.all-day-events-container:hover {
+  background-color: #f8f9fa;
+}
+
+.all-day-event {
+  font-size: 12px;
+  padding: 2px 8px;
+  margin: 2px 0;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.all-day-event:hover {
+  opacity: 0.8;
+}
+
+.day-all-day-section {
+  min-height: 40px;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #e0e0e0;
+  margin-bottom: 8px;
+}
+
+.day-all-day-section:hover {
+  background-color: #f8f9fa;
 }
 </style>
