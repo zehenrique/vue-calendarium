@@ -1,7 +1,7 @@
 # Google Calendar Component - Makefile
 
 # Phony targets
-.PHONY: all install dev build preview test test-ui test-ui-headed test-ui-debug test-ui-report lint format clean update open setup help
+.PHONY: all install dev build preview test test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration lint format clean update open setup help
 
 # Variables
 NODE_VERSION := 20
@@ -47,6 +47,22 @@ test-ui-debug: install
 test-ui-report:
 	$(NPM) run test:ui:report
 
+# Run mobile gesture tests
+test-gestures: install
+	npx playwright test tests/mobile/gestures.spec.js
+
+# Run visual regression tests
+test-visual: install
+	npx playwright test tests/visual/
+
+# Update visual regression snapshots (baselines)
+test-visual-update: install
+	npx playwright test tests/visual/ --update-snapshots
+
+# Run integration/persistence tests
+test-integration: install
+	npx playwright test tests/integration/
+
 # Lint code
 lint: install
 	$(NPM) run lint
@@ -79,19 +95,23 @@ setup: install
 # Help
 help:
 	@echo "Available targets:"
-	@echo "  install         - Install dependencies"
-	@echo "  dev             - Start development server"
-	@echo "  build           - Build for production"
-	@echo "  preview         - Preview production build"
-	@echo "  test            - Run tests"
-	@echo "  test-ui         - Run Playwright UI tests (headless)"
-	@echo "  test-ui-headed  - Run Playwright UI tests (visible browser)"
-	@echo "  test-ui-debug   - Debug Playwright tests"
-	@echo "  test-ui-report  - Show Playwright test HTML report"
-	@echo "  lint            - Lint code"
-	@echo "  format          - Format code"
-	@echo "  clean           - Clean build artifacts"
-	@echo "  update          - Update dependencies"
-	@echo "  open            - Open dev server in browser"
-	@echo "  setup           - Setup development environment"
-	@echo "  help            - Show this help message"
+	@echo "  install            - Install dependencies"
+	@echo "  dev                - Start development server"
+	@echo "  build              - Build for production"
+	@echo "  preview            - Preview production build"
+	@echo "  test               - Run tests"
+	@echo "  test-ui            - Run Playwright UI tests (headless)"
+	@echo "  test-ui-headed     - Run Playwright UI tests (visible browser)"
+	@echo "  test-ui-debug      - Debug Playwright tests"
+	@echo "  test-ui-report     - Show Playwright test HTML report"
+	@echo "  test-gestures      - Run mobile gesture tests"
+	@echo "  test-visual        - Run visual regression tests"
+	@echo "  test-visual-update - Update visual regression baselines"
+	@echo "  test-integration   - Run integration/persistence tests"
+	@echo "  lint               - Lint code"
+	@echo "  format             - Format code"
+	@echo "  clean              - Clean build artifacts"
+	@echo "  update             - Update dependencies"
+	@echo "  open               - Open dev server in browser"
+	@echo "  setup              - Setup development environment"
+	@echo "  help               - Show this help message"
