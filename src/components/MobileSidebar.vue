@@ -7,7 +7,7 @@
       @click="handleClose"
     >
       <transition name="slide">
-        <div 
+        <div v-if="modelValue"
           class="mobile-sidebar fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto" 
           style="z-index: 901;" 
           @click.stop
@@ -67,6 +67,7 @@
 
 <script>
 import { useI18n } from 'vue-i18n';
+import { onMounted, onUnmounted, watch } from 'vue';
 
 export default {
   name: 'MobileSidebar',
@@ -91,6 +92,7 @@ export default {
   emits: ['update:modelValue', 'view-change'],
   setup(props, { emit }) {
     const { t } = useI18n();
+    let hammer = null;
 
     const handleClose = () => {
       emit('update:modelValue', false);
@@ -100,6 +102,124 @@ export default {
       emit('view-change', view);
       handleClose();
     };
+
+    const initializeSwipeToClose = () => {
+      if (typeof window === 'undefined' || !window.Hammer || !props.modelValue) return;
+
+      // Clean up existing instance first
+      cleanupSwipe();
+
+      const sidebar = document.querySelector('.mobile-sidebar');
+      if (!sidebar) return;
+
+      hammer = new window.Hammer(sidebar);
+      
+      // Configure swipe left to close
+      hammer.get('swipe').set({ 
+        direction: window.Hammer.DIRECTION_HORIZONTAL,
+        threshold: 30,
+        velocity: 0.3
+      });
+
+      // Configure pan for visual feedback
+      hammer.get('pan').set({
+        direction: window.Hammer.DIRECTION_HORIZONTAL,
+        threshold: 10
+      });
+
+      let isPanning = false;
+      let swipeHandled = false;
+
+      hammer.on('panstart', (event) => {
+        isPanning = true;
+        swipeHandled = false;
+        sidebar.style.transition = 'none';
+        event.srcEvent.stopPropagation();
+      });
+
+      hammer.on('panmove', (event) => {
+        if (!isPanning) return;
+        
+        event.srcEvent.stopPropagation();
+        
+        // Only allow dragging left (closing direction)
+        const deltaX = Math.min(0, event.deltaX);
+        sidebar.style.transform = `translateX(${deltaX}px)`;
+        
+        // Calculate overlay opacity
+        const overlay = document.querySelector('.fixed.inset-0.bg-black');
+        const opacity = Math.max(0, 1 + (deltaX / 256)); // 256 = sidebar width
+        if (overlay) {
+          overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.5})`;
+        }
+      });
+
+      hammer.on('panend', (event) => {
+        if (!isPanning || swipeHandled) return;
+        
+        isPanning = false;
+        event.srcEvent.stopPropagation();
+        
+        sidebar.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        
+        const overlay = document.querySelector('.fixed.inset-0.bg-black');
+        if (overlay) {
+          overlay.style.transition = 'background-color 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
+        }
+
+        // Close if dragged more than 50% or fast swipe left
+        if (event.deltaX < -128 || (event.velocityX < -0.3 && event.deltaX < -30)) {
+          // Trigger haptic feedback
+          if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(10);
+          }
+          handleClose();
+        } else {
+          // Snap back
+          sidebar.style.transform = '';
+          if (overlay) {
+            overlay.style.backgroundColor = '';
+          }
+        }
+      });
+
+      hammer.on('swipeleft', (event) => {
+        swipeHandled = true;
+        event.srcEvent.stopPropagation();
+        // Trigger haptic feedback
+        if (window.navigator && window.navigator.vibrate) {
+          window.navigator.vibrate(10);
+        }
+        handleClose();
+      });
+    };
+
+    const cleanupSwipe = () => {
+      if (hammer) {
+        hammer.destroy();
+        hammer = null;
+      }
+    };
+
+    // Initialize swipe when sidebar opens
+    watch(() => props.modelValue, (isOpen) => {
+      if (isOpen) {
+        // Use longer timeout to ensure DOM is fully rendered and transitions complete
+        setTimeout(initializeSwipeToClose, 150);
+      } else {
+        cleanupSwipe();
+      }
+    });
+
+    onMounted(() => {
+      if (props.modelValue) {
+        setTimeout(initializeSwipeToClose, 150);
+      }
+    });
+
+    onUnmounted(() => {
+      cleanupSwipe();
+    });
 
     return {
       t,
