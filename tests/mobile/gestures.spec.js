@@ -117,6 +117,9 @@ test.describe('Mobile Gesture Tests', () => {
     await page.click('button[aria-label="Menu"]');
     await page.waitForSelector('.mobile-sidebar', { timeout: 2000 });
     
+    // Wait for animations to complete
+    await page.waitForTimeout(400);
+    
     const sidebar = page.locator('.mobile-sidebar');
     const box = await sidebar.boundingBox();
     
@@ -126,7 +129,8 @@ test.describe('Mobile Gesture Tests', () => {
     await page.mouse.move(box.x - 100, box.y + box.height / 2, { steps: 10 });
     await page.mouse.up();
     
-    await page.waitForTimeout(500);
+    // Wait for close animation
+    await page.waitForTimeout(600);
     
     // Verify sidebar is closed
     await expect(sidebar).not.toBeVisible({ timeout: 2000 });

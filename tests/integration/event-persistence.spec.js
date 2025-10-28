@@ -1,8 +1,54 @@
 const { test, expect } = require('@playwright/test');
 
+const WEEK_VIEW_SELECTOR = '.week-view';
+const DAY_VIEW_SELECTOR = '.day-view';
+const OVERLAY_SELECTOR = '.fixed.inset-0';
+const TITLE_INPUT_SELECTOR = 'input[type="text"], input:not([type])';
+
+async function switchToWeekView(page) {
+  await page.click('button:has-text("Week")');
+  await expect(page.locator(WEEK_VIEW_SELECTOR)).toBeVisible();
+}
+
+async function switchToDayView(page) {
+  await page.click('button:has-text("Day")');
+  await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
+}
+
+async function openEventModal(page, hourSlotIndex) {
+  const hourSlot = page.locator('.hour-slot').nth(hourSlotIndex);
+  await hourSlot.click({ force: true });
+  await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
+}
+
+async function saveEvent(page, title) {
+  const titleInput = page.locator(TITLE_INPUT_SELECTOR).first();
+  await expect(titleInput).toBeVisible();
+  await titleInput.fill(title);
+  await page.click('button:has-text("Save")');
+  await expect(page.locator(OVERLAY_SELECTOR)).toHaveCount(0);
+}
+
+async function createEvent(page, { slot, title, repeat } = {}) {
+  await openEventModal(page, slot);
+
+  if (repeat) {
+    await page.selectOption('select#event-repeat', repeat);
+  }
+
+  await saveEvent(page, title);
+  await expect(page.locator(`.day-event:has-text("${title}")`).first()).toBeVisible();
+}
+
+async function confirmDeletion(page) {
+  await expect(page.locator('button:has-text("Yes")')).toBeVisible();
+  await page.click('button:has-text("Yes")');
+  await expect(page.locator(OVERLAY_SELECTOR)).toHaveCount(0);
+}
+
 /**
  * API/Integration Tests for Event Persistence
- * 
+ *
  * Tests the complete event lifecycle including:
  * - Event creation and storage
  * - Event retrieval and display
@@ -16,101 +62,50 @@ test.describe('Event Persistence - CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    
-    // Switch to week view for easier event management
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
+    await switchToWeekView(page);
   });
 
   test('should persist event after creation', async ({ page }) => {
-    // Create an event
-    const hourSlot = page.locator('.hour-slot').nth(10);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
     const eventTitle = 'Persistence Test Event';
-    await page.fill('input[type="text"]', eventTitle);
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Verify event is visible
-    const event = page.locator(`.day-event:has-text("${eventTitle}")`).first();
-    await expect(event).toBeVisible();
-    
+    await createEvent(page, { slot: 10, title: eventTitle });
+
     // Reload page
     await page.reload();
     await page.waitForLoadState('networkidle');
-    
-    // Switch back to week view
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
-    
+    await switchToWeekView(page);
+
     // Verify event persists (currently in-memory, so won't persist)
-    // This test documents expected behavior for future localStorage/API implementation
     const eventCount = await page.locator(`.day-event:has-text("${eventTitle}")`).count();
-    
-    // Document current state: events don't persist across reloads
     expect(eventCount).toBe(0); // Will be 1 when persistence is implemented
   });
 
   test('should update event data correctly', async ({ page }) => {
-    // Create event
-    const hourSlot = page.locator('.hour-slot').nth(8);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Original Title');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Open event detail and edit
+    await createEvent(page, { slot: 8, title: 'Original Title' });
+
     await page.click('.day-event:has-text("Original Title")');
-    await page.waitForSelector('button:has-text("Edit")', { timeout: 2000 });
-    
-    // Click edit button
+    await expect(page.locator('button:has-text("Edit")')).toBeVisible();
+
     const editBtn = page.locator('button:has-text("Edit")');
     await editBtn.dispatchEvent('click');
-    
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    // Update title
-    await page.fill('input[type="text"]', 'Updated Title');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Verify update
+    await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
+
+    await saveEvent(page, 'Updated Title');
+
     await expect(page.locator('.day-event:has-text("Updated Title")')).toBeVisible();
     await expect(page.locator('.day-event:has-text("Original Title")')).not.toBeVisible();
   });
 
   test('should delete event correctly', async ({ page }) => {
-    // Create event
-    const hourSlot = page.locator('.hour-slot').nth(12);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
     const eventTitle = 'Event To Delete';
-    await page.fill('input[type="text"]', eventTitle);
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Verify event exists
-    await expect(page.locator(`.day-event:has-text("${eventTitle}")`)).toBeVisible();
-    
-    // Open event detail and delete
+    await createEvent(page, { slot: 12, title: eventTitle });
+
     await page.click(`.day-event:has-text("${eventTitle}")`);
-    await page.waitForSelector('button:has-text("Delete")', { timeout: 2000 });
-    
+    await expect(page.locator('button:has-text("Delete")')).toBeVisible();
+
     const deleteBtn = page.locator('button:has-text("Delete")');
     await deleteBtn.dispatchEvent('click');
-    
-    // Confirm deletion
-    await page.waitForSelector('button:has-text("Delete"):not(:disabled)', { timeout: 2000 });
-    await page.locator('button:has-text("Delete")').last().dispatchEvent('click');
-    
-    await page.waitForTimeout(500);
-    
-    // Verify event is deleted
+    await confirmDeletion(page);
+
     await expect(page.locator(`.day-event:has-text("${eventTitle}")`)).not.toBeVisible();
   });
 
@@ -120,23 +115,15 @@ test.describe('Event Persistence - CRUD Operations', () => {
       { slot: 9, title: 'Event 2' },
       { slot: 14, title: 'Event 3' },
     ];
-    
-    // Create multiple events
+
     for (const evt of events) {
-      const slot = page.locator('.hour-slot').nth(evt.slot);
-      await slot.click({ force: true });
-      await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-      await page.fill('input[type="text"]', evt.title);
-      await page.click('button:has-text("Save")');
-      await page.waitForTimeout(500); // Increased wait
+      await createEvent(page, evt);
     }
-    
-    // Verify all events are visible
+
     for (const evt of events) {
       await expect(page.locator(`.day-event:has-text("${evt.title}")`).first()).toBeVisible();
     }
-    
-    // Count total events
+
     const eventCount = await page.locator('.day-event').count();
     expect(eventCount).toBeGreaterThanOrEqual(events.length);
   });
@@ -146,83 +133,42 @@ test.describe('Event Persistence - Recurring Events', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
+    await switchToWeekView(page);
   });
 
   test('should create daily recurring event', async ({ page }) => {
-    const hourSlot = page.locator('.hour-slot').nth(10);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Daily Meeting');
-    await page.selectOption('select#event-repeat', 'daily');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Count events in current week (should have multiple instances)
+    await createEvent(page, { slot: 10, title: 'Daily Meeting', repeat: 'daily' });
+
     const eventCount = await page.locator('.day-event:has-text("Daily Meeting")').count();
-    expect(eventCount).toBeGreaterThan(1); // Should have multiple daily occurrences
+    expect(eventCount).toBeGreaterThan(1);
   });
 
   test('should create weekly recurring event', async ({ page }) => {
-    const hourSlot = page.locator('.hour-slot').nth(8);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Weekly Team Sync');
-    await page.selectOption('select#event-repeat', 'weekly');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Should have at least one instance this week
+    await createEvent(page, { slot: 8, title: 'Weekly Team Sync', repeat: 'weekly' });
+
     await expect(page.locator('.day-event:has-text("Weekly Team Sync")')).toBeVisible();
-    
-    // Navigate to next week
+
     await page.click('button[aria-label="Next"]');
-    await page.waitForTimeout(500);
-    
-    // Should have instance next week too
     await expect(page.locator('.day-event:has-text("Weekly Team Sync")')).toBeVisible();
   });
 
   test('should create monthly recurring event', async ({ page }) => {
-    const hourSlot = page.locator('.hour-slot').nth(12);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Monthly Review');
-    await page.selectOption('select#event-repeat', 'monthly');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Should have one instance this month
+    await createEvent(page, { slot: 12, title: 'Monthly Review', repeat: 'monthly' });
+
     const eventCount = await page.locator('.day-event:has-text("Monthly Review")').count();
     expect(eventCount).toBeGreaterThanOrEqual(1);
   });
 
   test('should delete all recurring event instances', async ({ page }) => {
-    // Create weekly recurring event
-    const hourSlot = page.locator('.hour-slot').nth(10);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Recurring To Delete');
-    await page.selectOption('select#event-repeat', 'weekly');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Open one instance and delete
+    await createEvent(page, { slot: 10, title: 'Recurring To Delete', repeat: 'weekly' });
+
     await page.click('.day-event:has-text("Recurring To Delete")');
-    await page.waitForSelector('button:has-text("Delete")', { timeout: 2000 });
-    
+    await expect(page.locator('button:has-text("Delete")')).toBeVisible();
+
     const deleteBtn = page.locator('button:has-text("Delete")');
     await deleteBtn.dispatchEvent('click');
-    await page.waitForSelector('button:has-text("Delete"):not(:disabled)', { timeout: 2000 });
-    await page.locator('button:has-text("Delete")').last().dispatchEvent('click');
-    await page.waitForTimeout(500);
-    
-    // All instances should be deleted
+    await confirmDeletion(page);
+
     const eventCount = await page.locator('.day-event:has-text("Recurring To Delete")').count();
     expect(eventCount).toBe(0);
   });
@@ -235,67 +181,34 @@ test.describe('Event Persistence - Calendar State Management', () => {
   });
 
   test('should maintain calendar view after event creation', async ({ page }) => {
-    // Switch to day view
-    await page.click('button:has-text("Day")');
-    await page.waitForTimeout(300);
-    
-    const initialView = await page.locator('.day-view').isVisible();
-    expect(initialView).toBe(true);
-    
-    // Create event
-    const hourSlot = page.locator('.hour-slot').nth(10);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    await page.fill('input[type="text"]', 'State Test Event');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Should still be in day view
-    const stillDayView = await page.locator('.day-view').isVisible();
-    expect(stillDayView).toBe(true);
+    await switchToDayView(page);
+    await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
+
+    await createEvent(page, { slot: 10, title: 'State Test Event' });
+
+    await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
   });
 
   test('should maintain date context after operations', async ({ page }) => {
-    // Get current month title
     const initialTitle = await page.locator('.calendar-title').textContent();
-    
-    // Switch to week view
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
-    
-    // Create event
-    const hourSlot = page.locator('.hour-slot').nth(8);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    await page.fill('input[type="text"]', 'Context Test');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Switch back to month
+
+    await switchToWeekView(page);
+    await createEvent(page, { slot: 8, title: 'Context Test' });
+
     await page.click('button:has-text("Month")');
-    await page.waitForTimeout(300);
-    
-    // Should still be same month
+    await expect(page.locator('.calendar-days')).toBeVisible();
+
     const finalTitle = await page.locator('.calendar-title').textContent();
-    expect(finalTitle).toContain(initialTitle.split(' ')[0]); // Same month name
+    expect(finalTitle).toContain(initialTitle.split(' ')[0]);
   });
 
   test('should handle rapid event operations', async ({ page }) => {
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
-    
-    // Rapidly create multiple events
+    await switchToWeekView(page);
+
     for (let i = 0; i < 5; i++) {
-      const slot = page.locator('.hour-slot').nth(8 + i);
-      await slot.click({ force: true });
-      await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-      await page.fill('input[type="text"]', `Rapid ${i}`);
-      await page.click('button:has-text("Save")');
-      // Minimal wait
-      await page.waitForTimeout(200);
+      await createEvent(page, { slot: 8 + i, title: `Rapid ${i}` });
     }
-    
-    // Verify all created
+
     const eventCount = await page.locator('.day-event').count();
     expect(eventCount).toBeGreaterThanOrEqual(5);
   });
@@ -305,76 +218,48 @@ test.describe('Event Persistence - Data Validation', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForLoadState('networkidle');
-    await page.click('button:has-text("Week")');
-    await page.waitForTimeout(300);
+    await switchToWeekView(page);
   });
 
   test('should validate event title requirement', async ({ page }) => {
-    const hourSlot = page.locator('.hour-slot').nth(10);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    // Try to save without title
-    page.on('dialog', async dialog => {
+    await openEventModal(page, 10);
+
+    page.once('dialog', async dialog => {
       expect(dialog.message()).toContain('title');
       await dialog.accept();
     });
-    
+
     await page.click('button:has-text("Save")');
-    await page.waitForTimeout(300);
-    
-    // Modal should still be open
-    await expect(page.locator('.fixed.inset-0')).toBeVisible();
+    await expect(page.locator(OVERLAY_SELECTOR)).toBeVisible();
   });
 
   test('should preserve event data across edit', async ({ page }) => {
-    // Create event with specific data
-    const hourSlot = page.locator('.hour-slot').nth(8);
-    await hourSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    
-    await page.fill('input[type="text"]', 'Data Test Event');
+    await openEventModal(page, 8);
     await page.fill('input[type="color"]', '#ea4335');
     await page.selectOption('select#event-repeat', 'weekly');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Open for edit
+    await saveEvent(page, 'Data Test Event');
+
     await page.click('.day-event:has-text("Data Test Event")');
-    await page.waitForSelector('button:has-text("Edit")', { timeout: 2000 });
+    await expect(page.locator('button:has-text("Edit")')).toBeVisible();
+
     const editBtn = page.locator('button:has-text("Edit")');
     await editBtn.dispatchEvent('click');
-    await page.waitForTimeout(300);
-    
-    // Verify data is pre-filled
+    await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
+
     const titleValue = await page.locator('input[type="text"]').inputValue();
     expect(titleValue).toBe('Data Test Event');
-    
+
     const colorValue = await page.locator('input[type="color"]').inputValue();
     expect(colorValue).toBe('#ea4335');
-    
+
     const repeatValue = await page.locator('select#event-repeat').inputValue();
     expect(repeatValue).toBe('weekly');
   });
 
   test('should handle event time boundaries', async ({ page }) => {
-    // Create event at start of day
-    const firstSlot = page.locator('.hour-slot').nth(0);
-    await firstSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    await page.fill('input[type="text"]', 'Early Event');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Create event at end of day
-    const lastSlot = page.locator('.hour-slot').nth(23);
-    await lastSlot.click({ force: true });
-    await page.waitForSelector('input[type="text"]', { timeout: 2000 });
-    await page.fill('input[type="text"]', 'Late Event');
-    await page.click('button:has-text("Save")');
-    await page.waitForTimeout(500);
-    
-    // Both should be visible
+    await createEvent(page, { slot: 0, title: 'Early Event' });
+    await createEvent(page, { slot: 23, title: 'Late Event' });
+
     await expect(page.locator('.day-event:has-text("Early Event")')).toBeVisible();
     await expect(page.locator('.day-event:has-text("Late Event")')).toBeVisible();
   });
