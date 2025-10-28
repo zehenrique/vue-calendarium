@@ -51,6 +51,29 @@ export default defineConfig({
       use: { ...devices['Pixel 5'] },
     },
 
+    {
+      name: 'Visual Regression - Desktop',
+      testDir: './tests/visual',
+      use: { 
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1280, height: 720 },
+      },
+    },
+
+    {
+      name: 'Visual Regression - Mobile',
+      testDir: './tests/visual',
+      use: { 
+        ...devices['Pixel 5'],
+      },
+    },
+
+    {
+      name: 'Integration Tests',
+      testDir: './tests/integration',
+      use: { ...devices['Desktop Chrome'] },
+    },
+
     // Uncomment to test on more browsers
     // {
     //   name: 'Desktop Firefox',
