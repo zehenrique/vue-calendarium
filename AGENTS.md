@@ -18,7 +18,7 @@
    - Keep code as simple as possible
    - Avoid over-engineering
    - Use clear, descriptive variable and function names
-   - Follow Vue.js best practices from Context7
+   - Follow code best practices from Context7
    - Component decomposition: split large files into smaller, focused components when possible. For example, break `src/Calendar.vue` into `DayView.vue`, `WeekView.vue`, `EventModal.vue`, and `EventList.vue` to keep logic and templates manageable.
 
 4. **Documentation**:
@@ -67,17 +67,6 @@
 4. Ensure mobile responsiveness before committing
 5. Verify internationalization works for both locales
 6. Check that all times display in 24-hour format
-
-## File Structure
-
-```
-src/
-  ├── Calendar.vue      # Main calendar component
-  ├── App.vue           # Demo/example application
-  ├── i18n.js          # Internationalization configuration
-  ├── main.js          # App entry point
-  └── style.css        # Global styles with Tailwind
-```
 
 ## Key Features to Maintain
 

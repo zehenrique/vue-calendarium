@@ -151,7 +151,18 @@ export default {
     },
     handleEventCreate(newEvents) {
       console.log('Events created:', newEvents);
-      this.events.push(...newEvents);
+      
+      // Handle both creation and updates
+      newEvents.forEach(newEvent => {
+        const existingIndex = this.events.findIndex(e => e.id === newEvent.id);
+        if (existingIndex !== -1) {
+          // Update existing event
+          this.events[existingIndex] = newEvent;
+        } else {
+          // Add new event
+          this.events.push(newEvent);
+        }
+      });
     },
     handleEventDelete(event) {
       console.log('Event deleted:', event);
@@ -213,17 +224,27 @@ export default {
   overflow: hidden;
   background: white;
   height: calc(100vh - 65px);
+  min-height: 0; /* Important for flex children */
 }
 
 @media (max-width: 768px) {
   .demo-header {
     flex-direction: column;
     align-items: flex-start;
+    padding: 12px 16px;
+  }
+  
+  .demo-header h1 {
+    font-size: 20px;
   }
   
   .demo-controls {
     margin-left: 0;
     width: 100%;
+  }
+  
+  .calendar-container {
+    height: calc(100vh - 110px); /* Adjust for mobile header */
   }
 }
 </style>

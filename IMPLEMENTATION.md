@@ -57,11 +57,55 @@ Successfully implemented a complete Google Calendar-like component for Vue.js th
 
 ```
 src/
-├── Calendar.vue      # Main calendar component (500+ lines)
-├── App.vue          # Demo application component
-├── i18n.js          # Internationalization messages
-└── main.js          # Application entry point
+├── Calendar.vue              # Main calendar component (manages state, views, events)
+├── components/
+│   ├── EventModal.vue       # Event creation/editing modal
+│   ├── EventDetailModal.vue # Event details display modal
+│   ├── DeleteConfirmModal.vue # Deletion confirmation dialog
+│   └── MobileSidebar.vue    # Mobile navigation sidebar
+├── composables/
+│   └── useCalendarUtils.js  # Shared calendar utility functions
+├── App.vue                   # Demo application component
+├── i18n.js                   # Internationalization messages
+└── main.js                   # Application entry point
 ```
+
+### Component Architecture
+
+The codebase follows modern Vue.js best practices with component decomposition:
+
+**Main Component (`Calendar.vue`)**
+- Manages application state (current view, selected date, events)
+- Coordinates sub-components via props and events
+- Handles business logic (event creation, navigation, view switching)
+- Renders view-specific templates (month, week, day)
+
+**Modal Components**
+- **EventModal**: Handles event creation/editing with form validation
+- **EventDetailModal**: Displays event information with edit/delete actions
+- **DeleteConfirmModal**: Confirms destructive delete operations
+- Each modal uses v-model pattern for show/hide state
+- All modals support i18n and are fully responsive
+
+**Mobile Component**
+- **MobileSidebar**: Provides touch-friendly navigation on small screens
+- Slide-in animation with backdrop
+- View switcher and calendar list
+
+**Shared Utilities (`useCalendarUtils.js`)**
+- Event styling and color generation
+- Date/time formatting (24-hour format)
+- Week/day boundary calculations
+- Event overlap detection and column layout
+- Current time indicator positioning
+
+### Design Patterns
+
+1. **Composition API**: All components use Vue 3 Composition API
+2. **Props Down, Events Up**: Clear parent-child communication
+3. **Single Responsibility**: Each component has one clear purpose
+4. **Utility Composables**: Shared logic extracted to reusable functions
+5. **v-model Pattern**: Modals use v-model for state synchronization
 
 ## Key Features
 

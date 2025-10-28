@@ -4,3 +4,10 @@ dist
 *.log
 .vscode
 .idea
+
+# Playwright test artifacts
+/test-results
+/playwright-report
+/playwright/.cache
+*.mp4
+*.webm

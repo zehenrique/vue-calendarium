@@ -253,6 +253,34 @@ Events accept any hex color code (e.g., `#1967d2`, `#137333`, `#d93025`). The co
 
 The component uses scoped styles that closely match Google Calendar. You can customize colors by overriding CSS variables in your parent component.
 
+## Component Architecture
+
+The calendar component follows a modular architecture with focused, single-responsibility components:
+
+### Main Component
+- **`Calendar.vue`** - Main calendar container managing state and view rendering
+
+### Sub-Components
+- **`EventModal.vue`** - Event creation and editing form modal
+- **`EventDetailModal.vue`** - Event details display with edit/delete actions
+- **`DeleteConfirmModal.vue`** - Confirmation dialog for event deletion
+- **`MobileSidebar.vue`** - Mobile navigation sidebar with view and calendar selection
+
+### Utilities
+- **`composables/useCalendarUtils.js`** - Shared utility functions for:
+  - Event styling and positioning
+  - Date/time formatting (24-hour format)
+  - Event overlap calculation
+  - Week/day calculations
+
+This modular structure makes the codebase:
+- **Maintainable**: Each component has a clear, focused purpose
+- **Testable**: Components can be tested in isolation
+- **Reusable**: Modal and utility components can be used elsewhere
+- **Scalable**: Easy to add new features without affecting existing code
+
+For more details on the refactoring approach, see [REFACTORING.md](./REFACTORING.md).
+
 ## Browser Support
 
 - Modern browsers with ES6+ support
@@ -277,17 +305,6 @@ MIT
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
-## Roadmap
-
-- [ ] Drag and drop event rescheduling
-- [ ] Event creation via UI
-- [ ] Recurring events
-- [ ] Event categories/calendars
-- [ ] Export to iCal format
-- [ ] Print view
-- [ ] Keyboard shortcuts
-- [ ] Accessibility improvements
 
 ## Credits
 
