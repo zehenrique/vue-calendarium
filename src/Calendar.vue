@@ -240,245 +240,37 @@
     </div>
 
     <!-- Event Creation Modal -->
-    <div v-if="showModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="closeModal" role="dialog" aria-modal="true" :aria-label="t('createEvent')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-lg w-full overflow-hidden" @click.stop>
-        <!-- Modal header with color -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 class="text-xl font-medium text-gray-900">{{ t('newEvent') }}</h2>
-          <button @click="closeModal" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" :aria-label="t('close')">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-            </svg>
-          </button>
-        </div>
-        
-        <!-- Modal body -->
-        <div class="p-6 space-y-5 max-h-96 overflow-y-auto">
-          <!-- Event title -->
-          <div class="space-y-1">
-            <label for="event-title" class="block text-sm font-medium text-gray-700">{{ t('eventTitle') }}</label>
-            <input 
-              id="event-title"
-              v-model="newEvent.title" 
-              type="text" 
-              :placeholder="t('eventTitle')"
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-              required
-            />
-          </div>
-          
-          <!-- Date and time inputs -->
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label for="start-date" class="block text-sm font-medium text-gray-700">{{ t('startDate') }}</label>
-              <input 
-                id="start-date"
-                v-model="newEvent.startDate" 
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div class="space-y-1">
-              <label for="start-time" class="block text-sm font-medium text-gray-700">{{ t('startTime') }}</label>
-              <input 
-                id="start-time"
-                v-model="newEvent.startTime" 
-                type="time"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-          
-          <div class="grid grid-cols-2 gap-4">
-            <div class="space-y-1">
-              <label for="end-date" class="block text-sm font-medium text-gray-700">{{ t('endDate') }}</label>
-              <input 
-                id="end-date"
-                v-model="newEvent.endDate" 
-                type="date"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-            <div class="space-y-1">
-              <label for="end-time" class="block text-sm font-medium text-gray-700">{{ t('endTime') }}</label>
-              <input 
-                id="end-time"
-                v-model="newEvent.endTime" 
-                type="time"
-                class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                required
-              />
-            </div>
-          </div>
-          
-          <!-- Repeat -->
-          <div class="space-y-1">
-            <label for="event-repeat" class="block text-sm font-medium text-gray-700">{{ t('repeat') }}</label>
-            <select id="event-repeat" v-model="newEvent.repeat" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option value="none">{{ t('repeatNone') }}</option>
-              <option value="daily">{{ t('repeatDaily') }}</option>
-              <option value="weekly">{{ t('repeatWeekly') }}</option>
-              <option value="monthly">{{ t('repeatMonthly') }}</option>
-              <option value="yearly">{{ t('repeatYearly') }}</option>
-            </select>
-          </div>
-          
-          <!-- Calendar selection -->
-          <div class="space-y-1">
-            <label for="event-calendar" class="block text-sm font-medium text-gray-700">{{ t('calendar') }}</label>
-            <select id="event-calendar" v-model="newEvent.calendar" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option v-for="cal in calendars" :key="cal.id" :value="cal.id">
-                {{ cal.name }}
-              </option>
-            </select>
-          </div>
-          
-          <!-- Color picker -->
-          <div class="space-y-1">
-            <label for="event-color" class="block text-sm font-medium text-gray-700">{{ t('color') }}</label>
-            <div class="flex items-center space-x-3">
-              <input 
-                id="event-color"
-                v-model="newEvent.color" 
-                type="color"
-                class="h-10 w-20 border border-gray-300 rounded cursor-pointer"
-                :title="t('color')"
-              />
-              <div class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 font-mono">
-                {{ newEvent.color }}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Modal footer -->
-        <div class="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <button @click="closeModal" class="px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors">
-            {{ t('cancel') }}
-          </button>
-          <button @click="saveEvent" class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm">
-            {{ t('save') }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <EventModal
+      v-model="showModal"
+      :event="newEvent"
+      :calendars="calendars"
+      @save="saveEvent"
+    />
 
     <!-- Event Detail Modal -->
-    <div v-if="showEventDetail" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="closeEventDetail" role="dialog" aria-modal="true" :aria-label="t('eventDetails')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-md w-full overflow-hidden" @click.stop>
-        <!-- Color bar -->
-        <div class="h-2" :style="{ backgroundColor: selectedEvent?.color || '#1967d2' }"></div>
-        
-        <!-- Header -->
-        <div class="p-6">
-          <div class="flex items-start justify-between mb-4">
-            <h2 class="text-2xl font-normal text-gray-900 flex-1">{{ selectedEvent?.title }}</h2>
-            <button @click="closeEventDetail" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100 -mt-2 -mr-2" :aria-label="t('close')">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          
-          <!-- Event details -->
-          <div class="space-y-3">
-            <div class="flex items-start">
-              <svg class="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
-              <div class="flex-1">
-                <p class="text-sm text-gray-700 leading-relaxed">{{ formatEventTimeRange(selectedEvent) }}</p>
-                <p v-if="selectedEvent?.repeat && selectedEvent.repeat !== 'none'" class="text-xs text-gray-500 mt-1">
-                  Repeats {{ t('repeat' + selectedEvent.repeat.charAt(0).toUpperCase() + selectedEvent.repeat.slice(1)).toLowerCase() }}
-                </p>
-              </div>
-            </div>
-            
-            <div v-if="selectedEvent?.calendar" class="flex items-start">
-              <svg class="w-5 h-5 text-gray-500 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-              <p class="text-sm text-gray-700">{{ getCalendarName(selectedEvent.calendar) }}</p>
-            </div>
-          </div>
-        </div>
-        
-        <!-- Actions -->
-        <div class="flex items-center justify-end space-x-2 px-6 py-4 bg-gray-50 border-t">
-          <button @click="deleteSelectedEvent" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded transition-colors">
-            {{ t('delete') }}
-          </button>
-          <button @click="editSelectedEvent" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors">
-            {{ t('edit') }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <EventDetailModal
+      v-model="showEventDetail"
+      :event="selectedEvent"
+      :calendars="calendars"
+      :locale="locale"
+      @edit="editSelectedEvent"
+      @delete="deleteSelectedEvent"
+    />
     
     <!-- Delete Confirmation Dialog -->
-    <div v-if="showDeleteConfirm" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-60 p-4" @click="cancelDelete" role="dialog" aria-modal="true" :aria-label="t('confirmDeleteTitle')">
-      <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full p-6" @click.stop>
-        <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('confirmDeleteTitle') }}</h3>
-        <p class="text-sm text-gray-600 mb-6">{{ t('confirmDelete') }}</p>
-        <div class="flex justify-end space-x-3">
-          <button @click="cancelDelete" class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors">
-            {{ t('no') }}
-          </button>
-          <button @click="confirmDelete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors">
-            {{ t('yes') }}
-          </button>
-        </div>
-      </div>
-    </div>
+    <DeleteConfirmModal
+      v-model="showDeleteConfirm"
+      @confirm="confirmDelete"
+    />
     
     <!-- Mobile Sidebar -->
-    <transition name="fade">
-      <div v-if="isMobile && showMobileSidebar" class="fixed inset-0 bg-black bg-opacity-50 z-60" @click="closeMobileSidebar">
-        <transition name="slide">
-          <div class="fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto z-70" @click.stop>
-            <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 class="text-lg font-medium text-gray-900">{{ t('menu') }}</h2>
-              <button @click="closeMobileSidebar" class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" :aria-label="t('close')">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
-            
-            <!-- View Selector -->
-            <div class="p-4 border-b border-gray-200">
-              <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('view') }}</h3>
-              <div class="space-y-2">
-                <button 
-                  v-for="view in views" 
-                  :key="view"
-                  :class="['w-full text-left px-4 py-2 rounded-md transition-all', 
-                          currentView === view ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100']"
-                  @click="currentView = view; closeMobileSidebar();"
-                  :aria-label="`Switch to ${t(view)} view`"
-                >
-                  {{ t(view) }}
-                </button>
-              </div>
-            </div>
-            
-            <!-- Calendars -->
-            <div class="p-4">
-              <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('calendars') }}</h3>
-              <div class="space-y-2">
-                <div v-for="calendar in calendars" :key="calendar.id" class="flex items-center space-x-3 px-2 py-2 rounded hover:bg-gray-50 transition-colors cursor-pointer">
-                  <div class="w-4 h-4 rounded-full flex-shrink-0 border border-gray-300" :style="{ backgroundColor: calendar.color }"></div>
-                  <span class="text-sm text-gray-800">{{ calendar.name }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </transition>
-      </div>
-    </transition>
+    <MobileSidebar
+      v-model="showMobileSidebar"
+      :current-view="currentView"
+      :views="views"
+      :calendars="calendars"
+      @view-change="handleViewChange"
+    />
   </div>
 </template>
 
@@ -486,9 +278,29 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import EventModal from './components/EventModal.vue';
+import EventDetailModal from './components/EventDetailModal.vue';
+import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
+import MobileSidebar from './components/MobileSidebar.vue';
+import {
+  getEventColorStyle,
+  formatEventTime,
+  formatHour,
+  getStartOfWeek,
+  getEndOfWeek,
+  getEventStyle,
+  getEventsForDate,
+  getCurrentTimePosition
+} from './composables/useCalendarUtils.js';
 
 export default {
   name: 'GoogleCalendar',
+  components: {
+    EventModal,
+    EventDetailModal,
+    DeleteConfirmModal,
+    MobileSidebar
+  },
   props: {
     events: {
       type: Array,
@@ -672,7 +484,7 @@ export default {
       while (Temporal.PlainDate.compare(current, endOfWeek) <= 0) {
         const isCurrentMonth = current.month === month;
         const isToday = Temporal.PlainDate.compare(current, Temporal.Now.plainDateISO()) === 0;
-        const dayEvents = getEventsForDate(current);
+        const dayEvents = getEventsForDate(current, props.events);
         
         days.push({
           key: current.toString(),
@@ -695,7 +507,7 @@ export default {
         const date = startOfWeek.add({ days: i });
         const isToday = Temporal.PlainDate.compare(date, Temporal.Now.plainDateISO()) === 0;
         const dayName = date.toLocaleString(props.locale, { weekday: 'short' });
-        const allEvents = getEventsForDate(date);
+        const allEvents = getEventsForDate(date, props.events);
         
         // Separate all-day and timed events
         const allDayEvents = allEvents.filter(e => e.allDay);
@@ -714,44 +526,18 @@ export default {
     });
 
     const dayEvents = computed(() => {
-      const allEvents = getEventsForDate(currentDate.value);
+      const allEvents = getEventsForDate(currentDate.value, props.events);
       return allEvents.filter(e => !e.allDay);
     });
 
     const dayAllDayEvents = computed(() => {
-      const allEvents = getEventsForDate(currentDate.value);
+      const allEvents = getEventsForDate(currentDate.value, props.events);
       return allEvents.filter(e => e.allDay);
     });
 
-    // Helper functions
-    function getStartOfWeek(date) {
-      const dayOfWeek = date.dayOfWeek; // 1 = Monday, 7 = Sunday
-      // Start week on Monday
-      return date.subtract({ days: dayOfWeek - 1 });
-    }
-
-    function getEndOfWeek(date) {
-      const startOfWeek = getStartOfWeek(date);
-      return startOfWeek.add({ days: 6 });
-    }
-
-    function getEventsForDate(date) {
-      const events = props.events.filter(event => {
-        const eventStart = Temporal.PlainDate.from(event.start);
-        const eventEnd = event.end ? Temporal.PlainDate.from(event.end) : eventStart;
-        
-        return Temporal.PlainDate.compare(date, eventStart) >= 0 &&
-               Temporal.PlainDate.compare(date, eventEnd) <= 0;
-      }).sort((a, b) => {
-        const aTime = Temporal.PlainDateTime.from(a.start);
-        const bTime = Temporal.PlainDateTime.from(b.start);
-        return Temporal.PlainDateTime.compare(aTime, bTime);
-      });
-      
-      // Calculate overlap columns for events
-      return calculateEventColumns(events);
-    }
-
+    // Helper functions - most imported from useCalendarUtils.js
+    // calculateEventColumns is kept here as it's specific to this component's overlap logic
+    
     // Calculate column positions for overlapping events (Google Calendar style)
     function calculateEventColumns(events) {
       if (events.length === 0) return [];
@@ -827,72 +613,6 @@ export default {
       }
       
       return eventsWithColumns;
-    }
-
-    function formatEventTime(event) {
-      const start = Temporal.PlainDateTime.from(event.start);
-      if (event.allDay) {
-        return t('allDay');
-      }
-      const timeStr = start.toLocaleString(props.locale, { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false
-      });
-      return timeStr;
-    }
-
-    function formatHour(hour) {
-      const time = Temporal.PlainTime.from({ hour });
-      return time.toLocaleString(props.locale, { 
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false
-      });
-    }
-
-    function getEventStyle(event) {
-      const start = Temporal.PlainDateTime.from(event.start);
-      const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
-      
-      const startMinutes = start.hour * 60 + start.minute;
-      const endMinutes = end.hour * 60 + end.minute;
-      const duration = endMinutes - startMinutes;
-      
-      const top = (startMinutes / 60) * PIXELS_PER_HOUR;
-      const height = (duration / 60) * PIXELS_PER_HOUR;
-      
-      // Handle event overlap with column-based positioning
-      const style = {
-        top: `${top}px`,
-        height: `${height}px`
-      };
-      
-      // If event has column information (from calculateEventColumns), apply it
-      if (event._column !== undefined && event._totalColumns !== undefined) {
-        const columnWidth = 100 / event._totalColumns;
-        const leftOffset = event._column * columnWidth;
-        
-        style.left = `${leftOffset}%`;
-        style.width = `${columnWidth - 1}%`; // -1% for small gap between columns
-      }
-      
-      return style;
-    }
-
-    function getEventColorStyle(hexColor) {
-      if (!hexColor) hexColor = '#1967d2';
-      
-      // Convert hex to RGB for lighter background
-      const r = parseInt(hexColor.slice(1, 3), 16);
-      const g = parseInt(hexColor.slice(3, 5), 16);
-      const b = parseInt(hexColor.slice(5, 7), 16);
-      
-      return {
-        backgroundColor: `rgba(${r}, ${g}, ${b}, 0.15)`,
-        color: hexColor,
-        borderLeft: `3px solid ${hexColor}`
-      };
     }
 
     // Modal functions
@@ -982,29 +702,32 @@ export default {
       showModal.value = true;
     }
 
-    function saveEvent() {
-      if (!newEvent.value.title) {
+    function saveEvent(eventDataFromModal) {
+      // Use data from modal if provided, otherwise use local newEvent
+      const eventToSave = eventDataFromModal || newEvent.value;
+      
+      if (!eventToSave.title) {
         alert('Please enter an event title');
         return;
       }
 
-      const startDateTime = `${newEvent.value.startDate}T${newEvent.value.startTime}:00`;
-      const endDateTime = `${newEvent.value.endDate}T${newEvent.value.endTime}:00`;
+      const startDateTime = `${eventToSave.startDate}T${eventToSave.startTime}:00`;
+      const endDateTime = `${eventToSave.endDate}T${eventToSave.endTime}:00`;
 
       const eventData = {
-        id: Date.now().toString(),
-        title: newEvent.value.title,
+        id: eventToSave.id || Date.now().toString(), // Preserve ID if editing, generate new if creating
+        title: eventToSave.title,
         start: startDateTime,
         end: endDateTime,
-        color: newEvent.value.color,
-        calendar: newEvent.value.calendar,
-        repeat: newEvent.value.repeat,
-        allDay: newEvent.value.allDay || false
+        color: eventToSave.color,
+        calendar: eventToSave.calendar,
+        repeat: eventToSave.repeat,
+        allDay: eventToSave.allDay || false
       };
 
       // If recurring, generate recurring events
-      if (newEvent.value.repeat !== 'none') {
-        const recurringEvents = generateRecurringEvents(eventData, newEvent.value.repeat);
+      if (eventToSave.repeat !== 'none') {
+        const recurringEvents = generateRecurringEvents(eventData, eventToSave.repeat);
         emit('eventCreate', recurringEvents);
       } else {
         emit('eventCreate', [eventData]);
@@ -1116,6 +839,7 @@ export default {
         const end = selectedEvent.value.end ? Temporal.PlainDateTime.from(selectedEvent.value.end) : start.add({ hours: 1 });
         
         newEvent.value = {
+          id: selectedEvent.value.id, // Preserve ID for editing
           title: selectedEvent.value.title,
           startDate: start.toPlainDate().toString(),
           startTime: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
@@ -1170,6 +894,11 @@ export default {
     }
     
     function closeMobileSidebar() {
+      showMobileSidebar.value = false;
+    }
+    
+    function handleViewChange(view) {
+      currentView.value = view;
       showMobileSidebar.value = false;
     }
     
@@ -1233,6 +962,7 @@ export default {
       getCalendarName,
       toggleMobileSidebar,
       closeMobileSidebar,
+      handleViewChange,
       getCurrentTimePosition,
       showCurrentTimeIndicator,
       currentTime,
@@ -1249,12 +979,14 @@ export default {
   font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
   background: #ffffff;
   height: 100%;
+  width: 100%;
   display: flex;
   flex-direction: column;
   color: #3c4043;
   touch-action: pan-y; /* Allow vertical scrolling, enable horizontal swipes */
   user-select: none; /* Prevent text selection during swipes */
   -webkit-user-select: none;
+  position: relative;
 }
 
 /* Header */
@@ -1661,23 +1393,37 @@ export default {
 /* Mobile Styles */
 @media (max-width: 768px) {
   .google-calendar {
-    overflow-x: hidden; /* Prevent horizontal scroll */
+    height: 100%;
   }
   
   .calendar-header {
     /* slightly larger mobile header spacing */
-    padding: 16px 12px;
+    padding: 12px;
     flex-wrap: wrap;
+    flex-shrink: 0;
   }
 
   .calendar-title {
-    font-size: 18px;
+    font-size: 16px;
+  }
+
+  .today-btn {
+    padding: 6px 12px;
+    font-size: 13px;
+    min-height: 44px;
   }
 
   .view-btn {
     padding: 6px 12px;
     font-size: 13px;
     min-height: 44px; /* Touch target size */
+  }
+
+  .calendar-body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   .calendar-days {
@@ -1687,7 +1433,6 @@ export default {
   .week-grid,
   .day-grid {
     min-height: calc(24 * 50px); /* Smaller height on mobile */
-    overflow-x: auto; /* Allow horizontal scroll if needed */
   }
 
   .time-column {
@@ -1695,22 +1440,31 @@ export default {
     font-size: 10px;
   }
 
+  .time-slot-label {
+    font-size: 9px;
+    padding: 2px 4px;
+    height: 50px;
+  }
+
   .week-day-number {
-    font-size: 20px;
-    width: 36px;
-    height: 36px;
+    font-size: 18px;
+    width: 32px;
+    height: 32px;
   }
   
-  /* Improve touch targets */
-  button, .event, .calendar-day {
-    min-height: 44px;
-    min-width: 44px;
+  .week-day-name {
+    font-size: 10px;
+  }
+  
+  .hour-slot {
+    height: 50px;
   }
   
   /* Better modal sizing on mobile */
-  .fixed.inset-0 > div {
-    max-width: calc(100% - 32px); /* Leave space on sides */
-    max-height: calc(100vh - 32px); /* Leave space top/bottom */
+  .fixed > div {
+    max-width: calc(100vw - 24px) !important;
+    max-height: calc(100vh - 80px) !important;
+    margin: auto;
   }
 }
 
@@ -1755,7 +1509,15 @@ export default {
   outline-offset: 2px;
 }
 
-/* Modal Styles */
+/* Modal Overlay Styles */
+.fixed.inset-0 {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+}
+
 /* Accessibility improvements */
 button:focus-visible,
 a:focus-visible {
