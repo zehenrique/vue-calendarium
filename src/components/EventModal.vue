@@ -1,163 +1,135 @@
 <template>
-  <div 
-    v-if="modelValue" 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
-    style="z-index: 1000;" 
-    @click="handleClose" 
-    role="dialog" 
-    aria-modal="true" 
-    :aria-label="t('createEvent')"
+  <v-dialog
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+    max-width="600"
+    persistent
   >
-    <div 
-      class="bg-white rounded-lg shadow-2xl max-w-lg w-full overflow-hidden" 
-      style="max-height: 90vh; display: flex; flex-direction: column;" 
-      @click.stop
-    >
-      <!-- Modal header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-        <h2 class="text-xl font-medium text-gray-900">{{ t('newEvent') }}</h2>
-        <button 
-          @click="handleClose" 
-          class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" 
-          :aria-label="t('close')"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-      </div>
+    <v-card>
+      <v-card-title>
+        <span>{{ t('newEvent') }}</span>
+        <v-spacer></v-spacer>
+        <v-btn icon variant="text" @click="handleClose" :aria-label="t('close')">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-title>
       
-      <!-- Modal body -->
-      <div class="p-6 space-y-4 overflow-y-auto" style="flex: 1;">
-        <!-- Event title -->
-        <div class="space-y-2">
-          <label for="event-title" class="block text-sm font-medium text-gray-700">{{ t('eventTitle') }}</label>
-          <input 
-            id="event-title"
-            v-model="eventData.title" 
-            type="text" 
+      <v-card-text>
+        <v-form>
+          <!-- Event title -->
+          <v-text-field
+            v-model="eventData.title"
+            :label="t('eventTitle')"
             :placeholder="t('eventTitle')"
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            variant="outlined"
+            density="comfortable"
             required
-          />
-        </div>
-        
-        <!-- Date and time inputs -->
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <label for="start-date" class="block text-sm font-medium text-gray-700">{{ t('startDate') }}</label>
-            <input 
-              id="start-date"
-              v-model="eventData.startDate" 
-              type="date"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div class="space-y-2">
-            <label for="start-time" class="block text-sm font-medium text-gray-700">{{ t('startTime') }}</label>
-            <input 
-              id="start-time"
-              v-model="eventData.startTime" 
-              type="time"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-        </div>
-        
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-2">
-            <label for="end-date" class="block text-sm font-medium text-gray-700">{{ t('endDate') }}</label>
-            <input 
-              id="end-date"
-              v-model="eventData.endDate" 
-              type="date"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-          <div class="space-y-2">
-            <label for="end-time" class="block text-sm font-medium text-gray-700">{{ t('endTime') }}</label>
-            <input 
-              id="end-time"
-              v-model="eventData.endTime" 
-              type="time"
-              class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
-          </div>
-        </div>
-        
-        <!-- Repeat -->
-        <div class="space-y-2">
-          <label for="event-repeat" class="block text-sm font-medium text-gray-700">{{ t('repeat') }}</label>
-          <select 
-            id="event-repeat" 
-            v-model="eventData.repeat" 
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          >
-            <option value="none">{{ t('repeatNone') }}</option>
-            <option value="daily">{{ t('repeatDaily') }}</option>
-            <option value="weekly">{{ t('repeatWeekly') }}</option>
-            <option value="monthly">{{ t('repeatMonthly') }}</option>
-            <option value="yearly">{{ t('repeatYearly') }}</option>
-          </select>
-        </div>
-        
-        <!-- Calendar selection -->
-        <div class="space-y-2">
-          <label for="event-calendar" class="block text-sm font-medium text-gray-700">{{ t('calendar') }}</label>
-          <select 
-            id="event-calendar" 
-            v-model="eventData.calendar" 
-            class="w-full px-3 py-2.5 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-          >
-            <option v-for="cal in calendars" :key="cal.id" :value="cal.id">
-              {{ cal.name }}
-            </option>
-          </select>
-        </div>
-        
-        <!-- Color picker -->
-        <div class="space-y-2">
-          <label for="event-color" class="block text-sm font-medium text-gray-700">{{ t('color') }}</label>
-          <div class="flex items-center space-x-3">
-            <input 
-              id="event-color"
-              v-model="eventData.color" 
-              type="color"
-              class="h-10 w-20 border border-gray-300 rounded cursor-pointer"
-              :title="t('color')"
-            />
-            <div class="flex-1 px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm text-gray-600 font-mono">
-              {{ eventData.color }}
-            </div>
-          </div>
-        </div>
-      </div>
+          ></v-text-field>
+          
+          <!-- Date and time inputs -->
+          <v-row>
+            <v-col cols="6">
+              <v-text-field
+                v-model="eventData.startDate"
+                :label="t('startDate')"
+                type="date"
+                variant="outlined"
+                density="comfortable"
+                required
+              ></v-text-field>
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
+                v-model="eventData.startTime"
+                :label="t('startTime')"
+                type="time"
+                variant="outlined"
+                density="comfortable"
+                required
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          
+          <v-row>
+            <v-col cols="6">
+              <v-text-field
+                v-model="eventData.endDate"
+                :label="t('endDate')"
+                type="date"
+                variant="outlined"
+                density="comfortable"
+                required
+              ></v-text-field>
+            </v-col>
+            <v-col cols="6">
+              <v-text-field
+                v-model="eventData.endTime"
+                :label="t('endTime')"
+                type="time"
+                variant="outlined"
+                density="comfortable"
+                required
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          
+          <!-- Repeat -->
+          <v-select
+            v-model="eventData.repeat"
+            :label="t('repeat')"
+            :items="repeatOptions"
+            item-title="text"
+            item-value="value"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          
+          <!-- Calendar selection -->
+          <v-select
+            v-model="eventData.calendar"
+            :label="t('calendar')"
+            :items="calendars"
+            item-title="name"
+            item-value="id"
+            variant="outlined"
+            density="comfortable"
+          ></v-select>
+          
+          <!-- Color picker -->
+          <v-row align="center">
+            <v-col cols="4">
+              <v-text-field
+                v-model="eventData.color"
+                :label="t('color')"
+                type="color"
+                variant="outlined"
+                density="comfortable"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="8">
+              <v-text-field
+                v-model="eventData.color"
+                readonly
+                variant="outlined"
+                density="comfortable"
+                class="font-mono"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+        </v-form>
+      </v-card-text>
       
-      <!-- Modal footer -->
-      <div class="flex items-center justify-end space-x-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
-        <button 
-          @click="handleClose" 
-          class="px-5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200 rounded-md transition-colors"
-        >
-          {{ t('cancel') }}
-        </button>
-        <button 
-          @click="handleSave" 
-          class="px-5 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors shadow-sm"
-        >
-          {{ t('save') }}
-        </button>
-      </div>
-    </div>
-  </div>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="handleClose">{{ t('cancel') }}</v-btn>
+        <v-btn color="primary" variant="elevated" @click="handleSave">{{ t('save') }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 export default {
@@ -191,6 +163,14 @@ export default {
       color: '#1967d2'
     });
 
+    const repeatOptions = computed(() => [
+      { text: t('repeatNone'), value: 'none' },
+      { text: t('repeatDaily'), value: 'daily' },
+      { text: t('repeatWeekly'), value: 'weekly' },
+      { text: t('repeatMonthly'), value: 'monthly' },
+      { text: t('repeatYearly'), value: 'yearly' }
+    ]);
+
     // Watch for event prop changes to update form
     watch(() => props.event, (newEvent) => {
       if (newEvent) {
@@ -214,13 +194,10 @@ export default {
     return {
       t,
       eventData,
+      repeatOptions,
       handleClose,
       handleSave
     };
   }
 };
 </script>
-
-<style>
-/* Modal uses Tailwind utilities - no scoped styles needed */
-</style>
