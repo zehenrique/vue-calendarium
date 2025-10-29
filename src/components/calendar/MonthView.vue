@@ -169,7 +169,7 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 .event {
   font-size: 11px;
   padding: 2px 6px;
-  border-radius: 2px;
+  border-radius: 6px;
   cursor: pointer;
   overflow: hidden;
   text-overflow: ellipsis;

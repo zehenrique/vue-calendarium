@@ -1,22 +1,5 @@
 <template>
   <v-app>
-    <v-app-bar color="white" elevation="1" density="compact">
-      <v-app-bar-title>
-        <span class="text-h6">📅 Google Calendar Component</span>
-      </v-app-bar-title>
-      <v-spacer></v-spacer>
-      <v-select
-        v-model="selectedLocale"
-        :items="localeItems"
-        item-title="text"
-        item-value="value"
-        density="compact"
-        variant="outlined"
-        hide-details
-        style="max-width: 180px"
-        @update:model-value="changeLocale"
-      ></v-select>
-    </v-app-bar>
     <v-main>
       <GoogleCalendar
         :events="events"
@@ -44,11 +27,7 @@ export default {
   },
   data() {
     return {
-      selectedLocale: 'en-US',
-      localeItems: [
-        { text: 'English', value: 'en-US' },
-        { text: 'Português', value: 'pt-PT' }
-      ],
+      selectedLocale: 'en-US', // Set default locale at initialization
       events: [],
       calendars: [
         { id: 'work', name: 'Work', color: '#1967d2' },
@@ -59,8 +38,16 @@ export default {
   },
   created() {
     this.generateSampleEvents();
+    this.initializeLocale();
   },
   methods: {
+    initializeLocale() {
+      const localeMap = {
+        'en-US': 'en',
+        'pt-PT': 'pt'
+      };
+      this.$i18n.locale = localeMap[this.selectedLocale] || 'en';
+    },
     generateSampleEvents() {
       const now = Temporal.Now.plainDateISO();
       const today = Temporal.PlainDateTime.from({
@@ -143,13 +130,6 @@ export default {
           color: '#137333'
         }
       ];
-    },
-    changeLocale() {
-      const localeMap = {
-        'en-US': 'en',
-        'pt-PT': 'pt'
-      };
-      this.$i18n.locale = localeMap[this.selectedLocale] || 'en';
     },
     handleEventClick(event) {
       console.log('Event clicked:', event);

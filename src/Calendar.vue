@@ -5,12 +5,16 @@
       :current-view="currentView"
       :views="views"
       :is-mobile="isMobile"
+      :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
       @toggle-sidebar="toggleMobileSidebar"
       @previous="previousPeriod"
       @next="nextPeriod"
       @today="goToToday"
       @view-change="handleViewChange"
+      @all-day-select="onAllDaySlotClick"
+      @event-select="onEventClick"
+      @day-number-click="onAllDaySlotClick"
     />
 
     <MonthView
