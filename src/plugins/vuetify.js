@@ -1,0 +1,34 @@
+import '@mdi/font/css/materialdesignicons.css'
+import 'vuetify/styles'
+import { createVuetify } from 'vuetify'
+import * as components from 'vuetify/components'
+import * as directives from 'vuetify/directives'
+
+// Create Vuetify instance with Material Design 3 theme
+export default createVuetify({
+  components,
+  directives,
+  theme: {
+    defaultTheme: 'light',
+    themes: {
+      light: {
+        colors: {
+          primary: '#1967d2',
+          secondary: '#5f6368',
+          accent: '#fbbc04',
+          error: '#d93025',
+          info: '#1967d2',
+          success: '#137333',
+          warning: '#f9ab00',
+          background: '#ffffff',
+          surface: '#ffffff',
+        },
+      },
+    },
+  },
+  defaults: {
+    VBtn: {
+      style: 'text-transform: none;',
+    },
+  },
+})

@@ -1,29 +1,36 @@
 <template>
-  <div class="demo-header">
-    <h1>📅 Google Calendar Component</h1>
-    <div class="demo-controls">
-      <label>
-        Language:
-        <select v-model="selectedLocale" @change="changeLocale">
-          <option value="en-US">English</option>
-          <option value="pt-PT">Português</option>
-        </select>
-      </label>
-    </div>
-  </div>
-  <div class="calendar-container">
-    <GoogleCalendar
-      :events="events"
-      :locale="selectedLocale"
-      :calendars="calendars"
-      initial-view="month"
-      @event-click="handleEventClick"
-      @date-change="handleDateChange"
-      @view-change="handleViewChange"
-      @event-create="handleEventCreate"
-      @event-delete="handleEventDelete"
-    />
-  </div>
+  <v-app>
+    <v-app-bar color="white" elevation="1" density="compact">
+      <v-app-bar-title>
+        <span class="text-h6">📅 Google Calendar Component</span>
+      </v-app-bar-title>
+      <v-spacer></v-spacer>
+      <v-select
+        v-model="selectedLocale"
+        :items="localeItems"
+        item-title="text"
+        item-value="value"
+        density="compact"
+        variant="outlined"
+        hide-details
+        style="max-width: 180px"
+        @update:model-value="changeLocale"
+      ></v-select>
+    </v-app-bar>
+    <v-main>
+      <GoogleCalendar
+        :events="events"
+        :locale="selectedLocale"
+        :calendars="calendars"
+        initial-view="month"
+        @event-click="handleEventClick"
+        @date-change="handleDateChange"
+        @view-change="handleViewChange"
+        @event-create="handleEventCreate"
+        @event-delete="handleEventDelete"
+      />
+    </v-main>
+  </v-app>
 </template>
 
 <script>
@@ -38,6 +45,10 @@ export default {
   data() {
     return {
       selectedLocale: 'en-US',
+      localeItems: [
+        { text: 'English', value: 'en-US' },
+        { text: 'Português', value: 'pt-PT' }
+      ],
       events: [],
       calendars: [
         { id: 'work', name: 'Work', color: '#1967d2' },
@@ -179,72 +190,5 @@ export default {
 </script>
 
 <style scoped>
-.demo-header {
-  background: white;
-  padding: 16px 24px;
-  border-bottom: 1px solid #dadce0;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.demo-header h1 {
-  font-size: 24px;
-  color: #3c4043;
-  font-weight: 400;
-}
-
-.demo-controls {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-left: auto;
-  flex-wrap: wrap;
-}
-
-.demo-controls label {
-  font-size: 14px;
-  color: #5f6368;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.demo-controls select {
-  padding: 6px 12px;
-  border: 1px solid #dadce0;
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.calendar-container {
-  flex: 1;
-  overflow: hidden;
-  background: white;
-  height: calc(100vh - 65px);
-  min-height: 0; /* Important for flex children */
-}
-
-@media (max-width: 768px) {
-  .demo-header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 12px 16px;
-  }
-  
-  .demo-header h1 {
-    font-size: 20px;
-  }
-  
-  .demo-controls {
-    margin-left: 0;
-    width: 100%;
-  }
-  
-  .calendar-container {
-    height: calc(100vh - 110px); /* Adjust for mobile header */
-  }
-}
+/* Vuetify handles most styling */
 </style>

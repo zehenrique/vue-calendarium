@@ -10,7 +10,10 @@
 2. **Technology Stack**:
    - **Framework**: Vue.js (Vue 3 with Composition API)
       - Composition API only: Use the Composition API and avoid the Options API for all new/updated components.
-   - **Styling**: Tailwind CSS for all styling needs
+   - **Styling**: Vuetify (Material Design for Vue.js)
+      - Use Vuetify components and Material Design principles
+      - Leverage Vuetify's built-in responsive utilities
+      - Use Material Design Icons (@mdi/font)
    - **Date/Time Handling**: Temporal API for all date and time operations
    - **Internationalization**: vue-i18n with full support for en-US and pt-PT
 
@@ -19,7 +22,12 @@
    - Avoid over-engineering
    - Use clear, descriptive variable and function names
    - Follow code best practices from Context7
-   - Component decomposition: split large files into smaller, focused components when possible. For example, break `src/Calendar.vue` into `DayView.vue`, `WeekView.vue`, `EventModal.vue`, and `EventList.vue` to keep logic and templates manageable.
+   - Component decomposition: Always break big component files into smaller, focused components when possible.
+     - Split large files into smaller components for better maintainability
+     - Create separate helper files for utility functions
+     - Create separate files for styling/theme configuration if needed
+     - For example, break complex views into sub-components and composables
+     - Keep component files under 300 lines when possible
 
 4. **Documentation**:
    - Always update ALL documentation to reflect any changes made to the code
@@ -31,7 +39,8 @@
    - All changes must be responsive
    - Adapt UI for mobile mode (< 768px)
    - Test on different screen sizes
-   - Use Tailwind's responsive utilities
+   - Use Vuetify's responsive utilities (breakpoints, display helpers)
+   - Use useDisplay composable for programmatic breakpoint detection
 
 6. **Time Format**:
    - Always use 24-hour format for time display (HH:MM)
@@ -52,7 +61,7 @@
 
 ## Development Workflow
 
-1. Before making changes, check Context7 for Vue.js and Tailwind CSS best practices
+1. Before making changes, check Context7 for Vue.js and Vuetify best practices
 2. Use Makefile targets for common workflows (preferred):
    - Start dev server: `make dev` (runs `npm run dev`)
    - Run unit tests: `make test`
@@ -85,11 +94,13 @@
 ## Testing Checklist
 
 Before completing any change, verify:
-- [ ] Matches Google Calendar design
+- [ ] Matches Google Calendar design (using Material Design)
 - [ ] Works in mobile view
 - [ ] Times show in 24-hour format
 - [ ] Works in both en-US and pt-PT
 - [ ] Uses Temporal API for dates
 - [ ] Documentation updated
 - [ ] Code is simple and maintainable
-- [ ] Tailwind CSS used for styling
+- [ ] Vuetify components used for styling
+- [ ] Calendar header is sticky with space for day events
+- [ ] Horizontal swipe gestures work in mobile mode
