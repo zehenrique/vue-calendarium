@@ -2,6 +2,7 @@ import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Get event color styling
+ * @param {string} hexColor - The hex color code
  */
 export function getEventColorStyle(hexColor) {
   if (!hexColor) hexColor = '#1967d2';
@@ -13,8 +14,7 @@ export function getEventColorStyle(hexColor) {
   
   return {
     backgroundColor: `rgba(${r}, ${g}, ${b}, 0.15)`,
-    color: hexColor,
-    borderLeft: `3px solid ${hexColor}`
+    color: hexColor
   };
 }
 
@@ -84,14 +84,12 @@ export function getEventStyle(event, pixelsPerHour = 60) {
   if (event._column !== undefined && event._totalColumns !== undefined) {
     const columnWidth = 100 / event._totalColumns;
     const leftOffset = event._column * columnWidth;
-    const gapPx = event._totalColumns >= 4 ? 2 : 6;
 
-    style.left = `calc(${leftOffset}% + 2px)`;
-    style.width = `calc(${columnWidth}% - ${gapPx}px)`;
-    style.right = 'auto';
+    style.left = `${leftOffset}%`;
+    style.width = `calc(${columnWidth}% - 1%)`;
   } else {
-    style.left = '2px';
-    style.width = 'calc(100% - 4px)';
+    style.left = '0';
+    style.width = 'calc(100% - 1%)';
   }
   
   return style;

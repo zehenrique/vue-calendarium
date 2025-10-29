@@ -69,9 +69,7 @@
    - Build production: `make build`
    - Lint/format: `make lint` / `make format`
    Prefer `make <target>` over calling `npm` scripts directly to keep workflows consistent.
-
 3. Always run Playwright UI tests for UI changes. Use `make test-ui` as part of your change verification and CI. Failures in Playwright tests must be addressed before merging UI changes.
-
 4. Update documentation immediately after code changes
 4. Ensure mobile responsiveness before committing
 5. Verify internationalization works for both locales
@@ -104,3 +102,4 @@ Before completing any change, verify:
 - [ ] Code is simple and maintainable
 - [ ] Vuetify components used for styling
 - [ ] Horizontal swipe gestures work in mobile mode
+- [ ] 100% of tests pass

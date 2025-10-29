@@ -174,6 +174,8 @@ const hasAllDayEvents = computed(() => {
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .header-right {
@@ -186,6 +188,11 @@ const hasAllDayEvents = computed(() => {
   margin: 0;
   font-weight: 400;
   color: #3c4043;
+  flex-shrink: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .week-day-headers-container {
@@ -297,10 +304,18 @@ const hasAllDayEvents = computed(() => {
 @media (max-width: 768px) {
   .header-content {
     padding: 12px 16px;
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  
+  .header-left {
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow: hidden;
   }
   
   .calendar-title {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 
   .time-column-spacer {

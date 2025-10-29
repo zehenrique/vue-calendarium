@@ -156,14 +156,33 @@ defineProps({
 .week-event {
   position: absolute;
   border-radius: 8px;
-  padding: 4px 8px;
+  padding: 4px;
   font-size: 12px;
   cursor: pointer;
   overflow: hidden;
   transition: opacity 0.2s;
   z-index: 1;
-  left: 2px;
-  width: calc(100% - 4px);
+  box-sizing: border-box;
+  /* Position, width, and padding are set via inline styles from getEventStyle */
+}
+
+@media (max-width: 768px) {
+  .week-event {
+    font-size: 10px;
+    padding: 2px;
+    border-radius: 6px;
+  }
+  
+  .week-event .event-title {
+    font-size: 10px;
+    line-height: 1.2;
+    margin-bottom: 1px;
+  }
+  
+  .week-event .event-time {
+    font-size: 9px;
+    line-height: 1.1;
+  }
 }
 
 .week-event:hover {

@@ -222,15 +222,15 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 
 .day-event {
   position: absolute;
-  left: 4px;
-  right: 4px;
   border-radius: 8px;
-  padding: 8px;
+  padding: 6px 4px;
   font-size: 13px;
   cursor: pointer;
   overflow: hidden;
   transition: opacity 0.2s;
   z-index: 1;
+  box-sizing: border-box;
+  /* Position, width, and padding are set via inline styles from getEventStyle */
 }
 
 .day-event:hover {
@@ -246,6 +246,25 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 .event-time {
   font-size: 11px;
   opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .day-event {
+    padding: 4px 2px;
+    font-size: 11px;
+    border-radius: 6px;
+  }
+  
+  .event-title {
+    font-size: 11px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  
+  .event-time {
+    font-size: 9px;
+    line-height: 1.1;
+  }
 }
 
 .current-time-indicator {

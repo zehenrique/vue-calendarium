@@ -139,23 +139,9 @@ export function formatCurrentTitle(view, currentDate, locale) {
   }
 
   if (view === 'week') {
-    const startOfWeek = getStartOfWeek(currentDate);
-    const endOfWeek = startOfWeek.add({ days: 6 });
-    const sameMonth = startOfWeek.month === endOfWeek.month && startOfWeek.year === endOfWeek.year;
-
-    if (sameMonth) {
-      const monthName = startOfWeek.toLocaleString(locale, { month: 'long' });
-      return `${monthName} ${startOfWeek.year}`;
-    }
-
-    const startLabel = startOfWeek.toLocaleString(locale, { month: 'long' });
-    const endLabel = endOfWeek.toLocaleString(locale, { month: 'long' });
-
-    if (startOfWeek.year === endOfWeek.year) {
-      return `${startLabel} – ${endLabel} ${startOfWeek.year}`;
-    }
-
-    return `${startLabel} ${startOfWeek.year} – ${endLabel} ${endOfWeek.year}`;
+    // Always show the month of the current date (not the week start/end)
+    const monthName = currentDate.toLocaleString(locale, { month: 'long' });
+    return `${monthName} ${currentDate.year}`;
   }
 
   return currentDate.toLocaleString(locale, {
