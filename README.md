@@ -20,7 +20,8 @@ A production-ready calendar component for Vue.js that replicates Google Calendar
 🕐 **Current Time Indicator** - Red line showing current time in week/day views
 📱 **Mobile Swipe Gestures** - Navigate with left/right swipes on mobile
 ☰ **Mobile Sidebar** - Full-featured navigation sidebar for mobile devices
-💅 **Tailwind CSS** - Modern, beautiful styling with Tailwind CSS
+💎 **Vuetify (Material Design)** - Modern, beautiful Material Design styling with Vuetify
+📌 **Sticky Calendar Header** - Header stays visible while scrolling for better navigation
 
 ## Installation
 
@@ -291,8 +292,10 @@ For more details on the refactoring approach, see [REFACTORING.md](./REFACTORING
 ## Dependencies
 
 - Vue 3.3+
+- Vuetify 3.0+
 - @js-temporal/polyfill 0.4+
 - vue-i18n 9.5+
+- @mdi/font (Material Design Icons)
 
 ## API Documentation
 
