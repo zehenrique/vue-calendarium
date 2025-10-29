@@ -57,6 +57,7 @@
     />
 
     <EventModal
+      v-if="modalsEnabled"
       v-model="showModal"
       :event="newEvent"
       :calendars="props.calendars"
@@ -64,6 +65,7 @@
     />
 
     <EventDetailModal
+      v-if="modalsEnabled"
       v-model="showEventDetail"
       :event="selectedEvent"
       :calendars="props.calendars"
@@ -73,6 +75,7 @@
     />
 
     <DeleteConfirmModal
+      v-if="modalsEnabled"
       v-model="showDeleteConfirm"
       @confirm="confirmDelete"
     />
@@ -134,10 +137,14 @@ const props = defineProps({
   calendars: {
     type: Array,
     default: () => [{ id: 'default', name: 'My Calendar', color: '#1967d2' }]
+  },
+  enableModals: {
+    type: Boolean,
+    default: true
   }
 });
 
-const emit = defineEmits(['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete']);
+const emit = defineEmits(['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete', 'eventCreateRequest']);
 
 defineOptions({ name: 'GoogleCalendar' });
 
@@ -147,15 +154,36 @@ const views = ['day', 'week', 'month'];
 const PIXELS_PER_HOUR_WEEK = 60;
 const PIXELS_PER_HOUR_DAY = 45;
 
+function readTestNow() {
+  if (typeof window === 'undefined') return null;
+  const value = window.__CALENDAR_TEST_NOW__;
+  if (!value) return null;
+  try {
+    return Temporal.PlainDateTime.from(value);
+  } catch (error) {
+    console.warn('Invalid __CALENDAR_TEST_NOW__ value:', value, error);
+    return null;
+  }
+}
+
+function getCurrentPlainDate() {
+  const testNow = readTestNow();
+  return testNow ? testNow.toPlainDate() : Temporal.Now.plainDateISO();
+}
+
+function getCurrentDateTime() {
+  return readTestNow() ?? Temporal.Now.plainDateTimeISO();
+}
+
 const currentView = ref(props.initialView);
-const currentDate = ref(props.initialDate ? Temporal.PlainDate.from(props.initialDate) : Temporal.Now.plainDateISO());
+const currentDate = ref(props.initialDate ? Temporal.PlainDate.from(props.initialDate) : getCurrentPlainDate());
 const isMobile = ref(false);
 const showModal = ref(false);
 const showEventDetail = ref(false);
 const showDeleteConfirm = ref(false);
 const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
-const currentTime = ref(Temporal.Now.plainDateTimeISO());
+const currentTime = ref(getCurrentDateTime());
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
@@ -166,6 +194,7 @@ const localeCodeMap = {
 };
 
 const calendarLocale = computed(() => props.locale);
+const modalsEnabled = computed(() => props.enableModals !== false);
 
 const newEvent = ref(createDefaultEventDraft(props.calendars));
 
@@ -252,7 +281,7 @@ function teardownMobileDetection() {
 }
 
 function updateCurrentTime() {
-  currentTime.value = Temporal.Now.plainDateTimeISO();
+  currentTime.value = getCurrentDateTime();
 }
 
 const { destroySwipeGestures, scheduleSwipeInitialization } = createSwipeController('.google-calendar', {
@@ -320,7 +349,7 @@ function nextPeriod() {
 }
 
 function goToToday() {
-  currentDate.value = Temporal.Now.plainDateISO();
+  currentDate.value = getCurrentPlainDate();
   emit('dateChange', currentDate.value);
 }
 
@@ -332,12 +361,18 @@ function handleViewChange(view) {
 }
 
 function handleMonthDaySelect(date) {
+  const clickedDate = Temporal.PlainDate.from(date);
+
   openCreateModal({
-    startDate: Temporal.PlainDate.from(date).toString(),
-    endDate: Temporal.PlainDate.from(date).toString(),
+    startDate: clickedDate.toString(),
+    endDate: clickedDate.toString(),
     startTime: '09:00',
     endTime: '10:00',
     allDay: false
+  }, {
+    source: 'month-day',
+    view: 'month',
+    date: clickedDate.toString()
   });
 }
 
@@ -354,6 +389,10 @@ function handleHourSlotSelect(payload) {
     startTime: `${startHour}:00`,
     endTime: `${endHour}:00`,
     allDay: false
+  }, {
+    source: 'time-slot',
+    slot: payload,
+    date: clickedDate.toString()
   });
 }
 
@@ -366,18 +405,38 @@ function onAllDaySlotClick(date) {
     startTime: '00:00',
     endTime: '23:59',
     allDay: true
+  }, {
+    source: 'all-day',
+    date: clickedDate.toString()
   });
 }
 
-function openCreateModal(overrides = {}) {
-  newEvent.value = createDefaultEventDraft(props.calendars, overrides);
+function openCreateModal(overrides = {}, context = {}) {
+  const draft = createDefaultEventDraft(props.calendars, overrides);
+  newEvent.value = draft;
+
+  if (!modalsEnabled.value) {
+    const requestContext = {
+      view: currentView.value,
+      ...context
+    };
+
+    emit('eventCreateRequest', { draft, context: requestContext });
+    return;
+  }
+
   showModal.value = true;
 }
 
 function onEventClick(event) {
   selectedEvent.value = event;
-  showEventDetail.value = true;
   emit('eventClick', event);
+
+  if (!modalsEnabled.value) {
+    return;
+  }
+
+  showEventDetail.value = true;
 }
 
 function editSelectedEvent(event) {
@@ -401,11 +460,19 @@ function editSelectedEvent(event) {
   });
 
   showEventDetail.value = false;
+  if (!modalsEnabled.value) {
+    return;
+  }
+
   showModal.value = true;
 }
 
 function deleteSelectedEvent(event) {
   selectedEvent.value = event || selectedEvent.value;
+  if (!modalsEnabled.value) {
+    return;
+  }
+
   if (selectedEvent.value) {
     showDeleteConfirm.value = true;
   }
@@ -448,7 +515,7 @@ function saveEvent(eventDataFromModal) {
   flex-direction: column;
   height: 100%;
   position: relative;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
   user-select: none;
   width: 100%;
 }

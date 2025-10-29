@@ -6,11 +6,13 @@
         :locale="selectedLocale"
         :calendars="calendars"
         initial-view="month"
+        :enable-modals="modalsEnabled"
         @event-click="handleEventClick"
         @date-change="handleDateChange"
         @view-change="handleViewChange"
         @event-create="handleEventCreate"
         @event-delete="handleEventDelete"
+        @event-create-request="handleEventCreateRequest"
       />
     </v-main>
   </v-app>
@@ -33,12 +35,14 @@ export default {
         { id: 'work', name: 'Work', color: '#1967d2' },
         { id: 'personal', name: 'Personal', color: '#137333' },
         { id: 'family', name: 'Family', color: '#d93025' }
-      ]
+      ],
+      modalsEnabled: true
     };
   },
   created() {
     this.generateSampleEvents();
     this.initializeLocale();
+    this.modalsEnabled = this.resolveModalPreference();
   },
   methods: {
     initializeLocale() {
@@ -164,6 +168,22 @@ export default {
         const eventBaseId = event.id.split('-')[0];
         return baseId !== eventBaseId;
       });
+    },
+    handleEventCreateRequest(payload) {
+      console.log('Event create request:', payload);
+    },
+    resolveModalPreference() {
+      if (typeof window === 'undefined') {
+        return true;
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const setting = params.get('modals');
+      if (!setting) {
+        return true;
+      }
+
+      return setting.toLowerCase() !== 'off';
     }
   }
 };

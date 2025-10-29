@@ -2,48 +2,89 @@ const { test, expect } = require('@playwright/test');
 
 const WEEK_VIEW_SELECTOR = '.week-view';
 const DAY_VIEW_SELECTOR = '.day-view';
-const OVERLAY_SELECTOR = '.fixed.inset-0';
-const TITLE_INPUT_SELECTOR = 'input[type="text"], input:not([type])';
+const EVENT_MODAL = '[data-testid="event-modal"]';
+const EVENT_DETAIL_MODAL = '[data-testid="event-detail-modal"]';
+const DELETE_CONFIRM_MODAL = '[data-testid="delete-confirm-modal"]';
+const TEST_NOW = '2025-01-15T09:00:00';
+
+const repeatLabels = {
+  daily: 'Daily',
+  weekly: 'Weekly',
+  monthly: 'Monthly',
+  yearly: 'Yearly'
+};
+
+async function switchToView(page, view) {
+  const labelPattern = new RegExp(`^${view}`, 'i');
+  await page.getByTestId('view-toggle').getByRole('button', { name: labelPattern }).click();
+
+  if (view === 'week') {
+    await expect(page.locator(WEEK_VIEW_SELECTOR)).toBeVisible();
+  } else if (view === 'day') {
+    await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
+  }
+}
 
 async function switchToWeekView(page) {
-  await page.click('button:has-text("Week")');
-  await expect(page.locator(WEEK_VIEW_SELECTOR)).toBeVisible();
+  await switchToView(page, 'week');
 }
 
 async function switchToDayView(page) {
-  await page.click('button:has-text("Day")');
-  await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
+  await switchToView(page, 'day');
 }
 
 async function openEventModal(page, hourSlotIndex) {
-  const hourSlot = page.locator('.hour-slot').nth(hourSlotIndex);
-  await hourSlot.click({ force: true });
-  await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
+  const dayViewVisible = await page.locator(DAY_VIEW_SELECTOR).isVisible().catch(() => false);
+
+  const slotLocator = dayViewVisible
+    ? page.locator(`${DAY_VIEW_SELECTOR} .hour-slot`).nth(hourSlotIndex)
+    : page.locator(`${WEEK_VIEW_SELECTOR} .week-day-column`).first().locator('.hour-slot').nth(hourSlotIndex);
+
+  await slotLocator.scrollIntoViewIfNeeded();
+  await slotLocator.click();
+  await expect(page.locator(EVENT_MODAL)).toBeVisible({ timeout: 4000 });
+}
+
+async function selectRepeat(page, repeat) {
+  if (!repeat || repeat === 'none') return;
+
+  const label = repeatLabels[repeat];
+  await page.getByTestId('repeat-select').click();
+  await page.locator('.v-list-item-title', { hasText: new RegExp(`^${label}`, 'i') }).click();
 }
 
 async function saveEvent(page, title) {
-  const titleInput = page.locator(TITLE_INPUT_SELECTOR).first();
-  await expect(titleInput).toBeVisible();
+  const titleInput = page.getByLabel(/Event Title/i);
   await titleInput.fill(title);
-  await page.click('button:has-text("Save")');
-  await expect(page.locator(OVERLAY_SELECTOR)).toHaveCount(0);
+  await page.getByRole('button', { name: /Save/i }).click();
+  await expect(page.locator(EVENT_MODAL)).not.toBeVisible({ timeout: 4000 });
 }
 
 async function createEvent(page, { slot, title, repeat } = {}) {
   await openEventModal(page, slot);
-
-  if (repeat) {
-    await page.selectOption('select#event-repeat', repeat);
-  }
-
+  await selectRepeat(page, repeat);
   await saveEvent(page, title);
-  await expect(page.locator(`.day-event:has-text("${title}")`).first()).toBeVisible();
+  await expect(page.locator(`.day-event:has-text("${title}")`).first()).toBeVisible({ timeout: 4000 });
 }
 
 async function confirmDeletion(page) {
-  await expect(page.locator('button:has-text("Yes")')).toBeVisible();
-  await page.click('button:has-text("Yes")');
-  await expect(page.locator(OVERLAY_SELECTOR)).toHaveCount(0);
+  await expect(page.locator(DELETE_CONFIRM_MODAL)).toBeVisible({ timeout: 4000 });
+  await page.getByRole('button', { name: /Yes/i }).click();
+  await expect(page.locator(DELETE_CONFIRM_MODAL)).not.toBeVisible({ timeout: 4000 });
+}
+
+async function openEventDetail(page, title) {
+  await page.locator(`.day-event:has-text("${title}")`).first().click();
+  await expect(page.locator(EVENT_DETAIL_MODAL)).toBeVisible({ timeout: 4000 });
+}
+
+async function loadCalendar(page) {
+  await page.addInitScript(({ testNow }) => {
+    window.__CALENDAR_TEST_NOW__ = testNow;
+  }, { testNow: TEST_NOW });
+
+  await page.goto('/');
+  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
 }
 
 /**
@@ -60,8 +101,7 @@ async function confirmDeletion(page) {
 
 test.describe('Event Persistence - CRUD Operations', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await loadCalendar(page);
     await switchToWeekView(page);
   });
 
@@ -71,7 +111,7 @@ test.describe('Event Persistence - CRUD Operations', () => {
 
     // Reload page
     await page.reload();
-    await page.waitForLoadState('networkidle');
+  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
     await switchToWeekView(page);
 
     // Verify event persists (currently in-memory, so won't persist)
@@ -82,12 +122,9 @@ test.describe('Event Persistence - CRUD Operations', () => {
   test('should update event data correctly', async ({ page }) => {
     await createEvent(page, { slot: 8, title: 'Original Title' });
 
-    await page.click('.day-event:has-text("Original Title")');
-    await expect(page.locator('button:has-text("Edit")')).toBeVisible();
-
-    const editBtn = page.locator('button:has-text("Edit")');
-    await editBtn.dispatchEvent('click');
-    await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
+    await openEventDetail(page, 'Original Title');
+    await page.getByRole('button', { name: /Edit/i }).click();
+    await expect(page.locator(EVENT_MODAL)).toBeVisible();
 
     await saveEvent(page, 'Updated Title');
 
@@ -99,11 +136,8 @@ test.describe('Event Persistence - CRUD Operations', () => {
     const eventTitle = 'Event To Delete';
     await createEvent(page, { slot: 12, title: eventTitle });
 
-    await page.click(`.day-event:has-text("${eventTitle}")`);
-    await expect(page.locator('button:has-text("Delete")')).toBeVisible();
-
-    const deleteBtn = page.locator('button:has-text("Delete")');
-    await deleteBtn.dispatchEvent('click');
+    await openEventDetail(page, eventTitle);
+    await page.getByRole('button', { name: /Delete/i }).click();
     await confirmDeletion(page);
 
     await expect(page.locator(`.day-event:has-text("${eventTitle}")`)).not.toBeVisible();
@@ -131,8 +165,7 @@ test.describe('Event Persistence - CRUD Operations', () => {
 
 test.describe('Event Persistence - Recurring Events', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await loadCalendar(page);
     await switchToWeekView(page);
   });
 
@@ -162,11 +195,8 @@ test.describe('Event Persistence - Recurring Events', () => {
   test('should delete all recurring event instances', async ({ page }) => {
     await createEvent(page, { slot: 10, title: 'Recurring To Delete', repeat: 'weekly' });
 
-    await page.click('.day-event:has-text("Recurring To Delete")');
-    await expect(page.locator('button:has-text("Delete")')).toBeVisible();
-
-    const deleteBtn = page.locator('button:has-text("Delete")');
-    await deleteBtn.dispatchEvent('click');
+    await openEventDetail(page, 'Recurring To Delete');
+    await page.getByRole('button', { name: /Delete/i }).click();
     await confirmDeletion(page);
 
     const eventCount = await page.locator('.day-event:has-text("Recurring To Delete")').count();
@@ -176,15 +206,14 @@ test.describe('Event Persistence - Recurring Events', () => {
 
 test.describe('Event Persistence - Calendar State Management', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await loadCalendar(page);
   });
 
   test('should maintain calendar view after event creation', async ({ page }) => {
     await switchToDayView(page);
     await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
 
-    await createEvent(page, { slot: 10, title: 'State Test Event' });
+    await createEvent(page, { slot: 20, title: 'State Test Event' });
 
     await expect(page.locator(DAY_VIEW_SELECTOR)).toBeVisible();
   });
@@ -195,7 +224,7 @@ test.describe('Event Persistence - Calendar State Management', () => {
     await switchToWeekView(page);
     await createEvent(page, { slot: 8, title: 'Context Test' });
 
-    await page.click('button:has-text("Month")');
+    await switchToView(page, 'month');
     await expect(page.locator('.calendar-days')).toBeVisible();
 
     const finalTitle = await page.locator('.calendar-title').textContent();
@@ -216,8 +245,7 @@ test.describe('Event Persistence - Calendar State Management', () => {
 
 test.describe('Event Persistence - Data Validation', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await loadCalendar(page);
     await switchToWeekView(page);
   });
 
@@ -229,31 +257,33 @@ test.describe('Event Persistence - Data Validation', () => {
       await dialog.accept();
     });
 
-    await page.click('button:has-text("Save")');
-    await expect(page.locator(OVERLAY_SELECTOR)).toBeVisible();
+    await page.getByRole('button', { name: /Save/i }).click();
+    await expect(page.locator(EVENT_MODAL)).toBeVisible();
   });
 
   test('should preserve event data across edit', async ({ page }) => {
     await openEventModal(page, 8);
-    await page.fill('input[type="color"]', '#ea4335');
-    await page.selectOption('select#event-repeat', 'weekly');
+    await page.locator('input[type="color"]').first().fill('#ea4335');
+    await selectRepeat(page, 'weekly');
     await saveEvent(page, 'Data Test Event');
 
-    await page.click('.day-event:has-text("Data Test Event")');
-    await expect(page.locator('button:has-text("Edit")')).toBeVisible();
+    await openEventDetail(page, 'Data Test Event');
+    await page.getByRole('button', { name: /Edit/i }).click();
+    await expect(page.locator(EVENT_MODAL)).toBeVisible();
 
-    const editBtn = page.locator('button:has-text("Edit")');
-    await editBtn.dispatchEvent('click');
-    await expect(page.locator(TITLE_INPUT_SELECTOR).first()).toBeVisible();
-
-    const titleValue = await page.locator('input[type="text"]').inputValue();
+    const titleValue = await page.getByLabel(/Event Title/i).inputValue();
     expect(titleValue).toBe('Data Test Event');
 
-    const colorValue = await page.locator('input[type="color"]').inputValue();
-    expect(colorValue).toBe('#ea4335');
+    const colorValue = await page.locator('input[type="color"]').first().inputValue();
+    expect(colorValue.toLowerCase()).toBe('#ea4335');
 
-    const repeatValue = await page.locator('select#event-repeat').inputValue();
-    expect(repeatValue).toBe('weekly');
+    // Close modal without changes and verify detail data manually
+    await page.getByRole('button', { name: /Cancel/i }).click();
+    await expect(page.locator(EVENT_MODAL)).not.toBeVisible();
+
+    await openEventDetail(page, 'Data Test Event');
+    await expect(page.locator(EVENT_DETAIL_MODAL).locator('text=Repeats weekly')).toBeVisible();
+    await page.locator(EVENT_DETAIL_MODAL).getByRole('button', { name: /Close/i }).click();
   });
 
   test('should handle event time boundaries', async ({ page }) => {

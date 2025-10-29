@@ -1,72 +1,70 @@
 import { test, expect } from '@playwright/test';
 
+const TEST_NOW = '2025-01-15T09:00:00';
+const SIDEBAR_SELECTOR = '.mobile-sidebar';
+
+async function openSidebar(page) {
+  await page.getByTestId('mobile-menu-button').click();
+  const sidebar = page.locator(SIDEBAR_SELECTOR);
+  await expect(sidebar).toHaveClass(/v-navigation-drawer--active/, { timeout: 3000 });
+}
+
+async function waitForSidebarClosed(page) {
+  const sidebar = page.locator(SIDEBAR_SELECTOR);
+  await expect(sidebar).not.toHaveClass(/v-navigation-drawer--active/, { timeout: 3000 });
+}
+
 test.describe('Calendar Views (Mobile)', () => {
   test.beforeEach(async ({ page }) => {
+    await page.addInitScript(({ testNow }) => {
+      window.__CALENDAR_TEST_NOW__ = testNow;
+    }, { testNow: TEST_NOW });
+
     await page.goto('/');
-    // Wait for Vue app to mount
-    await page.waitForSelector('#app', { timeout: 10000 });
-    await page.waitForTimeout(1000); // Give Vue time to render
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.calendar-title')).toHaveText('January 2025', { timeout: 5000 });
   });
 
   test('should display calendar with default month view', async ({ page }) => {
-    // Check that calendar is visible
-    await expect(page.locator('.google-calendar')).toBeVisible();
-    
-    // Check that month view is active
     await expect(page.locator('.calendar-days')).toBeVisible();
-    
-    // Check that header shows current month/year
-    const header = page.locator('h1.calendar-title');
-    await expect(header).toBeVisible();
-    const headerText = await header.textContent();
-    expect(headerText).toMatch(/\w+ \d{4}/);
+    await expect(page.locator('.calendar-title')).toHaveText('January 2025');
   });
 
   test('should switch to week view via mobile sidebar', async ({ page }) => {
-    // Open sidebar
-    await page.click('.mobile-menu-btn');
-    await page.waitForTimeout(300);
-    
-    // Click Week view in sidebar
-    const sidebar = page.locator('.mobile-sidebar');
-    await sidebar.locator('button:has-text("Week")').click();
-    await page.waitForTimeout(500);
-    
-    // Verify week view is displayed
-    await expect(page.locator('.week-view')).toBeVisible();
-    await expect(page.locator('.week-grid')).toBeVisible();
+    await openSidebar(page);
+    await page.getByTestId('sidebar-view-week').click();
+    await waitForSidebarClosed(page);
+
+    await expect(page.locator('.week-view')).toBeVisible({ timeout: 4000 });
+    await expect(page.locator('.week-grid')).toBeVisible({ timeout: 4000 });
   });
 
   test('should switch to day view via mobile sidebar', async ({ page }) => {
-    // Open sidebar
-    await page.click('.mobile-menu-btn');
-    await page.waitForTimeout(300);
-    
-    // Click Day view in sidebar
-    const sidebar = page.locator('.mobile-sidebar');
-    await sidebar.locator('button:has-text("Day")').click();
-    await page.waitForTimeout(500);
-    
-    // Verify day view is displayed
-    await expect(page.locator('.day-view')).toBeVisible();
-    await expect(page.locator('text=00:00')).toBeVisible();
-    await expect(page.locator('text=12:00').first()).toBeVisible();
+    await openSidebar(page);
+    await page.getByTestId('sidebar-view-day').click();
+    await waitForSidebarClosed(page);
+
+    await expect(page.locator('.day-view')).toBeVisible({ timeout: 4000 });
+    await expect(page.locator('.day-grid')).toBeVisible({ timeout: 4000 });
   });
 
   test('should display "Today" button on mobile', async ({ page }) => {
-    // Verify Today button is visible on mobile
-    const todayButton = page.locator('button.today-btn');
+    const todayButton = page.getByTestId('today-button');
     await expect(todayButton).toBeVisible();
-    
-    // Click today button should work
+
+    const calendarBody = page.locator('.calendar-body');
+    const box = await calendarBody.boundingBox();
+    if (!box) throw new Error('Calendar body not found');
+
+    await calendarBody.dragTo(calendarBody, {
+      sourcePosition: { x: box.width * 0.75, y: box.height / 2 },
+      targetPosition: { x: box.width * 0.25, y: box.height / 2 },
+      force: true,
+    });
+
+    await expect(page.locator('.calendar-title')).not.toHaveText('January 2025', { timeout: 4000 });
+
     await todayButton.click();
-    await page.waitForTimeout(300);
-    
-    // Verify current month is shown
-    const header = await page.locator('h1.calendar-title').textContent();
-    const now = new Date();
-    const currentMonth = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-    expect(header).toBe(currentMonth);
+    await expect(page.locator('.calendar-title')).toHaveText('January 2025', { timeout: 4000 });
   });
 });
