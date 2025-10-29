@@ -193,7 +193,7 @@ const hasAllDayEvents = computed(() => {
 .time-column-spacer {
   width: 60px;
   flex-shrink: 0;
-  border-right: 1px solid #d0d0d0;
+  /* border-right: 1px solid #d0d0d0; */
   display: flex;
   align-items: center;
   justify-content: center;

@@ -32,7 +32,7 @@
       v-else-if="currentView === 'week'"
       :days="weekViewDays"
       :locale="calendarLocale"
-      :pixels-per-hour="PIXELS_PER_HOUR"
+      :pixels-per-hour="PIXELS_PER_HOUR_WEEK"
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :t="t"
@@ -47,7 +47,7 @@
       :events="dayEvents"
       :all-day-events="dayAllDayEvents"
       :locale="calendarLocale"
-      :pixels-per-hour="PIXELS_PER_HOUR"
+      :pixels-per-hour="PIXELS_PER_HOUR_DAY"
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :t="t"
@@ -91,7 +91,6 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
-
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
 import MonthView from './components/calendar/MonthView.vue';
 import WeekView from './components/calendar/WeekView.vue';
@@ -145,7 +144,8 @@ defineOptions({ name: 'GoogleCalendar' });
 const { t, locale: i18nLocale } = useI18n();
 
 const views = ['day', 'week', 'month'];
-const PIXELS_PER_HOUR = 60;
+const PIXELS_PER_HOUR_WEEK = 60;
+const PIXELS_PER_HOUR_DAY = 45;
 
 const currentView = ref(props.initialView);
 const currentDate = ref(props.initialDate ? Temporal.PlainDate.from(props.initialDate) : Temporal.Now.plainDateISO());
@@ -206,7 +206,8 @@ const currentTitle = computed(() =>
 
 const currentTimePosition = computed(() => {
   const minutesSinceMidnight = currentTime.value.hour * 60 + currentTime.value.minute;
-  return (minutesSinceMidnight / 60) * PIXELS_PER_HOUR;
+  const pixelsPerHour = currentView.value === 'day' ? PIXELS_PER_HOUR_DAY : PIXELS_PER_HOUR_WEEK;
+  return (minutesSinceMidnight / 60) * pixelsPerHour;
 });
 
 const showCurrentTimeIndicator = computed(() =>

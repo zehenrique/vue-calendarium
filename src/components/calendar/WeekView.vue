@@ -10,7 +10,7 @@
       <div class="week-days-container">
         <div class="week-day-columns">
           <div v-for="day in days" :key="day.key" class="week-day-column">
-            <div v-for="hour in 23" :key="hour" class="hour-slot" @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })"></div>
+            <div v-for="hour in 24" :key="hour" class="hour-slot" @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })"></div>
             <div
               v-if="showCurrentTimeIndicator && day.isToday"
               class="current-time-indicator"
@@ -175,7 +175,7 @@ defineProps({
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 5;
   pointer-events: none;
   display: flex;
   align-items: center;

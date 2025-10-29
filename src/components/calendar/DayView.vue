@@ -1,14 +1,18 @@
 <template>
-  <div class="calendar-body day-view">
+  <div class="calendar-body day-view" :class="{ 'has-all-day-events': hasAllDayEvents }">
     <div class="day-grid">
       <div class="time-column no-border">
-        <div class="time-header"></div>
-        <div v-for="hour in 23" :key="hour" class="time-slot-label">
-          {{ formatHour(hour, locale) }}
+        <div v-if="hasAllDayEvents" class="time-header"></div>
+        <div v-for="hour in 24" :key="hour" class="time-slot-label">
+          <span v-if="hour > 1">{{ formatHour(hour - 1, locale) }}</span>
         </div>
       </div>
       <div class="day-column-container">
-        <div class="day-all-day-section" @click="$emit('all-day-select', date)">
+        <div
+          v-if="hasAllDayEvents"
+          class="day-all-day-section"
+          @click="$emit('all-day-select', date)"
+        >
           <div
             v-for="event in allDayEvents"
             :key="event.id"
@@ -21,7 +25,7 @@
         </div>
         <div class="day-column">
           <div
-            v-for="hour in 23"
+            v-for="hour in 24"
             :key="hour"
             class="hour-slot"
             @click="$emit('hour-slot-select', { date, hour: hour - 1 })"
@@ -51,9 +55,10 @@
 </template>
 
 <script setup>
+import { computed, toRefs } from 'vue';
 import { formatEventTime, formatHour, getEventColorStyle, getEventStyle } from '../../composables/useCalendarUtils.js';
 
-defineProps({
+const props = defineProps({
   date: {
     type: Object,
     required: true
@@ -72,7 +77,7 @@ defineProps({
   },
   pixelsPerHour: {
     type: Number,
-    default: 60
+    default: 45
   },
   showCurrentTimeIndicator: {
     type: Boolean,
@@ -87,6 +92,18 @@ defineProps({
     required: true
   }
 });
+
+const {
+  date,
+  events,
+  allDayEvents,
+  locale,
+  pixelsPerHour,
+  showCurrentTimeIndicator,
+  currentTimePosition
+} = toRefs(props);
+
+const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 </script>
 
 <style scoped>
@@ -106,7 +123,7 @@ defineProps({
 .day-grid {
   display: flex;
   height: 100%;
-  min-height: calc(23 * 60px);
+  min-height: calc(24 * 45px);
 }
 
 .time-column {
@@ -122,10 +139,11 @@ defineProps({
   display: flex;
   align-items: center;
   justify-content: center;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .time-slot-label {
-  height: 60px;
+  height: 45px;
   padding: 0 8px;
   font-size: 10px;
   color: #70757a;
@@ -134,8 +152,13 @@ defineProps({
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  /* Position label on the grid line */
-  transform: translateY(-8px);
+  overflow: visible;
+}
+
+.time-slot-label span {
+  display: inline-block;
+  position: relative;
+  top: -4px;
 }
 
 .day-column-container {
@@ -150,7 +173,6 @@ defineProps({
   cursor: pointer;
   transition: background-color 0.2s;
   border-bottom: 1px solid #e0e0e0;
-  margin-bottom: 8px;
 }
 
 .day-all-day-section:hover {
@@ -180,7 +202,7 @@ defineProps({
 }
 
 .hour-slot {
-  height: 60px;
+  height: 45px;
   border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   transition: background-color 0.15s;
@@ -188,6 +210,10 @@ defineProps({
 
 .hour-slot:first-child {
   border-top: none;
+}
+
+.day-view:not(.has-all-day-events) .hour-slot:first-child {
+  border-top: 1px solid #e0e0e0;
 }
 
 .hour-slot:hover {
@@ -226,7 +252,7 @@ defineProps({
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 20;
+  z-index: 5;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -249,7 +275,7 @@ defineProps({
 
 @media (max-width: 768px) {
   .day-grid {
-    min-height: calc(23 * 50px);
+    min-height: calc(24 * 38px);
   }
 
   .time-column {
@@ -257,11 +283,14 @@ defineProps({
   }
 
   .time-slot-label {
-    height: 50px;
+    height: 38px;
     font-size: 9px;
     padding: 0 4px;
     align-items: flex-start;
-    transform: translateY(-7px);
+  }
+
+  .time-slot-label span {
+    top: -3px;
   }
   
   .day-column {
@@ -269,7 +298,7 @@ defineProps({
   }
   
   .hour-slot {
-    height: 50px;
+    height: 38px;
   }
 }
 </style>
