@@ -44,6 +44,12 @@ Example:
 - **Default:** Current date
 - **Required:** No
 - **Description:** Initial date to display. Can be ISO string or Temporal.PlainDate object
+#### enableModals
+- **Type:** `Boolean`
+- **Default:** `true`
+- **Required:** No
+- **Description:** Toggles the built-in event creation, detail, and deletion modals. Set to `false` to handle these interactions in your host application.
+
 
 Example:
 ```javascript
@@ -89,6 +95,19 @@ Example:
 handleViewChange(view) {
   console.log('View changed to:', view);
   // Update URL or preferences
+}
+```
+
+#### eventCreateRequest
+- **Payload:** `{ draft, context }`
+- **Description:** Emitted when a user starts creating an event (clicks a day, time slot, or all-day area) while built-in modals are disabled. `draft` contains the pre-filled event data and `context` describes the trigger source.
+
+Example:
+```javascript
+handleCreateRequest({ draft, context }) {
+  console.log('Create in custom modal:', context.source);
+  // Open your own modal with the suggested draft values
+  this.openExternalModal(draft);
 }
 ```
 

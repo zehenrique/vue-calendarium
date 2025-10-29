@@ -11,6 +11,8 @@ dist
 /playwright/.cache
 *.mp4
 *.webm
+modal-debug.json
+modal-debug.png
 
 # Visual regression test snapshots (update baselines intentionally)
 # Uncomment to track baselines in git:

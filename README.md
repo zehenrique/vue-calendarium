@@ -15,6 +15,7 @@ A production-ready calendar component for Vue.js that replicates Google Calendar
 🔁 **Recurring Events** - Daily, weekly, monthly, and yearly recurring events (up to 52 occurrences)
 📂 **Multiple Calendars** - Support for event categories/calendars with color coding
 ♿ **Accessibility** - Full ARIA labels, keyboard navigation, and screen reader support
+🧩 **Optional Modals** - Disable built-in dialogs and plug in your own custom modals
 🎯 **Event Overlap Handling** - Column-based layout for overlapping events (Google Calendar style)
 ☀️ **All-Day Events** - Dedicated header section for all-day events
 🕐 **Current Time Indicator** - Red line showing current time in week/day views
@@ -176,6 +177,7 @@ export default {
 | `calendars` | Array | `[{id:'default', name:'My Calendar', color:'#1967d2'}]` | Array of calendar objects |
 | `initialView` | String | `'month'` | Initial view mode: 'month', 'week', or 'day' |
 | `initialDate` | String/Object | Current date | Initial date to display (Temporal PlainDate or ISO string) |
+| `enableModals` | Boolean | `true` | Toggle built-in event/detail/delete modals. Set to `false` to handle modals externally |
 
 ## Events
 
@@ -185,6 +187,7 @@ export default {
 | `dateChange` | `date` | Emitted when the displayed date changes |
 | `viewChange` | `view` | Emitted when the view mode changes |
 | `eventCreate` | `events[]` | Emitted when events are created via UI |
+| `eventCreateRequest` | `{ draft, context }` | Emitted when the user starts creating an event while built-in modals are disabled |
 
 ## Event Object Structure
 

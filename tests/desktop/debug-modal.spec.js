@@ -1,29 +1,30 @@
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test');
 const fs = require('fs');
 
+const TEST_NOW = '2025-01-15T09:00:00';
+
 test('debug modal styling', async ({ page }) => {
+  await page.addInitScript(({ testNow }) => {
+    window.__CALENDAR_TEST_NOW__ = testNow;
+  }, { testNow: TEST_NOW });
+
   await page.goto('/');
-  await page.waitForLoadState('networkidle');
-  
-  // Switch to week view to have hour slots
-  await page.click('button:has-text("Week")');
-  await page.waitForTimeout(500);
-  
-  // Click on a time slot to open the event modal
-  await page.waitForSelector('.hour-slot', { timeout: 5000 });
+  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+
+  await page.getByTestId('view-toggle').getByRole('button', { name: /^Week/i }).click();
+  await expect(page.locator('.week-view')).toBeVisible({ timeout: 4000 });
+
   const slot = page.locator('.hour-slot').nth(10);
+  await expect(slot).toBeVisible({ timeout: 4000 });
   await slot.click({ force: true });
-  
-  // Wait for modal to appear
-  await page.waitForSelector('.fixed.inset-0', { timeout: 2000 });
-  
-  // Capture modal element HTML and classes
-  const modalElement = page.locator('.fixed.inset-0').first();
-  const modalHTML = await modalElement.evaluate(el => el.outerHTML);
-  const modalClasses = await modalElement.getAttribute('class');
-  
-  // Get computed styles for the modal overlay
-  const computedStyles = await modalElement.evaluate(el => {
+
+  const modalContent = page.getByTestId('event-modal').first();
+  await expect(modalContent).toBeVisible({ timeout: 4000 });
+
+  const modalHTML = await modalContent.evaluate(el => el.outerHTML);
+  const modalClasses = await modalContent.evaluate(el => el.className || '');
+
+  const computedStyles = await modalContent.evaluate(el => {
     const styles = window.getComputedStyle(el);
     return {
       position: styles.position,
@@ -35,12 +36,10 @@ test('debug modal styling', async ({ page }) => {
       display: styles.display,
       zIndex: styles.zIndex,
       opacity: styles.opacity,
-      visibility: styles.visibility
+      visibility: styles.visibility,
     };
   });
-  
-  // Get computed styles for the modal content (bg-white div)
-  const modalContent = page.locator('.fixed.inset-0 > div').first();
+
   const contentStyles = await modalContent.evaluate(el => {
     const styles = window.getComputedStyle(el);
     return {
@@ -49,23 +48,21 @@ test('debug modal styling', async ({ page }) => {
       boxShadow: styles.boxShadow,
       padding: styles.padding,
       maxWidth: styles.maxWidth,
-      width: styles.width
+      width: styles.width,
     };
   });
-  
-  // Take screenshot
+
   await page.screenshot({ path: 'modal-debug.png', fullPage: true });
-  
-  // Write debug info to file
+
   const debugInfo = {
     modalClasses,
     computedStyles,
     contentStyles,
-    modalHTML: modalHTML.substring(0, 2000) // First 2000 chars
+    modalHTML: modalHTML.substring(0, 2000),
   };
-  
+
   fs.writeFileSync('modal-debug.json', JSON.stringify(debugInfo, null, 2));
-  
+
   console.log('Modal classes:', modalClasses);
   console.log('Computed styles:', computedStyles);
   console.log('Content styles:', contentStyles);

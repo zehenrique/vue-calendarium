@@ -11,6 +11,7 @@
           icon
           variant="text"
           :aria-label="t('menu')"
+          data-testid="mobile-menu-button"
           @click="$emit('toggle-sidebar')"
         >
           <v-icon>mdi-menu</v-icon>
@@ -35,6 +36,7 @@
         </v-btn>
         <v-btn
           variant="outlined"
+          data-testid="today-button"
           @click="$emit('today')"
         >
           {{ t('today') }}
@@ -47,6 +49,7 @@
           mandatory
           variant="outlined"
           divided
+          data-testid="view-toggle"
           @update:model-value="$emit('view-change', $event)"
         >
           <v-btn
@@ -54,6 +57,7 @@
             :key="view"
             :value="view"
             :aria-label="`${t(view)} ${t('view')}`"
+            :data-testid="`view-toggle-${view}`"
           >
             {{ t(view) }}
           </v-btn>

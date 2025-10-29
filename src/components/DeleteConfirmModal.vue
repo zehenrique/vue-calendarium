@@ -4,6 +4,7 @@
     @update:model-value="handleCancel"
     max-width="400"
     persistent
+    data-testid="delete-confirm-modal"
   >
     <v-card>
       <v-card-title>{{ t('confirmDeleteTitle') }}</v-card-title>

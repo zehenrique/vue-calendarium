@@ -6,6 +6,7 @@
     temporary
     touchless
     width="280"
+    class="mobile-sidebar"
   >
     <v-list>
       <v-list-item>
@@ -35,6 +36,7 @@
         v-for="view in views"
         :key="view"
         :active="currentView === view"
+        :data-testid="`sidebar-view-${view}`"
         @click="handleViewChange(view)"
         :aria-label="`Switch to ${t(view)} view`"
       >
@@ -107,7 +109,7 @@ export default {
       // Clean up existing instance first
       cleanupSwipe();
 
-      const sidebar = document.querySelector('.v-navigation-drawer');
+  const sidebar = document.querySelector('.mobile-sidebar');
       if (!sidebar) return;
 
       hammer = new window.Hammer(sidebar);

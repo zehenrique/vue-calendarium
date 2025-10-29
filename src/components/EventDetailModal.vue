@@ -3,6 +3,7 @@
     :model-value="modelValue && !!event"
     @update:model-value="handleClose"
     max-width="500"
+    data-testid="event-detail-modal"
   >
     <v-card v-if="event">
       <!-- Color bar -->

@@ -4,6 +4,7 @@
     @update:model-value="$emit('update:modelValue', $event)"
     max-width="600"
     persistent
+    data-testid="event-modal"
   >
     <v-card>
       <v-card-title>
@@ -82,6 +83,7 @@
             item-value="value"
             variant="outlined"
             density="comfortable"
+            data-testid="repeat-select"
           ></v-select>
           
           <!-- Calendar selection -->
@@ -93,6 +95,7 @@
             item-value="id"
             variant="outlined"
             density="comfortable"
+            data-testid="calendar-select"
           ></v-select>
           
           <!-- Color picker -->
