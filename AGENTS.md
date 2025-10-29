@@ -90,6 +90,7 @@
 - Event overlap handling
 - Mobile swipe gestures
 - Mobile sidebar navigation
+- Sticky calendar header 
 
 ## Testing Checklist
 
@@ -102,5 +103,4 @@ Before completing any change, verify:
 - [ ] Documentation updated
 - [ ] Code is simple and maintainable
 - [ ] Vuetify components used for styling
-- [ ] Calendar header is sticky with space for day events
 - [ ] Horizontal swipe gestures work in mobile mode

@@ -2,11 +2,9 @@
   <div class="calendar-body day-view">
     <div class="day-grid">
       <div class="time-column no-border">
-        <div class="time-header">
-          <div class="all-day-label">{{ t('allDay') }}</div>
-        </div>
-        <div v-for="hour in 24" :key="hour" class="time-slot-label">
-          {{ formatHour(hour - 1, locale) }}
+        <div class="time-header"></div>
+        <div v-for="hour in 23" :key="hour" class="time-slot-label">
+          {{ formatHour(hour, locale) }}
         </div>
       </div>
       <div class="day-column-container">
@@ -23,7 +21,7 @@
         </div>
         <div class="day-column">
           <div
-            v-for="hour in 24"
+            v-for="hour in 23"
             :key="hour"
             class="hour-slot"
             @click="$emit('hour-slot-select', { date, hour: hour - 1 })"
@@ -94,8 +92,7 @@ defineProps({
 <style scoped>
 .calendar-body {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   background: #ffffff;
   position: relative;
   width: 100%;
@@ -109,7 +106,36 @@ defineProps({
 .day-grid {
   display: flex;
   height: 100%;
-  min-height: calc(24 * 60px);
+  min-height: calc(23 * 60px);
+}
+
+.time-column {
+  width: 60px;
+  border-right: 1px solid #d0d0d0;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.time-header {
+  min-height: 40px;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.time-slot-label {
+  height: 60px;
+  padding: 0 8px;
+  font-size: 10px;
+  color: #70757a;
+  text-align: right;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding-top: 0;
+  /* Position label on the grid line */
+  transform: translateY(-8px);
 }
 
 .day-column-container {
@@ -135,7 +161,7 @@ defineProps({
   font-size: 12px;
   padding: 2px 8px;
   margin: 2px 0;
-  border-radius: 4px;
+  border-radius: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -151,8 +177,6 @@ defineProps({
   flex: 1;
   position: relative;
   border-right: 1px solid #d0d0d0;
-  margin-top: 8px;
-  border-top: 1px solid #d0d0d0;
 }
 
 .hour-slot {
@@ -160,6 +184,10 @@ defineProps({
   border-bottom: 1px solid #e0e0e0;
   cursor: pointer;
   transition: background-color 0.15s;
+}
+
+.hour-slot:first-child {
+  border-top: none;
 }
 
 .hour-slot:hover {
@@ -170,7 +198,7 @@ defineProps({
   position: absolute;
   left: 4px;
   right: 4px;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 8px;
   font-size: 13px;
   cursor: pointer;
@@ -221,7 +249,19 @@ defineProps({
 
 @media (max-width: 768px) {
   .day-grid {
-    min-height: calc(24 * 50px);
+    min-height: calc(23 * 50px);
+  }
+
+  .time-column {
+    width: 50px;
+  }
+
+  .time-slot-label {
+    height: 50px;
+    font-size: 9px;
+    padding: 0 4px;
+    align-items: flex-start;
+    transform: translateY(-7px);
   }
   
   .day-column {
