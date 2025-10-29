@@ -1,73 +1,66 @@
 <template>
-  <div class="calendar-header">
-    <div class="header-left">
-      <button
-        v-if="isMobile"
-        class="mobile-menu-btn"
-        type="button"
-        :aria-label="t('menu')"
-        @click="$emit('toggle-sidebar')"
-      >
-        <slot name="menu-icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <span class="sr-only">{{ t('menu') }}</span>
-        </slot>
-      </button>
-      <button
-        v-if="!isMobile"
-        class="nav-btn"
-        type="button"
-        :aria-label="t('previous')"
-        @click="$emit('previous')"
-      >
-        <slot name="previous-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
-          </svg>
-          <span class="sr-only">{{ t('previous') }}</span>
-        </slot>
-      </button>
-      <button
-        v-if="!isMobile"
-        class="nav-btn"
-        type="button"
-        :aria-label="t('next')"
-        @click="$emit('next')"
-      >
-        <slot name="next-icon">
-          <svg width="20" height="20" viewBox="0 0 24 24">
-            <path fill="currentColor" d="m10 6-1.41 1.41L13.17 12l-4.58 4.59L10 18l6-6z" />
-          </svg>
-          <span class="sr-only">{{ t('next') }}</span>
-        </slot>
-      </button>
-      <button class="today-btn" type="button" @click="$emit('today')">
-        {{ t('today') }}
-      </button>
-      <h1 class="calendar-title">{{ currentTitle }}</h1>
-    </div>
-    <div
-      v-if="!isMobile"
-      class="header-right"
-    >
-      <div class="view-selector">
-        <button
-          v-for="view in views"
-          :key="view"
-          type="button"
-          class="view-btn"
-          :class="{ active: view === currentView }"
-          :aria-label="`${t(view)} ${t('view')}`"
-          :aria-pressed="view === currentView"
-          @click="$emit('view-change', view)"
+  <v-sheet
+    class="calendar-header"
+    elevation="0"
+    :class="{ 'header-sticky': true }"
+  >
+    <div class="header-content">
+      <div class="header-left">
+        <v-btn
+          v-if="isMobile"
+          icon
+          variant="text"
+          :aria-label="t('menu')"
+          @click="$emit('toggle-sidebar')"
         >
-          {{ t(view) }}
-        </button>
+          <v-icon>mdi-menu</v-icon>
+        </v-btn>
+        <v-btn
+          v-if="!isMobile"
+          icon
+          variant="text"
+          :aria-label="t('previous')"
+          @click="$emit('previous')"
+        >
+          <v-icon>mdi-chevron-left</v-icon>
+        </v-btn>
+        <v-btn
+          v-if="!isMobile"
+          icon
+          variant="text"
+          :aria-label="t('next')"
+          @click="$emit('next')"
+        >
+          <v-icon>mdi-chevron-right</v-icon>
+        </v-btn>
+        <v-btn
+          variant="outlined"
+          @click="$emit('today')"
+        >
+          {{ t('today') }}
+        </v-btn>
+        <h1 class="calendar-title text-h6">{{ currentTitle }}</h1>
+      </div>
+      <div v-if="!isMobile" class="header-right">
+        <v-btn-toggle
+          :model-value="currentView"
+          mandatory
+          variant="outlined"
+          divided
+          @update:model-value="$emit('view-change', $event)"
+        >
+          <v-btn
+            v-for="view in views"
+            :key="view"
+            :value="view"
+            :aria-label="`${t(view)} ${t('view')}`"
+          >
+            {{ t(view) }}
+          </v-btn>
+        </v-btn-toggle>
       </div>
     </div>
-  </div>
+  </v-sheet>
 </template>
 
 <script setup>
@@ -97,19 +90,29 @@ defineProps({
 
 <style scoped>
 .calendar-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.header-sticky {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: white;
+}
+
+.header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  border-bottom: 1px solid #d0d0d0;
-  flex-wrap: wrap;
+  padding: 16px 20px;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
@@ -119,118 +122,19 @@ defineProps({
   gap: 12px;
 }
 
-.nav-btn {
-  width: 36px;
-  height: 36px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5f6368;
-  transition: background-color 0.2s;
-}
-
-.nav-btn:hover {
-  background-color: #e0e0e0;
-}
-
-.today-btn {
-  padding: 8px 16px;
-  border: 1px solid #d0d0d0;
-  background: white;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  color: #3c4043;
-  transition: background-color 0.2s, box-shadow 0.2s;
-}
-
-.today-btn:hover {
-  background-color: #f8f9fa;
-  box-shadow: 0 1px 2px 0 rgba(60,64,67,.3), 0 1px 3px 1px rgba(60,64,67,.15);
-}
-
 .calendar-title {
-  font-size: 22px;
+  margin: 0;
   font-weight: 400;
   color: #3c4043;
-  margin: 0;
-}
-
-.view-selector {
-  display: flex;
-  border: 1px solid #d0d0d0;
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.view-btn {
-  padding: 8px 16px;
-  border: none;
-  background: white;
-  cursor: pointer;
-  font-size: 14px;
-  color: #3c4043;
-  border-right: 1px solid #d0d0d0;
-  transition: background-color 0.2s;
-}
-
-.view-btn:last-child {
-  border-right: none;
-}
-
-.view-btn:hover {
-  background-color: #f8f9fa;
-}
-
-.view-btn.active {
-  background-color: #e8f0fe;
-  color: #1967d2;
-  font-weight: 500;
-}
-
-.mobile-menu-btn {
-  padding: 8px;
-  border: none;
-  background: none;
-  cursor: pointer;
-  color: #5f6368;
-  border-radius: 50%;
-  transition: background-color 0.2s;
-  margin-right: 8px;
-}
-
-.mobile-menu-btn:hover {
-  background-color: #f8f9fa;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  border: 0;
 }
 
 @media (max-width: 768px) {
-  .calendar-header {
-    padding: 16px 12px;
+  .header-content {
+    padding: 12px 16px;
   }
   
   .calendar-title {
-    font-size: 18px;
-  }
-  
-  .today-btn {
-    padding: 6px 12px;
-    font-size: 13px;
+    font-size: 1.1rem;
   }
 }
 </style>

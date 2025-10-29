@@ -1,68 +1,66 @@
 <template>
-  <transition name="fade">
-    <div 
-      v-if="modelValue" 
-      class="fixed inset-0 bg-black bg-opacity-50" 
-      style="z-index: 900;" 
-      @click="handleClose"
-    >
-      <transition name="slide">
-        <div v-if="modelValue"
-          class="mobile-sidebar fixed left-0 top-0 bottom-0 w-64 bg-white shadow-2xl overflow-y-auto" 
-          style="z-index: 901;" 
-          @click.stop
-        >
-          <div class="p-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 class="text-lg font-medium text-gray-900">{{ t('menu') }}</h2>
-            <button 
-              @click="handleClose" 
-              class="text-gray-400 hover:text-gray-600 rounded-full p-2 hover:bg-gray-100" 
-              :aria-label="t('close')"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-              </svg>
-            </button>
-          </div>
-          
-          <!-- View Selector -->
-          <div class="p-4 border-b border-gray-200">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('view') }}</h3>
-            <div class="space-y-2">
-              <button 
-                v-for="view in views" 
-                :key="view"
-                :class="['w-full text-left px-4 py-2 rounded-md transition-all', 
-                        currentView === view ? 'bg-blue-100 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-100']"
-                @click="handleViewChange(view)"
-                :aria-label="`Switch to ${t(view)} view`"
-              >
-                {{ t(view) }}
-              </button>
-            </div>
-          </div>
-          
-          <!-- Calendars -->
-          <div class="p-4">
-            <h3 class="text-sm font-medium text-gray-700 mb-3">{{ t('calendars') }}</h3>
-            <div class="space-y-2">
-              <div 
-                v-for="calendar in calendars" 
-                :key="calendar.id" 
-                class="flex items-center space-x-3 px-2 py-2 rounded hover:bg-gray-50 transition-colors cursor-pointer"
-              >
-                <div 
-                  class="w-4 h-4 rounded-full flex-shrink-0 border border-gray-300" 
-                  :style="{ backgroundColor: calendar.color }"
-                ></div>
-                <span class="text-sm text-gray-800">{{ calendar.name }}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </transition>
-    </div>
-  </transition>
+  <v-navigation-drawer
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+    location="left"
+    temporary
+    touchless
+    width="280"
+  >
+    <v-list>
+      <v-list-item>
+        <template v-slot:prepend>
+          <span class="text-h6">{{ t('menu') }}</span>
+        </template>
+        <template v-slot:append>
+          <v-btn
+            icon
+            variant="text"
+            size="small"
+            @click="handleClose"
+            :aria-label="t('close')"
+          >
+            <v-icon>mdi-close</v-icon>
+          </v-btn>
+        </template>
+      </v-list-item>
+    </v-list>
+
+    <v-divider></v-divider>
+
+    <!-- View Selector -->
+    <v-list-subheader>{{ t('view') }}</v-list-subheader>
+    <v-list density="compact">
+      <v-list-item
+        v-for="view in views"
+        :key="view"
+        :active="currentView === view"
+        @click="handleViewChange(view)"
+        :aria-label="`Switch to ${t(view)} view`"
+      >
+        <v-list-item-title>{{ t(view) }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+
+    <v-divider></v-divider>
+
+    <!-- Calendars -->
+    <v-list-subheader>{{ t('calendars') }}</v-list-subheader>
+    <v-list density="compact">
+      <v-list-item
+        v-for="calendar in calendars"
+        :key="calendar.id"
+      >
+        <template v-slot:prepend>
+          <v-avatar
+            :color="calendar.color"
+            size="16"
+          ></v-avatar>
+        </template>
+        <v-list-item-title>{{ calendar.name }}</v-list-item-title>
+      </v-list-item>
+    </v-list>
+  </v-navigation-drawer>
 </template>
 
 <script>
@@ -109,7 +107,7 @@ export default {
       // Clean up existing instance first
       cleanupSwipe();
 
-      const sidebar = document.querySelector('.mobile-sidebar');
+      const sidebar = document.querySelector('.v-navigation-drawer');
       if (!sidebar) return;
 
       hammer = new window.Hammer(sidebar);
@@ -145,13 +143,6 @@ export default {
         // Only allow dragging left (closing direction)
         const deltaX = Math.min(0, event.deltaX);
         sidebar.style.transform = `translateX(${deltaX}px)`;
-        
-        // Calculate overlay opacity
-        const overlay = document.querySelector('.fixed.inset-0.bg-black');
-        const opacity = Math.max(0, 1 + (deltaX / 256)); // 256 = sidebar width
-        if (overlay) {
-          overlay.style.backgroundColor = `rgba(0, 0, 0, ${opacity * 0.5})`;
-        }
       });
 
       hammer.on('panend', (event) => {
@@ -161,11 +152,6 @@ export default {
         event.srcEvent.stopPropagation();
         
         sidebar.style.transition = 'transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        
-        const overlay = document.querySelector('.fixed.inset-0.bg-black');
-        if (overlay) {
-          overlay.style.transition = 'background-color 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)';
-        }
 
         // Close if dragged more than 50% or fast swipe left
         if (event.deltaX < -128 || (event.velocityX < -0.3 && event.deltaX < -30)) {
@@ -177,9 +163,6 @@ export default {
         } else {
           // Snap back
           sidebar.style.transform = '';
-          if (overlay) {
-            overlay.style.backgroundColor = '';
-          }
         }
       });
 
@@ -229,22 +212,3 @@ export default {
   }
 };
 </script>
-
-<style scoped>
-/* Mobile sidebar transitions */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
-}
-
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
-}
-
-.slide-enter-active, .slide-leave-active {
-  transition: transform 0.3s ease;
-}
-
-.slide-enter-from, .slide-leave-to {
-  transform: translateX(-100%);
-}
-</style>

@@ -1,32 +1,20 @@
 <template>
-  <div 
-    v-if="modelValue" 
-    class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4" 
-    style="z-index: 1001;" 
-    @click="handleCancel" 
-    role="dialog" 
-    aria-modal="true" 
-    :aria-label="t('confirmDeleteTitle')"
+  <v-dialog
+    :model-value="modelValue"
+    @update:model-value="handleCancel"
+    max-width="400"
+    persistent
   >
-    <div class="bg-white rounded-lg shadow-2xl max-w-sm w-full p-6" @click.stop>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">{{ t('confirmDeleteTitle') }}</h3>
-      <p class="text-sm text-gray-600 mb-6">{{ t('confirmDelete') }}</p>
-      <div class="flex justify-end space-x-3">
-        <button 
-          @click="handleCancel" 
-          class="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded transition-colors"
-        >
-          {{ t('no') }}
-        </button>
-        <button 
-          @click="handleConfirm" 
-          class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded transition-colors"
-        >
-          {{ t('yes') }}
-        </button>
-      </div>
-    </div>
-  </div>
+    <v-card>
+      <v-card-title>{{ t('confirmDeleteTitle') }}</v-card-title>
+      <v-card-text>{{ t('confirmDelete') }}</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="handleCancel">{{ t('no') }}</v-btn>
+        <v-btn color="error" variant="elevated" @click="handleConfirm">{{ t('yes') }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -61,7 +49,3 @@ export default {
   }
 };
 </script>
-
-<style>
-/* Modal uses Tailwind utilities - no scoped styles needed */
-</style>
