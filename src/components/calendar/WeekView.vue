@@ -155,8 +155,6 @@ defineProps({
 
 .week-event {
   position: absolute;
-  left: 2px;
-  right: 2px;
   border-radius: 8px;
   padding: 4px 8px;
   font-size: 12px;
@@ -164,6 +162,8 @@ defineProps({
   overflow: hidden;
   transition: opacity 0.2s;
   z-index: 1;
+  left: 2px;
+  width: calc(100% - 4px);
 }
 
 .week-event:hover {

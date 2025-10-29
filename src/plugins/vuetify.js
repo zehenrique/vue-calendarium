@@ -29,6 +29,24 @@ export default createVuetify({
   defaults: {
     VBtn: {
       style: 'text-transform: none;',
+      rounded: 'lg',
+    },
+    VCard: {
+      rounded: 'lg',
+      elevation: 2,
+    },
+    VTextField: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+    },
+    VSelect: {
+      variant: 'outlined',
+      density: 'comfortable',
+      rounded: 'lg',
+    },
+    VDialog: {
+      rounded: 'xl',
     },
   },
 })

@@ -5,44 +5,66 @@
     max-width="500"
     data-testid="event-detail-modal"
   >
-    <v-card v-if="event">
+    <v-card v-if="event" class="pa-0">
       <!-- Color bar -->
       <div class="color-bar" :style="{ backgroundColor: event?.color || '#1967d2' }"></div>
-      
-      <v-card-title class="d-flex align-center">
-        <span class="text-h5">{{ event?.title }}</span>
+
+      <v-card-title class="d-flex align-center px-6 pt-6 pb-4">
+        <span class="text-h6 font-weight-medium">{{ event?.title }}</span>
         <v-spacer></v-spacer>
-        <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')">
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          @click="handleClose"
+          :aria-label="t('close')"
+          class="text-medium-emphasis"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      
-      <v-card-text>
+
+      <v-card-text class="px-6 pb-6">
         <!-- Event details -->
-        <v-list density="compact">
-          <v-list-item>
+        <v-list density="comfortable" class="pa-0">
+          <v-list-item class="px-0">
             <template v-slot:prepend>
-              <v-icon>mdi-clock-outline</v-icon>
+              <v-icon color="primary" class="mr-3">mdi-clock-outline</v-icon>
             </template>
-            <v-list-item-title>{{ timeRange }}</v-list-item-title>
-            <v-list-item-subtitle v-if="event?.repeat && event.repeat !== 'none'">
-              Repeats {{ repeatText }}
-            </v-list-item-subtitle>
+            <div>
+              <div class="text-body-1">{{ timeRange }}</div>
+              <div v-if="event?.repeat && event.repeat !== 'none'" class="text-body-2 text-medium-emphasis">
+                {{ t('repeats') }} {{ repeatText }}
+              </div>
+            </div>
           </v-list-item>
-          
-          <v-list-item v-if="calendarName">
+
+          <v-list-item v-if="calendarName" class="px-0">
             <template v-slot:prepend>
-              <v-icon>mdi-calendar</v-icon>
+              <v-icon color="primary" class="mr-3">mdi-calendar</v-icon>
             </template>
-            <v-list-item-title>{{ calendarName }}</v-list-item-title>
+            <v-list-item-title class="text-body-1">{{ calendarName }}</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-card-text>
-      
-      <v-card-actions>
+
+      <v-card-actions class="px-6 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn text @click="handleDelete">{{ t('delete') }}</v-btn>
-        <v-btn color="primary" variant="elevated" @click="handleEdit">{{ t('edit') }}</v-btn>
+        <v-btn
+          variant="text"
+          color="error"
+          @click="handleDelete"
+          class="mr-2"
+        >
+          {{ t('delete') }}
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="filled"
+          @click="handleEdit"
+        >
+          {{ t('edit') }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -145,7 +167,8 @@ export default {
 
 <style scoped>
 .color-bar {
-  height: 8px;
+  height: 6px;
   width: 100%;
+  border-radius: 3px 3px 0 0;
 }
 </style>

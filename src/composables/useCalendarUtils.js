@@ -84,9 +84,14 @@ export function getEventStyle(event, pixelsPerHour = 60) {
   if (event._column !== undefined && event._totalColumns !== undefined) {
     const columnWidth = 100 / event._totalColumns;
     const leftOffset = event._column * columnWidth;
-    
-    style.left = `${leftOffset}%`;
-    style.width = `${columnWidth - 1}%`; // -1% for small gap between columns
+    const gapPx = event._totalColumns >= 4 ? 2 : 6;
+
+    style.left = `calc(${leftOffset}% + 2px)`;
+    style.width = `calc(${columnWidth}% - ${gapPx}px)`;
+    style.right = 'auto';
+  } else {
+    style.left = '2px';
+    style.width = 'calc(100% - 4px)';
   }
   
   return style;
@@ -97,77 +102,89 @@ export function getEventStyle(event, pixelsPerHour = 60) {
  */
 export function calculateEventColumns(events) {
   if (events.length === 0) return [];
-  
+
   // Filter out all-day events as they're handled separately
   const timedEvents = events.filter(e => !e.allDay);
-  
-  // Add column information to each event
+
+  // Prepare events with temporal helpers and layout metadata
   const eventsWithColumns = timedEvents.map(event => {
     const start = Temporal.PlainDateTime.from(event.start);
     const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
-    
+
     return {
       ...event,
       _start: start,
       _end: end,
       _column: 0,
-      _totalColumns: 1
+      _totalColumns: 1,
     };
   });
-  
-  // Sort by start time, then by duration (longer first)
+
+  // Sort by start time, then by duration (longer first) to maintain stable ordering
   eventsWithColumns.sort((a, b) => {
     const timeComp = Temporal.PlainDateTime.compare(a._start, b._start);
     if (timeComp !== 0) return timeComp;
-    
+
     const durationA = Temporal.Duration.from(a._end.since(a._start)).total('minutes');
     const durationB = Temporal.Duration.from(b._end.since(b._start)).total('minutes');
     return durationB - durationA;
   });
-  
-  // Detect overlaps and assign columns
-  for (let i = 0; i < eventsWithColumns.length; i++) {
-    const current = eventsWithColumns[i];
-    const overlapping = [current];
-    
-    // Find all events that overlap with current event
-    for (let j = 0; j < eventsWithColumns.length; j++) {
-      if (i === j) continue;
-      const other = eventsWithColumns[j];
-      
-      // Check if events overlap
-      const currentStartsBeforeOtherEnds = Temporal.PlainDateTime.compare(current._start, other._end) < 0;
-      const currentEndsAfterOtherStarts = Temporal.PlainDateTime.compare(current._end, other._start) > 0;
-      
-      if (currentStartsBeforeOtherEnds && currentEndsAfterOtherStarts) {
-        if (!overlapping.find(e => e.id === other.id)) {
-          overlapping.push(other);
+
+  // Group events that overlap in time
+  const groups = [];
+  for (const event of eventsWithColumns) {
+    let placedInGroup = false;
+
+    for (const group of groups) {
+      if (Temporal.PlainDateTime.compare(event._start, group.maxEnd) < 0) {
+        group.events.push(event);
+        if (Temporal.PlainDateTime.compare(event._end, group.maxEnd) > 0) {
+          group.maxEnd = event._end;
         }
+        placedInGroup = true;
+        break;
       }
     }
-    
-    // Assign column to current event
-    const usedColumns = new Set();
-    for (const event of overlapping) {
-      if (event.id !== current.id && event._column !== undefined) {
-        usedColumns.add(event._column);
-      }
-    }
-    
-    // Find first available column
-    let column = 0;
-    while (usedColumns.has(column)) {
-      column++;
-    }
-    current._column = column;
-    
-    // Update total columns for all overlapping events
-    const maxColumns = Math.max(column + 1, ...overlapping.map(e => e._column + 1));
-    for (const event of overlapping) {
-      event._totalColumns = Math.min(maxColumns, 3); // Max 3 columns for readability
+
+    if (!placedInGroup) {
+      groups.push({
+        events: [event],
+        maxEnd: event._end,
+      });
     }
   }
-  
+
+  // Within each group assign columns greedily
+  for (const group of groups) {
+    const columnEndTimes = [];
+
+    for (const event of group.events) {
+      let assignedColumn = -1;
+
+      for (let columnIndex = 0; columnIndex < columnEndTimes.length; columnIndex++) {
+        if (Temporal.PlainDateTime.compare(event._start, columnEndTimes[columnIndex]) >= 0) {
+          assignedColumn = columnIndex;
+          columnEndTimes[columnIndex] = event._end;
+          break;
+        }
+      }
+
+      if (assignedColumn === -1) {
+        columnEndTimes.push(event._end);
+        assignedColumn = columnEndTimes.length - 1;
+      }
+
+      event._column = assignedColumn;
+      event._totalColumns = columnEndTimes.length;
+    }
+
+    // Ensure all events in group know total columns (accounts for backtracking)
+    const totalColumns = columnEndTimes.length;
+    for (const event of group.events) {
+      event._totalColumns = totalColumns;
+    }
+  }
+
   return eventsWithColumns;
 }
 

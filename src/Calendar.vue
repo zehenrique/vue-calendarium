@@ -32,7 +32,7 @@
       v-else-if="currentView === 'week'"
       :days="weekViewDays"
       :locale="calendarLocale"
-      :pixels-per-hour="PIXELS_PER_HOUR_WEEK"
+      :pixels-per-hour="weekPixelsPerHour"
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :t="t"
@@ -47,7 +47,7 @@
       :events="dayEvents"
       :all-day-events="dayAllDayEvents"
       :locale="calendarLocale"
-      :pixels-per-hour="PIXELS_PER_HOUR_DAY"
+      :pixels-per-hour="dayPixelsPerHour"
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :t="t"
@@ -151,8 +151,10 @@ defineOptions({ name: 'GoogleCalendar' });
 const { t, locale: i18nLocale } = useI18n();
 
 const views = ['day', 'week', 'month'];
-const PIXELS_PER_HOUR_WEEK = 60;
-const PIXELS_PER_HOUR_DAY = 45;
+const DESKTOP_PIXELS_PER_HOUR_WEEK = 60;
+const MOBILE_PIXELS_PER_HOUR_WEEK = 50;
+const DESKTOP_PIXELS_PER_HOUR_DAY = 45;
+const MOBILE_PIXELS_PER_HOUR_DAY = 38;
 
 function readTestNow() {
   if (typeof window === 'undefined') return null;
@@ -225,6 +227,14 @@ const weekViewDays = computed(() =>
   createWeekViewDays(currentDate.value, props.events, calendarLocale.value)
 );
 
+const weekPixelsPerHour = computed(() =>
+  isMobile.value ? MOBILE_PIXELS_PER_HOUR_WEEK : DESKTOP_PIXELS_PER_HOUR_WEEK
+);
+
+const dayPixelsPerHour = computed(() =>
+  isMobile.value ? MOBILE_PIXELS_PER_HOUR_DAY : DESKTOP_PIXELS_PER_HOUR_DAY
+);
+
 const dayEventSummary = computed(() => summarizeEventsForDate(currentDate.value, props.events));
 const dayEvents = computed(() => dayEventSummary.value.timedEvents);
 const dayAllDayEvents = computed(() => dayEventSummary.value.allDayEvents);
@@ -235,7 +245,7 @@ const currentTitle = computed(() =>
 
 const currentTimePosition = computed(() => {
   const minutesSinceMidnight = currentTime.value.hour * 60 + currentTime.value.minute;
-  const pixelsPerHour = currentView.value === 'day' ? PIXELS_PER_HOUR_DAY : PIXELS_PER_HOUR_WEEK;
+  const pixelsPerHour = currentView.value === 'day' ? dayPixelsPerHour.value : weekPixelsPerHour.value;
   return (minutesSinceMidnight / 60) * pixelsPerHour;
 });
 

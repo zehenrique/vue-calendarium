@@ -6,126 +6,137 @@
     persistent
     data-testid="event-modal"
   >
-    <v-card>
-      <v-card-title>
-        <span>{{ t('newEvent') }}</span>
+    <v-card class="pa-0">
+      <v-card-title class="d-flex align-center pa-6 pb-4">
+        <span class="text-h6 font-weight-medium">{{ t('newEvent') }}</span>
         <v-spacer></v-spacer>
-        <v-btn icon variant="text" @click="handleClose" :aria-label="t('close')">
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          @click="handleClose"
+          :aria-label="t('close')"
+          class="text-medium-emphasis"
+        >
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
-      
-      <v-card-text>
-        <v-form>
-          <!-- Event title -->
-          <v-text-field
-            v-model="eventData.title"
-            :label="t('eventTitle')"
-            :placeholder="t('eventTitle')"
-            variant="outlined"
-            density="comfortable"
-            required
-          ></v-text-field>
-          
-          <!-- Date and time inputs -->
-          <v-row>
-            <v-col cols="6">
-              <v-text-field
-                v-model="eventData.startDate"
-                :label="t('startDate')"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-                required
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model="eventData.startTime"
-                :label="t('startTime')"
-                type="time"
-                variant="outlined"
-                density="comfortable"
-                required
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          
-          <v-row>
-            <v-col cols="6">
-              <v-text-field
-                v-model="eventData.endDate"
-                :label="t('endDate')"
-                type="date"
-                variant="outlined"
-                density="comfortable"
-                required
-              ></v-text-field>
-            </v-col>
-            <v-col cols="6">
-              <v-text-field
-                v-model="eventData.endTime"
-                :label="t('endTime')"
-                type="time"
-                variant="outlined"
-                density="comfortable"
-                required
-              ></v-text-field>
-            </v-col>
-          </v-row>
-          
-          <!-- Repeat -->
-          <v-select
-            v-model="eventData.repeat"
-            :label="t('repeat')"
-            :items="repeatOptions"
-            item-title="text"
-            item-value="value"
-            variant="outlined"
-            density="comfortable"
-            data-testid="repeat-select"
-          ></v-select>
-          
-          <!-- Calendar selection -->
-          <v-select
-            v-model="eventData.calendar"
-            :label="t('calendar')"
-            :items="calendars"
-            item-title="name"
-            item-value="id"
-            variant="outlined"
-            density="comfortable"
-            data-testid="calendar-select"
-          ></v-select>
-          
-          <!-- Color picker -->
-          <v-row align="center">
-            <v-col cols="4">
-              <v-text-field
-                v-model="eventData.color"
-                :label="t('color')"
-                type="color"
-                variant="outlined"
-                density="comfortable"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="8">
-              <v-text-field
-                v-model="eventData.color"
-                readonly
-                variant="outlined"
-                density="comfortable"
-                class="font-mono"
-              ></v-text-field>
-            </v-col>
-          </v-row>
-        </v-form>
+
+      <v-card-text class="px-6 pb-6">
+        <v-container fluid class="pa-0">
+          <v-form>
+            <!-- Event title -->
+            <v-text-field
+              v-model="eventData.title"
+              :label="t('eventTitle')"
+              :placeholder="t('eventTitle')"
+              required
+              class="mb-4"
+            ></v-text-field>
+
+            <!-- Date and time inputs -->
+            <div class="text-body-2 text-medium-emphasis mb-3">{{ t('start') }}</div>
+            <v-row class="mb-4">
+              <v-col cols="6">
+                <v-text-field
+                  v-model="eventData.startDate"
+                  :label="t('date')"
+                  type="date"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="eventData.startTime"
+                  :label="t('time')"
+                  type="time"
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+
+            <div class="text-body-2 text-medium-emphasis mb-3">{{ t('end') }}</div>
+            <v-row class="mb-4">
+              <v-col cols="6">
+                <v-text-field
+                  v-model="eventData.endDate"
+                  :label="t('date')"
+                  type="date"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col cols="6">
+                <v-text-field
+                  v-model="eventData.endTime"
+                  :label="t('time')"
+                  type="time"
+                  required
+                ></v-text-field>
+              </v-col>
+            </v-row>
+
+            <!-- Repeat -->
+            <v-select
+              v-model="eventData.repeat"
+              :label="t('repeat')"
+              :items="repeatOptions"
+              item-title="text"
+              item-value="value"
+              class="mb-4"
+              data-testid="repeat-select"
+            ></v-select>
+
+            <!-- Calendar selection -->
+            <v-select
+              v-model="eventData.calendar"
+              :label="t('calendar')"
+              :items="calendars"
+              item-title="name"
+              item-value="id"
+              class="mb-4"
+              data-testid="calendar-select"
+            ></v-select>
+
+            <!-- Color picker -->
+            <div class="text-body-2 text-medium-emphasis mb-3">{{ t('color') }}</div>
+            <v-row align="center" class="mb-4">
+              <v-col cols="4">
+                <v-text-field
+                  v-model="eventData.color"
+                  type="color"
+                  hide-details
+                ></v-text-field>
+              </v-col>
+              <v-col cols="8">
+                <v-text-field
+                  v-model="eventData.color"
+                  readonly
+                  hide-details
+                  class="font-mono text-body-2"
+                ></v-text-field>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-container>
       </v-card-text>
-      
-      <v-card-actions>
+
+      <v-card-actions class="px-6 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn text @click="handleClose">{{ t('cancel') }}</v-btn>
-        <v-btn color="primary" variant="elevated" @click="handleSave">{{ t('save') }}</v-btn>
+        <v-btn
+          variant="text"
+          @click="handleClose"
+          class="mr-2"
+        >
+          {{ t('cancel') }}
+        </v-btn>
+        <v-btn
+          color="primary"
+          variant="filled"
+          @click="handleSave"
+          :disabled="!eventData.title"
+        >
+          {{ t('save') }}
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

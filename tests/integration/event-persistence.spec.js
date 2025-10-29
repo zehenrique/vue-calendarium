@@ -252,13 +252,13 @@ test.describe('Event Persistence - Data Validation', () => {
   test('should validate event title requirement', async ({ page }) => {
     await openEventModal(page, 10);
 
-    page.once('dialog', async dialog => {
-      expect(dialog.message()).toContain('title');
-      await dialog.accept();
-    });
+    // Check that Save button is disabled when title is empty
+    const saveButton = page.getByRole('button', { name: /Save/i });
+    await expect(saveButton).toBeDisabled();
 
-    await page.getByRole('button', { name: /Save/i }).click();
-    await expect(page.locator(EVENT_MODAL)).toBeVisible();
+    // Enter a title and verify button becomes enabled
+    await page.getByLabel(/Event Title/i).fill('Test Event');
+    await expect(saveButton).toBeEnabled();
   });
 
   test('should preserve event data across edit', async ({ page }) => {
