@@ -3,6 +3,7 @@
     <CalendarHeader
       :current-title="currentTitle"
       :current-view="currentView"
+      :current-date="currentDate"
       :views="views"
       :is-mobile="isMobile"
       :week-days="currentView === 'week' ? weekViewDays : null"
@@ -77,6 +78,7 @@
     <DeleteConfirmModal
       v-if="modalsEnabled"
       v-model="showDeleteConfirm"
+      :event="selectedEvent"
       @confirm="confirmDelete"
     />
 
@@ -111,9 +113,10 @@ import {
   createWeekdayLabels,
   formatCurrentTitle,
   shouldDisplayCurrentTimeIndicator,
-  buildEventPayloadFromDraft,
-  generateRecurringEvents
+  buildEventPayloadFromDraft
 } from './composables/useCalendarEventHelpers.js';
+import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
+import { expandRecurrence } from './composables/useCalendarInterop.js';
 import { createSwipeController } from './composables/useSwipeGestures.js';
 
 const props = defineProps({
@@ -144,7 +147,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete', 'eventCreateRequest']);
+const emit = defineEmits(['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete', 'eventUpdate', 'eventCreateRequest']);
 
 defineOptions({ name: 'GoogleCalendar' });
 
@@ -221,10 +224,54 @@ const weekDays = computed(() =>
   createWeekdayLabels(currentDate.value, calendarLocale.value, isMobile.value)
 );
 
-const monthDays = computed(() => createMonthGrid(currentDate.value, props.events));
+// Expand RRULE-based events into occurrences for the visible range
+function getViewRange(view, date) {
+  if (view === 'month') {
+    const year = date.year;
+    const month = date.month;
+    const firstDay = Temporal.PlainDate.from({ year, month, day: 1 });
+    const lastDay = firstDay.add({ months: 1 }).subtract({ days: 1 });
+    const start = getStartOfWeek(firstDay);
+    const end = getEndOfWeek(lastDay);
+    return {
+      start: `${start.toString()}T00:00:00`,
+      end: `${end.toString()}T23:59:59`
+    };
+  }
+  if (view === 'week') {
+    const start = getStartOfWeek(date);
+    const end = start.add({ days: 6 });
+    return {
+      start: `${start.toString()}T00:00:00`,
+      end: `${end.toString()}T23:59:59`
+    };
+  }
+  // day
+  return {
+    start: `${date.toString()}T00:00:00`,
+    end: `${date.toString()}T23:59:59`
+  };
+}
+
+const displayEvents = computed(() => {
+  const range = getViewRange(currentView.value, currentDate.value);
+  const expanded = [];
+  for (const e of props.events) {
+    if (e && e.rrule) {
+      expanded.push(
+        ...expandRecurrence(e, range.start, range.end)
+      );
+    } else {
+      expanded.push(e);
+    }
+  }
+  return expanded;
+});
+
+const monthDays = computed(() => createMonthGrid(currentDate.value, displayEvents.value));
 
 const weekViewDays = computed(() =>
-  createWeekViewDays(currentDate.value, props.events, calendarLocale.value)
+  createWeekViewDays(currentDate.value, displayEvents.value, calendarLocale.value)
 );
 
 const weekPixelsPerHour = computed(() =>
@@ -235,12 +282,12 @@ const dayPixelsPerHour = computed(() =>
   isMobile.value ? MOBILE_PIXELS_PER_HOUR_DAY : DESKTOP_PIXELS_PER_HOUR_DAY
 );
 
-const dayEventSummary = computed(() => summarizeEventsForDate(currentDate.value, props.events));
+const dayEventSummary = computed(() => summarizeEventsForDate(currentDate.value, displayEvents.value));
 const dayEvents = computed(() => dayEventSummary.value.timedEvents);
 const dayAllDayEvents = computed(() => dayEventSummary.value.allDayEvents);
 
 const currentTitle = computed(() =>
-  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value)
+  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value)
 );
 
 const currentTimePosition = computed(() => {
@@ -463,7 +510,7 @@ function editSelectedEvent(event) {
     startTime: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
     endDate: end.toPlainDate().toString(),
     endTime: `${String(end.hour).padStart(2, '0')}:${String(end.minute).padStart(2, '0')}`,
-    repeat: target.repeat || 'none',
+    rrule: target.rrule || '',
     calendar: target.calendar || props.calendars[0]?.id || 'default',
     color: target.color || props.calendars[0]?.color || '#1967d2',
     allDay: target.allDay || false
@@ -488,11 +535,71 @@ function deleteSelectedEvent(event) {
   }
 }
 
-function confirmDelete() {
-  if (selectedEvent.value) {
-    emit('eventDelete', selectedEvent.value);
-    selectedEvent.value = null;
+function confirmDelete(options = {}) {
+  if (!selectedEvent.value) {
+    showDeleteConfirm.value = false;
+    showEventDetail.value = false;
+    return;
   }
+
+  const { deleteAll = false } = options;
+  
+  // If deleting all events in the series, or if not a recurring event
+  if (deleteAll || (!selectedEvent.value.rrule && !selectedEvent.value.recurringEventId)) {
+    emit('eventDelete', selectedEvent.value);
+  } else {
+    // Deleting single occurrence - find the base event and add EXDATE
+    // selectedEvent might be an expanded occurrence (id like 'event-1-2')
+    // We need to find the original base event
+    const selectedId = selectedEvent.value.id.toString();
+    const baseEventId = selectedId.includes('-') ? selectedId.split('-')[0] : selectedId;
+    
+    // Find the base event from props.events (not the expanded displayEvents)
+    const baseEvent = props.events.find(e => e.id.toString() === baseEventId);
+    
+    if (!baseEvent || !baseEvent.rrule) {
+      // Fallback: if we can't find base event or it doesn't have rrule, delete normally
+      emit('eventDelete', selectedEvent.value);
+      selectedEvent.value = null;
+      showDeleteConfirm.value = false;
+      showEventDetail.value = false;
+      return;
+    }
+    
+    // Create updated event with EXDATE
+    const eventToUpdate = { ...baseEvent };
+    const dateToExclude = selectedEvent.value.start;
+    
+    // Parse the ISO date to get formatted date for EXDATE (YYYYMMDDTHHMMSSZ format)
+    const excludeDate = new Date(dateToExclude);
+    const exdateFormatted = excludeDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+    
+    // Parse existing RRULE
+    let rruleString = eventToUpdate.rrule || '';
+    
+    // Check if EXDATE already exists in the RRULE
+    if (rruleString.includes('\nEXDATE:')) {
+      // Append to existing EXDATE
+      rruleString = rruleString.replace(
+        /\nEXDATE:([^\n]+)/,
+        (match, dates) => `\nEXDATE:${dates},${exdateFormatted}`
+      );
+    } else {
+      // Add new EXDATE line
+      // Ensure RRULE has proper format (DTSTART\nRRULE:...)
+      if (!rruleString.includes('DTSTART:')) {
+        // Use the base event's start for DTSTART, not the occurrence's start
+        const dtstart = new Date(baseEvent.start).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+        rruleString = `DTSTART:${dtstart}\nRRULE:${rruleString.replace(/^RRULE:/, '')}`;
+      }
+      rruleString += `\nEXDATE:${exdateFormatted}`;
+    }
+    
+    eventToUpdate.rrule = rruleString;
+    emit('eventUpdate', eventToUpdate);
+  }
+  
+  selectedEvent.value = null;
   showDeleteConfirm.value = false;
   showEventDetail.value = false;
 }
@@ -507,9 +614,9 @@ function saveEvent(eventDataFromModal) {
 
   const normalizedDraft = ensureDraftCalendar(eventToSave, props.calendars);
   const eventPayload = buildEventPayloadFromDraft(normalizedDraft, props.calendars);
-  const eventsToEmit = generateRecurringEvents(eventPayload, eventPayload.repeat);
 
-  emit('eventCreate', eventsToEmit);
+  // Emit single event with RRULE - expansion happens in displayEvents computed
+  emit('eventCreate', [eventPayload]);
 
   newEvent.value = createDefaultEventDraft(props.calendars);
 }

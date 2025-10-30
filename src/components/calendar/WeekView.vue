@@ -163,25 +163,51 @@ defineProps({
   transition: opacity 0.2s;
   z-index: 1;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   /* Position, width, and padding are set via inline styles from getEventStyle */
+}
+
+.event-title {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.event-time {
+  font-size: 11px;
+  opacity: 0.9;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 @media (max-width: 768px) {
   .week-event {
-    font-size: 10px;
-    padding: 2px;
-    border-radius: 6px;
+    font-size: 8px;
+    padding: 1px 2px;
+    border-radius: 3px;
+    min-height: 0;
+    line-height: 1;
+    max-width: 100%;
   }
   
   .week-event .event-title {
-    font-size: 10px;
-    line-height: 1.2;
-    margin-bottom: 1px;
+    font-size: 8px;
+    line-height: 1;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-weight: 500;
   }
   
   .week-event .event-time {
-    font-size: 9px;
-    line-height: 1.1;
+    display: none; /* Hide time in mobile week view to save space */
   }
 }
 
@@ -240,6 +266,38 @@ defineProps({
   }
   
   .hour-slot {
+    height: 50px;
+  }
+  
+  .week-event {
+    font-size: 8px;
+    padding: 1px 2px;
+    border-radius: 3px;
+    min-height: 0;
+    line-height: 1;
+    max-width: 100%;
+  }
+  
+  .week-event .event-title {
+    font-size: 8px;
+    line-height: 1;
+    margin-bottom: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    font-weight: 500;
+  }
+  
+  .week-event .event-time {
+    display: none; /* Hide time in mobile week view to save space */
+  }
+
+  .time-header {
+    min-height: 50px;
+  }
+
+  .time-slot-label {
     height: 50px;
   }
 }

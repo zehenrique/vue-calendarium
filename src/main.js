@@ -3,7 +3,6 @@ import { createI18n } from 'vue-i18n';
 import App from './App.vue';
 import messages from './i18n.js';
 import vuetify from './plugins/vuetify.js';
-import './style.css';
 
 // Create i18n instance
 // Default locale is 'en', but Calendar component can override via props

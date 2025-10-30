@@ -33,8 +33,8 @@
             </template>
             <div>
               <div class="text-body-1">{{ timeRange }}</div>
-              <div v-if="event?.repeat && event.repeat !== 'none'" class="text-body-2 text-medium-emphasis">
-                {{ t('repeats') }} {{ repeatText }}
+              <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis">
+                {{ formatRRule(event.rrule) }}
               </div>
             </div>
           </v-list-item>
@@ -60,7 +60,7 @@
         </v-btn>
         <v-btn
           color="primary"
-          variant="filled"
+          variant="flat"
           @click="handleEdit"
         >
           {{ t('edit') }}
@@ -74,6 +74,7 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Temporal } from '@js-temporal/polyfill';
+import { useRRuleFormatter } from '../composables/useRRuleFormatter.js';
 
 export default {
   name: 'EventDetailModal',
@@ -98,6 +99,7 @@ export default {
   emits: ['update:modelValue', 'edit', 'delete'],
   setup(props, { emit }) {
     const { t } = useI18n();
+    const { formatRRule } = useRRuleFormatter();
 
     const timeRange = computed(() => {
       if (!props.event) return '';
@@ -128,12 +130,6 @@ export default {
       return `${dateStr}, ${startStr} – ${endStr}`;
     });
 
-    const repeatText = computed(() => {
-      if (!props.event?.repeat || props.event.repeat === 'none') return '';
-      const repeatKey = 'repeat' + props.event.repeat.charAt(0).toUpperCase() + props.event.repeat.slice(1);
-      return t(repeatKey).toLowerCase();
-    });
-
     const calendarName = computed(() => {
       if (!props.event?.calendar) return '';
       const calendar = props.calendars.find(c => c.id === props.event.calendar);
@@ -154,8 +150,8 @@ export default {
 
     return {
       t,
+      formatRRule,
       timeRange,
-      repeatText,
       calendarName,
       handleClose,
       handleEdit,

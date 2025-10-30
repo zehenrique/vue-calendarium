@@ -121,15 +121,16 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 .day-grid {
-  display: flex;
+  display: grid;
+  grid-template-columns: 60px 1fr;
   height: 100%;
   min-height: calc(24 * 45px);
 }
 
 .time-column {
-  width: 60px;
+  display: grid;
+  grid-template-rows: auto repeat(24, 45px);
   border-right: 1px solid #d0d0d0;
-  flex-shrink: 0;
   position: relative;
 }
 
@@ -158,13 +159,12 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 .time-slot-label span {
   display: inline-block;
   position: relative;
-  top: -4px;
+  top: -8px;
 }
 
 .day-column-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
 }
 
 .day-all-day-section {
@@ -196,9 +196,10 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 .day-column {
-  flex: 1;
   position: relative;
   border-right: 1px solid #d0d0d0;
+  display: grid;
+  grid-template-rows: repeat(24, 45px);
 }
 
 .hour-slot {
@@ -294,11 +295,16 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 
 @media (max-width: 768px) {
   .day-grid {
+    grid-template-columns: 50px 1fr;
     min-height: calc(24 * 38px);
   }
 
   .time-column {
-    width: 50px;
+    grid-template-rows: auto repeat(24, 38px);
+  }
+  
+  .day-column {
+    grid-template-rows: repeat(24, 38px);
   }
 
   .time-slot-label {
@@ -306,10 +312,6 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
     font-size: 9px;
     padding: 0 4px;
     align-items: flex-start;
-  }
-
-  .time-slot-label span {
-    top: -3px;
   }
   
   .day-column {

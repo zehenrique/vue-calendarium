@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import { rrulestr } from 'rrule';
 import { getStartOfWeek, getEndOfWeek, calculateEventColumns } from './useCalendarUtils.js';
 
 const DEFAULT_EVENT_COLOR = '#1967d2';
@@ -26,7 +27,7 @@ export function createDefaultEventDraft(calendars, overrides = {}) {
     startTime: '09:00',
     endDate: today.toString(),
     endTime: '10:00',
-    repeat: 'none',
+    rrule: '', // RRULE string per RFC 5545, e.g. 'FREQ=WEEKLY;COUNT=4;BYDAY=MO'
     calendar: calendar.id,
     color: calendar.color || DEFAULT_EVENT_COLOR,
     allDay: false,
@@ -132,7 +133,7 @@ export function createWeekdayLabels(currentDate, locale, isMobile) {
   });
 }
 
-export function formatCurrentTitle(view, currentDate, locale) {
+export function formatCurrentTitle(view, currentDate, locale, isMobile = false) {
   if (view === 'month') {
     const monthName = currentDate.toLocaleString(locale, { month: 'long' });
     return `${monthName} ${currentDate.year}`;
@@ -144,12 +145,19 @@ export function formatCurrentTitle(view, currentDate, locale) {
     return `${monthName} ${currentDate.year}`;
   }
 
-  return currentDate.toLocaleString(locale, {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Day view: 
+  // - Mobile: Show only month and year (day name is shown separately in header badge)
+  // - Desktop: Show full date with weekday
+  if (isMobile) {
+    const monthName = currentDate.toLocaleString(locale, { month: 'long' });
+    return `${monthName} ${currentDate.year}`;
+  } else {
+    const weekday = currentDate.toLocaleString(locale, { weekday: 'long' });
+    const monthName = currentDate.toLocaleString(locale, { month: 'long' });
+    const day = currentDate.day;
+    const year = currentDate.year;
+    return `${weekday}, ${monthName} ${day}, ${year}`;
+  }
 }
 
 export function shouldDisplayCurrentTimeIndicator(view, currentDate) {
@@ -184,46 +192,40 @@ export function buildEventPayloadFromDraft(draft, calendars) {
     end: endDateTime,
     color: draft.color || calendar.color || DEFAULT_EVENT_COLOR,
     calendar: draft.calendar || calendar.id,
-    repeat: draft.repeat || 'none',
+    rrule: draft.rrule || '',
     allDay: Boolean(draft.allDay)
   };
 }
 
-export function generateRecurringEvents(baseEvent, repeatType, maxOccurrences = MAX_RECURRING_OCCURRENCES) {
-  if (repeatType === 'none') return [baseEvent];
+export function generateRecurringEvents(baseEvent, maxOccurrences = MAX_RECURRING_OCCURRENCES) {
+  const dtstart = new Date(baseEvent.start);
+  const baseStart = Temporal.PlainDateTime.from(baseEvent.start);
+  const baseEnd = Temporal.PlainDateTime.from(baseEvent.end || baseEvent.start);
+  const dur = baseEnd.since(baseStart);
 
-  const events = [baseEvent];
-  const start = Temporal.PlainDate.from(baseEvent.start.split('T')[0]);
-  const timeStart = baseEvent.start.split('T')[1];
-  const timeEnd = baseEvent.end.split('T')[1];
-
-  for (let offset = 1; offset < maxOccurrences; offset += 1) {
-    let nextDate;
-
-    switch (repeatType) {
-      case 'daily':
-        nextDate = start.add({ days: offset });
-        break;
-      case 'weekly':
-        nextDate = start.add({ weeks: offset });
-        break;
-      case 'monthly':
-        nextDate = start.add({ months: offset });
-        break;
-      case 'yearly':
-        nextDate = start.add({ years: offset });
-        break;
-      default:
-        return events;
-    }
-
-    events.push({
-      ...baseEvent,
-      id: `${baseEvent.id}-${offset}`,
-      start: `${nextDate.toString()}T${timeStart}`,
-      end: `${nextDate.toString()}T${timeEnd}`
-    });
+  const rruleText = baseEvent.rrule;
+  if (!rruleText || rruleText.trim() === '') {
+    return [baseEvent];
   }
 
-  return events;
+  const rule = rrulestr(rruleText.startsWith('RRULE:') ? rruleText : `RRULE:${rruleText}`, {
+    dtstart
+  });
+
+  const dates = [];
+  rule.all((date, i) => {
+    if (i >= maxOccurrences) return false;
+    dates.push(date);
+    return true;
+  });
+
+  return dates.map((jsDate, idx) => {
+    const t = Temporal.PlainDateTime.from(jsDate.toISOString().slice(0, 19));
+    return {
+      ...baseEvent,
+      id: idx === 0 ? baseEvent.id : `${baseEvent.id}-${idx}`,
+      start: t.toString(),
+      end: t.add(dur).toString()
+    };
+  });
 }

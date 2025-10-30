@@ -185,31 +185,3 @@ export function calculateEventColumns(events) {
 
   return eventsWithColumns;
 }
-
-/**
- * Get events for a specific date
- */
-export function getEventsForDate(date, allEvents) {
-  const events = allEvents.filter(event => {
-    const eventStart = Temporal.PlainDate.from(event.start);
-    const eventEnd = event.end ? Temporal.PlainDate.from(event.end) : eventStart;
-    
-    return Temporal.PlainDate.compare(date, eventStart) >= 0 &&
-           Temporal.PlainDate.compare(date, eventEnd) <= 0;
-  }).sort((a, b) => {
-    const aTime = Temporal.PlainDateTime.from(a.start);
-    const bTime = Temporal.PlainDateTime.from(b.start);
-    return Temporal.PlainDateTime.compare(aTime, bTime);
-  });
-  
-  return calculateEventColumns(events);
-}
-
-/**
- * Get current time position in pixels for time indicator
- */
-export function getCurrentTimePosition(pixelsPerHour = 60) {
-  const now = Temporal.Now.plainDateTimeISO();
-  const minutesSinceMidnight = now.hour * 60 + now.minute;
-  return (minutesSinceMidnight / 60) * pixelsPerHour;
-}

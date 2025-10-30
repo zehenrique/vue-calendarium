@@ -12,7 +12,10 @@ A production-ready calendar component for Vue.js that replicates Google Calendar
 🎨 **Custom Hex Colors** - Events accept any hex color code
 💻 **Vue 3 Composition API** - Built with Vue 3 Composition API best practices
 📊 **Event Management** - Create, view, edit, and delete events via UI and programmatically
-🔁 **Recurring Events** - Daily, weekly, monthly, and yearly recurring events (up to 52 occurrences)
+🔁 **Recurring Events** - RFC 5545 compliant recurring events with RRULE support and iCalendar import/export
+  - Google Calendar-like interface: Daily, Weekly, Monthly, Yearly, or Custom recurrence
+  - Delete single occurrence or entire series with EXDATE support
+  - Human-readable recurrence descriptions
 📂 **Multiple Calendars** - Support for event categories/calendars with color coding
 ♿ **Accessibility** - Full ARIA labels, keyboard navigation, and screen reader support
 🧩 **Optional Modals** - Disable built-in dialogs and plug in your own custom modals

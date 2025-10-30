@@ -111,6 +111,54 @@ handleCreateRequest({ draft, context }) {
 }
 ```
 
+#### eventCreate
+- **Payload:** Array of event objects
+- **Description:** Emitted when the user creates a new event through the built-in modal. Contains an array with the newly created event(s). For recurring events, the array contains a single event with an `rrule` property.
+
+Example:
+```javascript
+handleEventCreate(events) {
+  events.forEach(event => {
+    this.events.push(event);
+    // Optionally persist to backend
+    this.saveToAPI(event);
+  });
+}
+```
+
+#### eventDelete
+- **Payload:** Event object
+- **Description:** Emitted when the user deletes an event. For recurring events, this may be the original event (if deleting the entire series) or represent a single occurrence deletion.
+
+Example:
+```javascript
+handleEventDelete(event) {
+  const index = this.events.findIndex(e => e.id === event.id);
+  if (index !== -1) {
+    this.events.splice(index, 1);
+    // Optionally persist to backend
+    this.deleteFromAPI(event.id);
+  }
+}
+```
+
+#### eventUpdate
+- **Payload:** Event object
+- **Description:** Emitted when an event is updated (e.g., adding an EXDATE to exclude a single occurrence from a recurring series). The payload contains the updated event object with all modifications.
+
+Example:
+```javascript
+handleEventUpdate(updatedEvent) {
+  const index = this.events.findIndex(e => e.id === updatedEvent.id);
+  if (index !== -1) {
+    this.events[index] = updatedEvent;
+    // Optionally persist to backend
+    this.updateToAPI(updatedEvent);
+  }
+}
+```
+
+
 ## Event Object Structure
 
 ### Required Properties
@@ -162,11 +210,12 @@ start: '2025-10-27T14:30:00-05:00'
 - **Default:** `'default'`
 - **Description:** Calendar/category ID that event belongs to
 
-#### repeat
+#### rrule
 - **Type:** `String`
-- **Default:** `'none'`
-- **Allowed values:** `'none'`, `'daily'`, `'weekly'`, `'monthly'`, `'yearly'`
-- **Description:** Recurrence pattern for event. When set, component automatically generates up to 52 recurring instances.
+- **Required:** No
+- **Description:** RFC 5545 recurrence rule string (e.g. `FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4` or `RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4`). 
+- **Usage:** All recurrence is stored and processed using RRULE internally. The UI provides a Google Calendar-like interface where users select repeat patterns (Daily, Weekly, Monthly, Yearly, or Custom), and these selections are converted to RRULE strings automatically.
+- **Display:** When viewing events, RRULE strings are converted to human-readable text (e.g., "Weekly on Monday, Friday").
 
 ## Usage Examples
 
@@ -439,4 +488,75 @@ function validateEvent(event) {
   
   return true;
 }
+```
+
+## iCalendar (RFC 5545) and RRULE Interop
+
+### User-Facing Recurrence Interface
+
+The calendar provides a Google Calendar-like interface for recurrence. Users **never see or edit RRULE strings directly**. Instead:
+
+1. **Simple Repeat Options**: Users can select:
+   - Does not repeat
+   - Daily
+   - Weekly
+   - Monthly
+   - Yearly
+   - Custom...
+
+2. **Custom Recurrence Modal**: When "Custom..." is selected, a detailed modal opens allowing users to configure:
+   - Frequency (Daily/Weekly/Monthly/Yearly)
+   - Interval (every N days/weeks/months/years)
+   - Days of the week (for weekly recurrence)
+   - Monthly pattern (by day of month or by weekday position)
+   - End condition (never, until date, or after N occurrences)
+
+3. **Human-Readable Display**: Event details show recurrence in plain language:
+   - "Weekly" → displays as "Weekly"
+   - "FREQ=WEEKLY;BYDAY=MO,FR" → displays as "Weekly on M, F"
+   - "FREQ=MONTHLY;INTERVAL=2;COUNT=6" → displays as "Every 2 months, 6 times"
+
+4. **Deleting Recurring Events**: When deleting a recurring event, users are prompted to choose:
+   - **Delete this event**: Removes only the selected occurrence by adding an EXDATE to the RRULE. The event is updated via `eventUpdate` emission.
+   - **Delete all events in the series**: Removes the entire recurring series. The event is deleted via `eventDelete` emission.
+
+### Programmatic RRULE Usage
+
+For developers, a composable `useCalendarInterop` is provided for importing/exporting iCalendar data and handling RRULE recurrence.
+
+- parseICal(icsString) -> Array<Event>: Parses ICS text into the component's event objects.
+- serializeICal(events, opts?) -> string: Generates ICS text from event objects. Optional opts: { prodId, tzid }.
+- parseRRule(rruleString) -> { rule, options }: Parses an RRULE (with or without DTSTART) into an RRule instance.
+- serializeRRule(optionsOrRule) -> string: Serializes RRule options or an RRule instance to RFC string.
+- expandRecurrence(event, rangeStart, rangeEnd) -> Array<Event>: Expands an event with event.rrule into occurrences within range.
+
+Example:
+
+```js
+import useCalendarInterop from './src/composables/useCalendarInterop.js';
+
+const { parseICal, serializeICal, parseRRule, serializeRRule, expandRecurrence } = useCalendarInterop();
+
+// Parse ICS
+const events = parseICal(icsText);
+
+// Export ICS
+const ics = serializeICal(events, { prodId: '-//My App//EN' });
+
+// RRULE round-trip
+const { options } = parseRRule('RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=3');
+const rruleText = serializeRRule(options);
+
+// Expand occurrences
+const recurrences = expandRecurrence(
+  {
+    id: 'evt1',
+    title: 'Standup',
+    start: '2025-10-06T09:00:00',
+    end: '2025-10-06T09:15:00',
+    rrule: 'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO'
+  },
+  '2025-10-01T00:00:00',
+  '2025-11-01T00:00:00'
+);
 ```

@@ -8,6 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext .js,.vue",
+  "test": "vitest run tests/unit",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed",
     "test:ui:debug": "playwright test --debug",
@@ -29,6 +30,8 @@
     "@js-temporal/polyfill": "^0.4.4",
     "@mdi/font": "^7.4.47",
     "hammerjs": "^2.0.8",
+    "ical.js": "^2.1.0",
+    "rrule": "^2.8.1",
     "vue": "^3.3.0",
     "vue-i18n": "^9.14.3",
     "vuetify": "^3.10.8"
@@ -36,6 +39,7 @@
   "devDependencies": {
     "@playwright/test": "^1.56.1",
     "@vitejs/plugin-vue": "^4.4.0",
+    "vitest": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.21.1",
     "playwright": "^1.56.1",

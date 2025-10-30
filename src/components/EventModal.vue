@@ -34,6 +34,14 @@
               class="mb-4"
             ></v-text-field>
 
+            <!-- All day toggle -->
+            <v-checkbox
+              v-model="eventData.allDay"
+              :label="t('allDay')"
+              class="mb-2"
+              hide-details
+            ></v-checkbox>
+
             <!-- Date and time inputs -->
             <div class="text-body-2 text-medium-emphasis mb-3">{{ t('start') }}</div>
             <v-row class="mb-4">
@@ -51,6 +59,7 @@
                   :label="t('time')"
                   type="time"
                   required
+                  :disabled="eventData.allDay"
                 ></v-text-field>
               </v-col>
             </v-row>
@@ -71,19 +80,21 @@
                   :label="t('time')"
                   type="time"
                   required
+                  :disabled="eventData.allDay"
                 ></v-text-field>
               </v-col>
             </v-row>
 
-            <!-- Repeat -->
+            <!-- Recurrence picker -->
             <v-select
-              v-model="eventData.repeat"
+              v-model="repeatSelection"
               :label="t('repeat')"
               :items="repeatOptions"
               item-title="text"
               item-value="value"
               class="mb-4"
               data-testid="repeat-select"
+              @update:modelValue="handleRepeatChange"
             ></v-select>
 
             <!-- Calendar selection -->
@@ -131,7 +142,7 @@
         </v-btn>
         <v-btn
           color="primary"
-          variant="filled"
+          variant="flat"
           @click="handleSave"
           :disabled="!eventData.title"
         >
@@ -140,14 +151,26 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Custom recurrence picker - outside main dialog -->
+  <RecurrencePickerModal
+    v-model="showCustomRecurrence"
+    :rrule="eventData.rrule"
+    :start-date="eventData.startDate"
+    @save="handleCustomRecurrenceSave"
+  />
 </template>
 
 <script>
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import RecurrencePickerModal from './RecurrencePickerModal.vue';
 
 export default {
   name: 'EventModal',
+  components: {
+    RecurrencePickerModal
+  },
   props: {
     modelValue: {
       type: Boolean,
@@ -172,25 +195,85 @@ export default {
       startTime: '09:00',
       endDate: '',
       endTime: '10:00',
-      repeat: 'none',
+      rrule: '', // Internal RRULE storage
       calendar: 'default',
-      color: '#1967d2'
+      color: '#1967d2',
+      allDay: false
     });
+
+    const repeatSelection = ref('none');
+    const showCustomRecurrence = ref(false);
 
     const repeatOptions = computed(() => [
       { text: t('repeatNone'), value: 'none' },
       { text: t('repeatDaily'), value: 'daily' },
       { text: t('repeatWeekly'), value: 'weekly' },
       { text: t('repeatMonthly'), value: 'monthly' },
-      { text: t('repeatYearly'), value: 'yearly' }
+      { text: t('repeatYearly'), value: 'yearly' },
+      { text: t('customRecurrence'), value: 'custom' }
     ]);
 
     // Watch for event prop changes to update form
     watch(() => props.event, (newEvent) => {
       if (newEvent) {
-        eventData.value = { ...newEvent };
+        eventData.value = {
+          title: newEvent.title || '',
+          startDate: newEvent.startDate || '',
+          startTime: newEvent.startTime || '09:00',
+          endDate: newEvent.endDate || '',
+          endTime: newEvent.endTime || '10:00',
+          rrule: newEvent.rrule || '',
+          calendar: newEvent.calendar || 'default',
+          color: newEvent.color || '#1967d2',
+          allDay: newEvent.allDay || false
+        };
+        
+        // Set repeat selection based on RRULE
+        if (!newEvent.rrule || newEvent.rrule === '') {
+          repeatSelection.value = 'none';
+        } else if (newEvent.rrule === 'FREQ=DAILY') {
+          repeatSelection.value = 'daily';
+        } else if (newEvent.rrule === 'FREQ=WEEKLY') {
+          repeatSelection.value = 'weekly';
+        } else if (newEvent.rrule === 'FREQ=MONTHLY') {
+          repeatSelection.value = 'monthly';
+        } else if (newEvent.rrule === 'FREQ=YEARLY') {
+          repeatSelection.value = 'yearly';
+        } else {
+          repeatSelection.value = 'custom';
+        }
       }
     }, { immediate: true, deep: true });
+
+    const handleRepeatChange = (val) => {
+      if (val === 'custom') {
+        showCustomRecurrence.value = true;
+        return;
+      }
+      
+      // Map simple repeats to RRULE
+      switch (val) {
+        case 'daily':
+          eventData.value.rrule = 'FREQ=DAILY';
+          break;
+        case 'weekly':
+          eventData.value.rrule = 'FREQ=WEEKLY';
+          break;
+        case 'monthly':
+          eventData.value.rrule = 'FREQ=MONTHLY';
+          break;
+        case 'yearly':
+          eventData.value.rrule = 'FREQ=YEARLY';
+          break;
+        default:
+          eventData.value.rrule = '';
+      }
+    };
+
+    const handleCustomRecurrenceSave = (rrule) => {
+      eventData.value.rrule = rrule;
+      repeatSelection.value = 'custom';
+    };
 
     const handleClose = () => {
       emit('update:modelValue', false);
@@ -208,7 +291,11 @@ export default {
     return {
       t,
       eventData,
+      repeatSelection,
       repeatOptions,
+      showCustomRecurrence,
+      handleRepeatChange,
+      handleCustomRecurrenceSave,
       handleClose,
       handleSave
     };

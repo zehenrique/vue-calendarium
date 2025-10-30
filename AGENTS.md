@@ -58,6 +58,8 @@
    - No Date() object usage
    - Leverage Temporal.PlainDate, Temporal.PlainDateTime, Temporal.Now
    - Handle time zones appropriately
+   - Follow the iCalendar (RFC 5545) standard for calendar data and interoperability. Calendar data exchanged or persisted (for import/export) should conform to iCalendar where applicable.
+   - Use the RRULE recurrence standard from iCalendar (RFC 5545) for defining recurring events; parse and serialize RRULE strings for recurrence handling.
 
 ## Development Workflow
 

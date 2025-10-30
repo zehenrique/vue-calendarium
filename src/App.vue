@@ -12,6 +12,7 @@
         @view-change="handleViewChange"
         @event-create="handleEventCreate"
         @event-delete="handleEventDelete"
+        @event-update="handleEventUpdate"
         @event-create-request="handleEventCreateRequest"
       />
     </v-main>
@@ -132,6 +133,14 @@ export default {
           start: today.subtract({ days: 5 }).add({ hours: 3 }).toString(),
           end: today.subtract({ days: 5 }).add({ hours: 5 }).toString(),
           color: '#137333'
+        },
+        {
+          id: '11',
+          title: 'Weekly Standup (Recurring)',
+          start: today.toString(),
+          end: today.add({ hours: 0, minutes: 30 }).toString(),
+          color: '#e67c73',
+          rrule: 'FREQ=WEEKLY;COUNT=6'
         }
       ];
     },
@@ -168,6 +177,15 @@ export default {
         const eventBaseId = event.id.split('-')[0];
         return baseId !== eventBaseId;
       });
+    },
+    handleEventUpdate(updatedEvent) {
+      console.log('Event updated:', updatedEvent);
+      // Find and update the existing event
+      const index = this.events.findIndex(e => e.id === updatedEvent.id);
+      if (index !== -1) {
+        // Use splice to ensure Vue reactivity detects the change
+        this.events.splice(index, 1, updatedEvent);
+      }
     },
     handleEventCreateRequest(payload) {
       console.log('Event create request:', payload);
