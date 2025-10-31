@@ -2,7 +2,7 @@
   <v-sheet
     class="calendar-header"
     elevation="0"
-    :class="{ 'header-sticky': true }"
+    :class="{ 'header-sticky': true, 'month-view': currentView === 'month' }"
   >
     <div class="header-content">
       <div class="header-left">
@@ -215,11 +215,15 @@ const dayInfo = computed(() => {
   border-bottom: 1px solid #e0e0e0;
 }
 
+.calendar-header.month-view {
+  border-bottom: none;
+}
+
 .header-sticky {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: white;
+  background: #f8f9fa;
 }
 
 .header-content {

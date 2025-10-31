@@ -68,7 +68,15 @@ export default {
     deleteThisEvent: 'This event',
     deleteAllEvents: 'All events in the series',
     yes: 'Yes',
-    no: 'No'
+    no: 'No',
+    event: 'Event',
+    task: 'Task',
+    appointmentSlots: 'Appointment slots',
+    timezone: 'Time zone',
+    doesNotRepeat: 'Does not repeat',
+    addDescription: 'Add description or attachments',
+    moreOptions: 'More options',
+    email: 'Email'
   },
   pt: {
     today: 'Hoje',
@@ -139,6 +147,14 @@ export default {
     deleteThisEvent: 'Este evento',
     deleteAllEvents: 'Todos os eventos da série',
     yes: 'Sim',
-    no: 'Não'
+    no: 'Não',
+    event: 'Evento',
+    task: 'Tarefa',
+    appointmentSlots: 'Agendamento de marcações',
+    timezone: 'Fuso horário',
+    doesNotRepeat: 'Não se repete',
+    addDescription: 'Adicionar descrição ou um anexo do Google Drive',
+    moreOptions: 'Mais opções',
+    email: 'Email'
   }
 };

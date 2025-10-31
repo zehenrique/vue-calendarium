@@ -14,20 +14,18 @@
             <div
               v-if="showCurrentTimeIndicator && day.isToday"
               class="current-time-indicator"
-              :style="{ top: currentTimePosition + 'px' }"
-            >
+              :style="{ top: currentTimePosition + 'px' }">
               <div class="time-indicator-circle"></div>
               <div class="time-indicator-line"></div>
             </div>
             <div
               v-for="event in day.events"
               :key="event.id"
-              class="week-event day-event"
+              class="week-event"
+              :class="{ 'ghost-event': event.isGhost }"
               :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color) }"
-              @click.stop="$emit('event-select', event)"
-            >
-              <div class="event-title">{{ event.title }}</div>
-              <div class="event-time">{{ formatEventTime(event, locale) }}</div>
+              @click.stop="$emit('event-select', event)">
+              <div class="event-title">{{ event.title || '(Sem título)' }}</div>
             </div>
           </div>
         </div>
@@ -170,50 +168,21 @@ defineProps({
 
 .event-title {
   font-weight: 500;
-  overflow: hidden;
+  overflow: visble;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: wrap;
   flex-shrink: 0;
-}
-
-.event-time {
-  font-size: 11px;
-  opacity: 0.9;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-@media (max-width: 768px) {
-  .week-event {
-    font-size: 8px;
-    padding: 1px 2px;
-    border-radius: 3px;
-    min-height: 0;
-    line-height: 1;
-    max-width: 100%;
-  }
-  
-  .week-event .event-title {
-    font-size: 8px;
-    line-height: 1;
-    margin-bottom: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    font-weight: 500;
-  }
-  
-  .week-event .event-time {
-    display: none; /* Hide time in mobile week view to save space */
-  }
 }
 
 .week-event:hover {
   opacity: 0.9;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.ghost-event {
+  opacity: 0.5 !important;
+  pointer-events: none;
+  border: 2px dashed currentColor !important;
 }
 
 .current-time-indicator {
@@ -242,6 +211,15 @@ defineProps({
 }
 
 @media (max-width: 768px) {
+.week-event {
+    font-size: 8px;
+    padding: 1px 2px;
+    border-radius: 3px;
+    min-height: 0;
+    line-height: 1;
+    max-width: 100%;
+  }
+
   .week-grid {
     min-height: calc(23 * 50px);
   }
@@ -282,8 +260,8 @@ defineProps({
     font-size: 8px;
     line-height: 1;
     margin-bottom: 0;
-    white-space: nowrap;
-    overflow: hidden;
+    white-space: wrap;
+    overflow: visible;
     text-overflow: ellipsis;
     max-width: 100%;
     font-weight: 500;

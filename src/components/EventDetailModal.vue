@@ -5,67 +5,63 @@
     max-width="500"
     data-testid="event-detail-modal"
   >
-    <v-card v-if="event" class="pa-0">
-      <!-- Color bar -->
-      <div class="color-bar" :style="{ backgroundColor: event?.color || '#1967d2' }"></div>
-
-      <v-card-title class="d-flex align-center px-6 pt-6 pb-4">
-        <span class="text-h6 font-weight-medium">{{ event?.title }}</span>
+    <v-card v-if="event" class="pa-0 event-detail-card">
+      <!-- Header with action buttons -->
+      <v-card-title class="d-flex align-center px-4 py-3 border-b">
         <v-spacer></v-spacer>
         <v-btn
           icon
           variant="text"
           size="small"
+          @click="handleEdit"
+          :aria-label="t('edit')">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          variant="text"
+          size="small"
+          @click="handleDelete"
+          :aria-label="t('delete')">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+        <v-btn
+          icon
+          variant="text"
+          size="small"
           @click="handleClose"
-          :aria-label="t('close')"
-          class="text-medium-emphasis"
-        >
+          :aria-label="t('close')">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
 
-      <v-card-text class="px-6 pb-6">
-        <!-- Event details -->
-        <v-list density="comfortable" class="pa-0">
-          <v-list-item class="px-0">
-            <template v-slot:prepend>
-              <v-icon color="primary" class="mr-3">mdi-clock-outline</v-icon>
-            </template>
-            <div>
-              <div class="text-body-1">{{ timeRange }}</div>
-              <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis">
-                {{ formatRRule(event.rrule) }}
-              </div>
+      <v-card-text class="px-6 py-4">
+        <!-- Title with color indicator -->
+        <div class="d-flex align-start mb-4">
+          <div 
+            class="color-dot mr-3 mt-1" 
+            :style="{ backgroundColor: event?.color || '#1967d2' }"
+          ></div>
+          <h2 class="text-h5 font-weight-regular">{{ event?.title }}</h2>
+        </div>
+
+        <!-- Date and time -->
+        <div class="d-flex align-start mb-2">
+          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+          <div>
+            <div class="text-body-1">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+              {{ formatRRule(event.rrule) }}
             </div>
-          </v-list-item>
+          </div>
+        </div>
 
-          <v-list-item v-if="calendarName" class="px-0">
-            <template v-slot:prepend>
-              <v-icon color="primary" class="mr-3">mdi-calendar</v-icon>
-            </template>
-            <v-list-item-title class="text-body-1">{{ calendarName }}</v-list-item-title>
-          </v-list-item>
-        </v-list>
+        <!-- Calendar name -->
+        <div v-if="calendarName" class="d-flex align-start">
+          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
+          <div class="text-body-1">{{ calendarName }}</div>
+        </div>
       </v-card-text>
-
-      <v-card-actions class="px-6 pb-6 pt-0">
-        <v-spacer></v-spacer>
-        <v-btn
-          variant="text"
-          color="error"
-          @click="handleDelete"
-          class="mr-2"
-        >
-          {{ t('delete') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          @click="handleEdit"
-        >
-          {{ t('edit') }}
-        </v-btn>
-      </v-card-actions>
     </v-card>
   </v-dialog>
 </template>
@@ -101,33 +97,34 @@ export default {
     const { t } = useI18n();
     const { formatRRule } = useRRuleFormatter();
 
-    const timeRange = computed(() => {
+    const dateTimeDisplay = computed(() => {
       if (!props.event) return '';
-      if (props.event.allDay) return t('allDay');
       
       const start = Temporal.PlainDateTime.from(props.event.start);
       const end = props.event.end ? Temporal.PlainDateTime.from(props.event.end) : start.add({ hours: 1 });
       
-      const startStr = start.toLocaleString(props.locale, {
+      // Format the day and date
+      const dayOfWeek = start.toLocaleString(props.locale, { weekday: 'long' });
+      const dayNumber = start.day;
+      const month = start.toLocaleString(props.locale, { month: 'long' });
+      
+      if (props.event.allDay) {
+        return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()}`;
+      }
+      
+      const startTime = start.toLocaleString(props.locale, {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
       });
       
-      const endStr = end.toLocaleString(props.locale, {
+      const endTime = end.toLocaleString(props.locale, {
         hour: '2-digit',
         minute: '2-digit',
         hour12: false
       });
       
-      const dateStr = start.toLocaleString(props.locale, {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-      
-      return `${dateStr}, ${startStr} – ${endStr}`;
+      return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()} · ${startTime} – ${endTime}`;
     });
 
     const calendarName = computed(() => {
@@ -151,7 +148,7 @@ export default {
     return {
       t,
       formatRRule,
-      timeRange,
+      dateTimeDisplay,
       calendarName,
       handleClose,
       handleEdit,
@@ -162,9 +159,18 @@ export default {
 </script>
 
 <style scoped>
-.color-bar {
-  height: 6px;
-  width: 100%;
-  border-radius: 3px 3px 0 0;
+.event-detail-card {
+  border-radius: 8px;
+}
+
+.border-b {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.color-dot {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 </style>

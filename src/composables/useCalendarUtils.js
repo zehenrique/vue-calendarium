@@ -13,7 +13,7 @@ export function getEventColorStyle(hexColor) {
   const b = parseInt(hexColor.slice(5, 7), 16);
   
   return {
-    backgroundColor: `rgba(${r}, ${g}, ${b}, 0.15)`,
+    backgroundColor: `rgba(${r}, ${g}, ${b}, 0.20)`,
     color: hexColor
   };
 }
@@ -86,10 +86,10 @@ export function getEventStyle(event, pixelsPerHour = 60) {
     const leftOffset = event._column * columnWidth;
 
     style.left = `${leftOffset}%`;
-    style.width = `calc(${columnWidth}% - 1%)`;
+    style.width = `calc(${columnWidth}% - 3%)`;
   } else {
     style.left = '0';
-    style.width = 'calc(100% - 1%)';
+    style.width = 'calc(100% - 3%)';
   }
   
   return style;

@@ -24,12 +24,11 @@
               :key="event.id"
               type="button"
               class="event"
+              :class="{ 'ghost-event': event.isGhost }"
               :style="getEventColorStyle(event.color)"
               @click.stop="$emit('event-select', event)"
-              :aria-label="`${event.title} ${formatEventTime(event, locale)}`"
-            >
-              <span class="event-time" v-if="!event.allDay">{{ formatEventTime(event, locale) }}</span>
-              <span>{{ event.title }}</span>
+              :aria-label="`${event.title || '(Sem título)'} ${formatEventTime(event, locale)}`">
+              <span>{{ event.title || '(Sem título)' }}</span>
             </button>
             <button
               v-if="day.events.length > maxVisibleEvents"
@@ -97,12 +96,10 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 .day-headers {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  border-bottom: 1px solid #d0d0d0;
-  margin-bottom: 4px;
 }
 
 .day-header {
-  padding: 8px;
+  padding: 2px;
   text-align: center;
   font-size: 11px;
   font-weight: 500;
@@ -116,7 +113,8 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   grid-auto-rows: minmax(100px, 1fr);
   gap: 1px;
   background: #d0d0d0;
-  border: 1px solid #d0d0d0;
+  border-bottom: 1px solid #d0d0d0;
+  text-align: center;
 }
 
 .calendar-day {
@@ -182,9 +180,10 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   opacity: 0.8;
 }
 
-.event-time {
-  font-weight: 500;
-  margin-right: 4px;
+.ghost-event {
+  opacity: 0.5 !important;
+  pointer-events: none;
+  border: 2px dashed currentColor !important;
 }
 
 .more-events {

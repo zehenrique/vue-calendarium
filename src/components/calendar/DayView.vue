@@ -11,15 +11,13 @@
         <div
           v-if="hasAllDayEvents"
           class="day-all-day-section"
-          @click="$emit('all-day-select', date)"
-        >
+          @click="$emit('all-day-select', date)">
           <div
             v-for="event in allDayEvents"
             :key="event.id"
             class="all-day-event"
             :style="getEventColorStyle(event.color)"
-            @click.stop="$emit('event-select', event)"
-          >
+            @click.stop="$emit('event-select', event)">
             {{ event.title }}
           </div>
         </div>
@@ -28,13 +26,12 @@
             v-for="hour in 24"
             :key="hour"
             class="hour-slot"
-            @click="$emit('hour-slot-select', { date, hour: hour - 1 })"
-          ></div>
+            @click="$emit('hour-slot-select', { date, hour: hour - 1 })">
+          </div>
           <div
             v-if="showCurrentTimeIndicator"
             class="current-time-indicator"
-            :style="{ top: currentTimePosition + 'px' }"
-          >
+            :style="{ top: currentTimePosition + 'px' }">
             <div class="time-indicator-circle"></div>
             <div class="time-indicator-line"></div>
           </div>
@@ -42,11 +39,10 @@
             v-for="event in events"
             :key="event.id"
             class="day-event"
+            :class="{ 'ghost-event': event.isGhost }"
             :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color) }"
-            @click.stop="$emit('event-select', event)"
-          >
-            <div class="event-title">{{ event.title }}</div>
-            <div class="event-time">{{ formatEventTime(event, locale) }}</div>
+            @click.stop="$emit('event-select', event)">
+            <div class="event-title">{{ event.title || '(Sem título)' }}</div>
           </div>
         </div>
       </div>
@@ -224,7 +220,7 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 .day-event {
   position: absolute;
   border-radius: 8px;
-  padding: 6px 4px;
+  padding: 2px 4px 0px 8px;
   font-size: 13px;
   cursor: pointer;
   overflow: hidden;
@@ -244,28 +240,10 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
   margin-bottom: 4px;
 }
 
-.event-time {
-  font-size: 11px;
-  opacity: 0.9;
-}
-
-@media (max-width: 768px) {
-  .day-event {
-    padding: 4px 2px;
-    font-size: 11px;
-    border-radius: 6px;
-  }
-  
-  .event-title {
-    font-size: 11px;
-    line-height: 1.2;
-    margin-bottom: 2px;
-  }
-  
-  .event-time {
-    font-size: 9px;
-    line-height: 1.1;
-  }
+.ghost-event {
+  opacity: 0.5 !important;
+  pointer-events: none;
+  border: 2px dashed currentColor !important;
 }
 
 .current-time-indicator {
@@ -294,6 +272,17 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 @media (max-width: 768px) {
+  .day-event {
+    font-size: 11px;
+    border-radius: 6px;
+  }
+  
+  .event-title {
+    font-size: 11px;
+    line-height: 1.2;
+    margin-bottom: 2px;
+  }
+  
   .day-grid {
     grid-template-columns: 50px 1fr;
     min-height: calc(24 * 38px);

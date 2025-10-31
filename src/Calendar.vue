@@ -189,6 +189,7 @@ const showDeleteConfirm = ref(false);
 const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
+const ghostEvent = ref(null); // Ghost event displayed before saving
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
@@ -256,6 +257,12 @@ function getViewRange(view, date) {
 const displayEvents = computed(() => {
   const range = getViewRange(currentView.value, currentDate.value);
   const expanded = [];
+  
+  // Add ghost event if it exists
+  if (ghostEvent.value) {
+    expanded.push(ghostEvent.value);
+  }
+  
   for (const e of props.events) {
     if (e && e.rrule) {
       expanded.push(
@@ -472,6 +479,14 @@ function openCreateModal(overrides = {}, context = {}) {
   const draft = createDefaultEventDraft(props.calendars, overrides);
   newEvent.value = draft;
 
+  // Create ghost event with lower opacity
+  const ghostEventData = buildEventPayloadFromDraft(draft, props.calendars);
+  ghostEvent.value = {
+    ...ghostEventData,
+    id: 'ghost-event',
+    isGhost: true // Mark as ghost for styling
+  };
+
   if (!modalsEnabled.value) {
     const requestContext = {
       view: currentView.value,
@@ -618,8 +633,18 @@ function saveEvent(eventDataFromModal) {
   // Emit single event with RRULE - expansion happens in displayEvents computed
   emit('eventCreate', [eventPayload]);
 
+  // Clear ghost event after saving
+  ghostEvent.value = null;
   newEvent.value = createDefaultEventDraft(props.calendars);
 }
+
+// Watch for modal close to clear ghost event if cancelled
+watch(showModal, (isOpen) => {
+  if (!isOpen && ghostEvent.value) {
+    // Modal was closed without saving, clear ghost event
+    ghostEvent.value = null;
+  }
+});
 
 </script>
 
