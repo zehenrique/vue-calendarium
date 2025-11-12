@@ -27,6 +27,11 @@ export default createVuetify({
     },
   },
   defaults: {
+    global: {
+      font: {
+        family: "'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+      },
+    },
     VBtn: {
       style: 'text-transform: none;',
       rounded: 'lg',

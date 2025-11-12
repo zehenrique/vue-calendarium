@@ -16,7 +16,7 @@
             v-for="event in allDayEvents"
             :key="event.id"
             class="all-day-event"
-            :style="getEventColorStyle(event.color)"
+            :style="getEventColorStyle(event.color, isEventPast(event))"
             @click.stop="$emit('event-select', event)">
             {{ event.title }}
           </div>
@@ -40,7 +40,7 @@
             :key="event.id"
             class="day-event"
             :class="{ 'ghost-event': event.isGhost }"
-            :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color) }"
+            :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color, isEventPast(event)) }"
             @click.stop="$emit('event-select', event)">
             <div class="event-title">{{ event.title || '(Sem título)' }}</div>
           </div>
@@ -52,7 +52,7 @@
 
 <script setup>
 import { computed, toRefs } from 'vue';
-import { formatEventTime, formatHour, getEventColorStyle, getEventStyle } from '../../composables/useCalendarUtils.js';
+import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 const props = defineProps({
   date: {
@@ -227,6 +227,8 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
   transition: opacity 0.2s;
   z-index: 1;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
   /* Position, width, and padding are set via inline styles from getEventStyle */
 }
 
@@ -238,6 +240,13 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 .event-title {
   font-weight: 500;
   margin-bottom: 4px;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.3;
+  flex: 1;
+  overflow: hidden;
 }
 
 .ghost-event {

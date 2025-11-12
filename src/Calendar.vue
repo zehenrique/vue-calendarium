@@ -6,6 +6,7 @@
       :current-date="currentDate"
       :views="views"
       :is-mobile="isMobile"
+      :show-mobile-menu="mobileSidebarEnabled"
       :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
       @toggle-sidebar="toggleMobileSidebar"
@@ -83,11 +84,14 @@
     />
 
     <MobileSidebar
+      v-if="mobileSidebarEnabled"
       v-model="showMobileSidebar"
       :current-view="currentView"
       :views="views"
       :calendars="props.calendars"
+      :visible-calendars="visibleCalendars"
       @view-change="handleViewChange"
+      @update:visible-calendars="handleVisibleCalendarsUpdate"
     />
   </div>
 </template>
@@ -144,6 +148,10 @@ const props = defineProps({
   enableModals: {
     type: Boolean,
     default: true
+  },
+  enableMobileSidebar: {
+    type: Boolean,
+    default: true
   }
 });
 
@@ -190,6 +198,7 @@ const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
 const ghostEvent = ref(null); // Ghost event displayed before saving
+const visibleCalendars = ref(props.calendars.map(c => c.id)); // Track which calendars are visible
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
@@ -201,6 +210,7 @@ const localeCodeMap = {
 
 const calendarLocale = computed(() => props.locale);
 const modalsEnabled = computed(() => props.enableModals !== false);
+const mobileSidebarEnabled = computed(() => props.enableMobileSidebar !== false);
 
 const newEvent = ref(createDefaultEventDraft(props.calendars));
 
@@ -272,7 +282,20 @@ const displayEvents = computed(() => {
       expanded.push(e);
     }
   }
-  return expanded;
+  
+  // Filter events by visible calendars
+  return expanded.filter(event => {
+    // Ghost events are always shown
+    if (event.isGhost) return true;
+    
+    // Filter by calendar ID - show only events from visible calendars
+    if (event.calendar) {
+      return visibleCalendars.value.includes(event.calendar);
+    }
+    
+    // If no calendar property, show the event by default
+    return true;
+  });
 });
 
 const monthDays = computed(() => createMonthGrid(currentDate.value, displayEvents.value));
@@ -386,6 +409,10 @@ watch(currentView, (view) => {
 
 function toggleMobileSidebar() {
   showMobileSidebar.value = !showMobileSidebar.value;
+}
+
+function handleVisibleCalendarsUpdate(calendars) {
+  visibleCalendars.value = calendars;
 }
 
 function previousPeriod() {

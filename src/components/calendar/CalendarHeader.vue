@@ -7,7 +7,7 @@
     <div class="header-content">
       <div class="header-left">
         <v-btn
-          v-if="isMobile"
+          v-if="isMobile && showMobileMenu"
           icon
           variant="text"
           :aria-label="t('menu')"
@@ -115,7 +115,7 @@
             v-for="event in day.allDayEvents"
             :key="event.id"
             class="all-day-event"
-            :style="getEventColorStyle(event)"
+            :style="getEventColorStyle(event.color, isEventPast(event))"
             @click.stop="$emit('event-select', event)"
             :title="event.title"
           >
@@ -129,14 +129,7 @@
 
 <script setup>
 import { computed } from 'vue';
-
-function getEventColorStyle(event) {
-  const color = event.color || '#1967d2';
-  return {
-    backgroundColor: color,
-    color: '#ffffff'
-  };
-}
+import { getEventColorStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 function abbreviateTitle(title) {
   if (!title) return '';
@@ -162,6 +155,10 @@ const props = defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  showMobileMenu: {
+    type: Boolean,
+    default: true
   },
   t: {
     type: Function,

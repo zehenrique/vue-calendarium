@@ -25,7 +25,7 @@
               type="button"
               class="event"
               :class="{ 'ghost-event': event.isGhost }"
-              :style="getEventColorStyle(event.color)"
+              :style="getEventColorStyle(event.color, isEventPast(event))"
               @click.stop="$emit('event-select', event)"
               :aria-label="`${event.title || '(Sem título)'} ${formatEventTime(event, locale)}`">
               <span>{{ event.title || '(Sem título)' }}</span>
@@ -47,7 +47,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { formatEventTime, getEventColorStyle } from '../../composables/useCalendarUtils.js';
+import { formatEventTime, getEventColorStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 const props = defineProps({
   days: {
@@ -75,27 +75,34 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 <style scoped>
 .calendar-body {
   flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden;
   background: #ffffff;
   position: relative;
   width: 100%;
   max-width: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .month-view {
   padding: 8px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .calendar-grid {
   display: flex;
   flex-direction: column;
   height: 100%;
+  flex: 1;
 }
 
 .day-headers {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  flex-shrink: 0;
 }
 
 .day-header {
@@ -110,11 +117,13 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 .calendar-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  grid-auto-rows: minmax(100px, 1fr);
+  grid-template-rows: repeat(auto-fit, 1fr);
   gap: 1px;
   background: #d0d0d0;
   border-bottom: 1px solid #d0d0d0;
   text-align: center;
+  flex: 1;
+  overflow: hidden;
 }
 
 .calendar-day {
@@ -124,6 +133,9 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   overflow: hidden;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .calendar-day:hover {
@@ -156,12 +168,16 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   color: #3c4043;
   padding: 4px;
   margin-bottom: 2px;
+  flex-shrink: 0;
 }
 
 .day-events {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .event {
@@ -169,11 +185,13 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   padding: 2px 6px;
   border-radius: 6px;
   cursor: pointer;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
   transition: opacity 0.2s;
   text-align: left;
+  line-height: 1.2;
+  max-height: 20px;
 }
 
 .event:hover {
@@ -201,8 +219,18 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 }
 
 @media (max-width: 768px) {
-  .calendar-days {
-    grid-auto-rows: minmax(80px, 1fr);
+  .month-view {
+    padding: 4px;
+  }
+  
+  .day-number {
+    font-size: 11px;
+    padding: 2px;
+  }
+  
+  .event {
+    font-size: 10px;
+    padding: 1px 4px;
   }
 }
 </style>

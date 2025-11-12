@@ -44,11 +44,18 @@ Example:
 - **Default:** Current date
 - **Required:** No
 - **Description:** Initial date to display. Can be ISO string or Temporal.PlainDate object
+
 #### enableModals
 - **Type:** `Boolean`
 - **Default:** `true`
 - **Required:** No
 - **Description:** Toggles the built-in event creation, detail, and deletion modals. Set to `false` to handle these interactions in your host application.
+
+#### enableMobileSidebar
+- **Type:** `Boolean`
+- **Default:** `true`
+- **Required:** No
+- **Description:** Toggles the mobile sidebar menu (hamburger menu). Set to `false` to hide the mobile menu button and sidebar. Useful when you want to implement custom navigation or calendar selection.
 
 
 Example:
@@ -58,6 +65,10 @@ initialDate="2025-12-25"
 
 // Temporal object
 :initialDate="Temporal.PlainDate.from({ year: 2025, month: 12, day: 25 })"
+
+// Disable modals and sidebar
+:enableModals="false"
+:enableMobileSidebar="false"
 ```
 
 ### Events
@@ -208,7 +219,8 @@ start: '2025-10-27T14:30:00-05:00'
 #### calendar
 - **Type:** `String`
 - **Default:** `'default'`
-- **Description:** Calendar/category ID that event belongs to
+- **Description:** Calendar/category ID that event belongs to. Used for filtering events in mobile sidebar.
+- **Note:** Events with the same `calendar` value will be shown/hidden together when toggling calendar visibility.
 
 #### rrule
 - **Type:** `String`

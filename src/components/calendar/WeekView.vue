@@ -23,7 +23,7 @@
               :key="event.id"
               class="week-event"
               :class="{ 'ghost-event': event.isGhost }"
-              :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color) }"
+              :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color, isEventPast(event)) }"
               @click.stop="$emit('event-select', event)">
               <div class="event-title">{{ event.title || '(Sem título)' }}</div>
             </div>
@@ -35,7 +35,7 @@
 </template>
 
 <script setup>
-import { formatEventTime, formatHour, getEventColorStyle, getEventStyle } from '../../composables/useCalendarUtils.js';
+import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 defineProps({
   days: {
@@ -168,10 +168,13 @@ defineProps({
 
 .event-title {
   font-weight: 500;
-  overflow: visble;
-  text-overflow: ellipsis;
-  white-space: wrap;
-  flex-shrink: 0;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+  line-height: 1.3;
+  flex: 1;
+  overflow: hidden;
 }
 
 .week-event:hover {

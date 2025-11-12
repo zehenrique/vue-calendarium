@@ -1,5 +1,6 @@
 <template>
   <v-dialog
+    v-if="!mobile"
     :model-value="modelValue"
     @update:model-value="$emit('update:modelValue', $event)"
     max-width="680"
@@ -13,18 +14,9 @@
           icon
           variant="text"
           size="small"
-          class="ml-2"
-        >
-          <v-icon>mdi-menu</v-icon>
-        </v-btn>
-        <v-btn
-          icon
-          variant="text"
-          size="small"
           @click="handleClose"
           :aria-label="t('close')"
-          class="ml-auto mr-2"
-        >
+          class="ml-auto mr-2">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -43,73 +35,58 @@
             ></v-text-field>
 
             <!-- Date and time row -->
-            <div class="d-flex align-start mb-4">
-              <v-icon class="mr-4 mt-2" size="20">mdi-clock-outline</v-icon>
+            <div class="d-flex align-center mb-2">
+              <v-icon class="mr-4 flex-shrink-0" size="20">mdi-clock-outline</v-icon>
+              <span class="date-label mr-3">{{ startDateDisplay }}</span>
+              <v-select
+                v-if="!eventData.allDay"
+                v-model="eventData.startTime"
+                :items="timeOptions"
+                variant="outlined"
+                hide-details
+                density="compact"
+                class="time-select mr-2"
+              ></v-select>
+              <span v-if="!eventData.allDay" class="time-separator">–</span>
+              <v-select
+                v-if="!eventData.allDay"
+                v-model="eventData.endTime"
+                :items="endTimeOptions"
+                variant="outlined"
+                hide-details
+                density="compact"
+                class="time-select ml-2"
+              >
+                <template v-slot:selection="{ item }">
+                  {{ item.value }}
+                </template>
+              </v-select>
+            </div>
+
+            <!-- All day and recurrence row -->
+            <div class="d-flex align-center mb-4">
+              <div class="icon-spacer mr-4"></div>
               <div class="flex-grow-1">
-                <div class="d-flex align-center mb-2">
-                  <v-text-field
-                    v-model="startDateDisplay"
-                    variant="plain"
-                    hide-details
-                    readonly
-                    density="compact"
-                    class="date-field mr-2"
-                  ></v-text-field>
-                  <v-text-field
-                    v-if="!eventData.allDay"
-                    v-model="eventData.startTime"
-                    variant="plain"
-                    type="time"
-                    hide-details
-                    density="compact"
-                    class="time-field"
-                  ></v-text-field>
-                  <span v-if="!eventData.allDay" class="mx-2">–</span>
-                  <v-text-field
-                    v-if="!eventData.allDay"
-                    v-model="eventData.endTime"
-                    variant="plain"
-                    type="time"
-                    hide-details
-                    density="compact"
-                    class="time-field"
-                  ></v-text-field>
-                </div>
-                <div class="text-body-2">
+                <div class="text-body-2 d-flex align-center flex-wrap options-row">
                   <v-checkbox
                     v-model="eventData.allDay"
                     :label="t('allDay')"
                     hide-details
                     density="compact"
-                    class="d-inline-flex all-day-checkbox"
+                    class="all-day-checkbox"
                   ></v-checkbox>
-                  <span class="mx-2">•</span>
-                  <span>{{ timezoneDisplay }}</span>
-                  <span class="mx-2">•</span>
-                  <a href="#" class="text-decoration-none" @click.prevent="toggleRepeatPicker">
+                  <span class="separator">•</span>
+                  <a href="#" class="option-link" @click.prevent="toggleRepeatPicker">
                     {{ repeatDisplayText }}
                   </a>
                 </div>
               </div>
             </div>
 
-            <!-- Description row -->
-            <div class="d-flex align-start mb-4">
-              <v-icon class="mr-4 mt-2" size="20">mdi-text</v-icon>
-              <v-text-field
-                v-model="eventData.description"
-                :placeholder="t('addDescription')"
-                variant="plain"
-                hide-details
-                density="compact"
-                class="flex-grow-1"
-              ></v-text-field>
-            </div>
-
             <!-- Calendar and color row -->
-            <div class="d-flex align-start">
-              <v-icon class="mr-4 mt-2" size="20">mdi-calendar-blank</v-icon>
-              <div class="d-flex align-center flex-grow-1">
+            <div class="d-flex align-center">
+              <v-icon class="mr-4" size="20">mdi-calendar-blank</v-icon>
+              <div class="flex-grow-1">
                 <v-select
                   v-model="eventData.calendar"
                   :items="calendars"
@@ -148,6 +125,11 @@
       </v-card-text>
 
       <v-card-actions class="px-8 pb-4 pt-0">
+        <v-btn
+          variant="text"
+          @click="handleClose">
+          {{ t('cancel') }}
+        </v-btn>
         <v-spacer></v-spacer>
         <v-btn
           color="primary"
@@ -163,6 +145,157 @@
     </v-card>
   </v-dialog>
 
+  <!-- Mobile Bottom Sheet -->
+  <v-bottom-sheet
+    v-if="mobile"
+    :model-value="modelValue"
+    @update:model-value="$emit('update:modelValue', $event)"
+    data-testid="event-modal-mobile"
+  >
+    <v-card class="mobile-bottom-sheet" rounded="t-xl">
+      <!-- Action buttons at top -->
+      <v-card-actions class="pa-4 pb-2">
+        <v-btn
+          variant="text"
+          @click="handleClose"
+        >
+          {{ t('cancel') }}
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn
+          color="primary"
+          variant="text"
+          @click="handleSave"
+          :disabled="!eventData.title"
+        >
+          {{ t('save') }}
+        </v-btn>
+      </v-card-actions>
+
+      <v-divider></v-divider>
+
+      <v-card-text class="px-4 pt-3 pb-4 mobile-content">
+        <v-form>
+          <!-- Event title -->
+          <v-text-field
+            v-model="eventData.title"
+            :placeholder="t('eventTitle')"
+            variant="plain"
+            class="mobile-title-input mb-3"
+            hide-details
+            autofocus
+          ></v-text-field>
+
+          <!-- Date and time -->
+          <div class="mb-2">
+            <div class="d-flex align-center mb-2">
+              <v-icon size="20" class="mr-3 flex-shrink-0 text-medium-emphasis">mdi-clock-outline</v-icon>
+              <!-- Date picker -->
+              <v-text-field
+                v-model="eventData.startDate"
+                type="date"
+                variant="outlined"
+                density="compact"
+                hide-details
+                class="flex-grow-1"
+              ></v-text-field>
+            </div>
+            
+            <!-- Time pickers -->
+            <div v-if="!eventData.allDay" class="d-flex align-center">
+              <div class="icon-spacer mr-3"></div>
+              <v-select
+                v-model="eventData.startTime"
+                :items="timeOptions"
+                variant="outlined"
+                hide-details
+                density="compact"
+                class="time-select-mobile mr-2"
+              ></v-select>
+              <span class="time-separator">–</span>
+              <v-select
+                v-model="eventData.endTime"
+                :items="endTimeOptions"
+                variant="outlined"
+                hide-details
+                density="compact"
+                class="time-select-mobile ml-2"
+              >
+                <template v-slot:selection="{ item }">
+                  {{ item.value }}
+                </template>
+              </v-select>
+            </div>
+          </div>
+
+          <!-- All day toggle -->
+          <div class="mb-3">
+            <div class="d-flex align-center">
+              <div class="icon-spacer mr-3"></div>
+              <div class="flex-grow-1">
+                <v-checkbox
+                  v-model="eventData.allDay"
+                  :label="t('allDay')"
+                  hide-details
+                  density="compact"
+                  class="mobile-checkbox"
+                ></v-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recurrence -->
+          <div class="mb-3 d-flex align-center">
+            <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-repeat</v-icon>
+            <div class="flex-grow-1">
+              <a href="#" class="mobile-option-link" @click.prevent="toggleRepeatPicker">
+                {{ repeatDisplayText }}
+              </a>
+            </div>
+          </div>
+
+          <!-- Calendar selection -->
+          <div class="d-flex align-center">
+            <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-calendar-blank</v-icon>
+            <div class="flex-grow-1">
+              <v-select
+                v-model="eventData.calendar"
+                :items="calendars"
+                item-title="name"
+                item-value="id"
+                variant="outlined"
+                hide-details
+                density="compact"
+                class="mobile-calendar-select"
+                data-testid="calendar-select"
+              >
+                <template v-slot:selection="{ item }">
+                  <div class="d-flex align-center">
+                    <div
+                      class="color-dot mr-2"
+                      :style="{ backgroundColor: eventData.color }"
+                    ></div>
+                    <span>{{ item.title }}</span>
+                  </div>
+                </template>
+                <template v-slot:item="{ item, props }">
+                  <v-list-item v-bind="props">
+                    <template v-slot:prepend>
+                      <div
+                        class="color-dot mr-2"
+                        :style="{ backgroundColor: getCalendarColor(item.value) }"
+                      ></div>
+                    </template>
+                  </v-list-item>
+                </template>
+              </v-select>
+            </div>
+          </div>
+        </v-form>
+      </v-card-text>
+    </v-card>
+  </v-bottom-sheet>
+
   <!-- Custom recurrence picker - outside main dialog -->
   <RecurrencePickerModal
     v-model="showCustomRecurrence"
@@ -175,6 +308,7 @@
 <script>
 import { ref, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import RecurrencePickerModal from './RecurrencePickerModal.vue';
 
@@ -200,6 +334,7 @@ export default {
   emits: ['update:modelValue', 'save'],
   setup(props, { emit }) {
     const { t } = useI18n();
+    const { mobile } = useDisplay();
     
     const eventData = ref({
       title: '',
@@ -210,12 +345,67 @@ export default {
       rrule: '',
       calendar: 'default',
       color: '#1967d2',
-      allDay: false,
-      description: ''
+      allDay: false
     });
 
     const repeatSelection = ref('none');
     const showCustomRecurrence = ref(false);
+
+    // Generate time options in 15-minute intervals
+    const timeOptions = computed(() => {
+      const options = [];
+      for (let hour = 0; hour < 24; hour++) {
+        for (let minute = 0; minute < 60; minute += 15) {
+          const timeStr = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+          options.push({
+            value: timeStr,
+            title: timeStr
+          });
+        }
+      }
+      return options;
+    });
+
+    // Calculate duration and generate end time options with duration labels
+    const endTimeOptions = computed(() => {
+      if (!eventData.value.startTime) return timeOptions.value;
+      
+      const [startHour, startMinute] = eventData.value.startTime.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMinute;
+      
+      return timeOptions.value
+        .map(option => {
+          const [endHour, endMinute] = option.value.split(':').map(Number);
+          const endMinutes = endHour * 60 + endMinute;
+          const durationMinutes = endMinutes - startMinutes;
+          
+          // Generate duration label for all options
+          let durationLabel = '';
+          const hours = Math.floor(durationMinutes / 60);
+          const minutes = durationMinutes % 60;
+          
+          if (durationMinutes < 60) {
+            // Less than 1 hour - show minutes
+            durationLabel = ` (${durationMinutes} minutos)`;
+          } else if (minutes === 0) {
+            // Exact hours
+            durationLabel = hours === 1 ? ' (1 hora)' : ` (${hours} horas)`;
+          } else if (minutes === 30) {
+            // Half hours
+            durationLabel = ` (${hours},5 horas)`;
+          } else {
+            // Hours and minutes
+            durationLabel = ` (${hours}h${String(minutes).padStart(2, '0')})`;
+          }
+          
+          return {
+            value: option.value,
+            title: option.value + durationLabel,
+            durationMinutes
+          };
+        })
+        .filter(option => option.durationMinutes > 0); // Only allow end times after start time
+    });
 
     const startDateDisplay = computed(() => {
       if (!eventData.value.startDate) return '';
@@ -230,10 +420,6 @@ export default {
       } catch (e) {
         return eventData.value.startDate;
       }
-    });
-
-    const timezoneDisplay = computed(() => {
-      return t('timezone') || 'Fuso horário';
     });
 
     const repeatDisplayText = computed(() => {
@@ -271,8 +457,7 @@ export default {
           rrule: newEvent.rrule || '',
           calendar: newEvent.calendar || 'default',
           color: newEvent.color || '#1967d2',
-          allDay: newEvent.allDay || false,
-          description: newEvent.description || ''
+          allDay: newEvent.allDay || false
         };
         
         // Update color from calendar
@@ -303,6 +488,13 @@ export default {
       const calendar = props.calendars.find(c => c.id === calendarId);
       if (calendar) {
         eventData.value.color = calendar.color;
+      }
+    });
+
+    // Watch startDate to sync endDate
+    watch(() => eventData.value.startDate, (newDate) => {
+      if (newDate) {
+        eventData.value.endDate = newDate;
       }
     });
 
@@ -354,11 +546,13 @@ export default {
 
     return {
       t,
+      mobile,
       eventData,
       repeatSelection,
       showCustomRecurrence,
+      timeOptions,
+      endTimeOptions,
       startDateDisplay,
-      timezoneDisplay,
       repeatDisplayText,
       getCalendarColor,
       toggleRepeatPicker,
@@ -393,18 +587,90 @@ export default {
   color: rgba(0, 0, 0, 0.38);
 }
 
-.date-field,
-.time-field {
-  max-width: fit-content;
+.gap-2 {
+  gap: 8px;
 }
 
-.date-field :deep(.v-field__input),
+.icon-spacer {
+  width: 20px;
+  flex-shrink: 0;
+}
+
+.date-label {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.87);
+  white-space: nowrap;
+}
+
+.date-field {
+  flex: 1;
+  min-width: 200px;
+}
+
+.time-field {
+  width: 100px;
+}
+
 .time-field :deep(.v-field__input) {
   font-size: 0.875rem;
+  text-align: center;
+}
+
+.time-field :deep(.v-field) {
+  border-radius: 4px;
+}
+
+.time-select {
+  min-width: 80px;
+  max-width: 120px;
+}
+
+.time-select :deep(.v-field__input) {
+  font-size: 0.875rem;
+}
+
+.time-select :deep(.v-field) {
+  border-radius: 4px;
+}
+
+.date-field :deep(.v-field__input) {
+  font-size: 0.875rem;
+  padding: 4px 0;
+}
+
+.time-separator {
+  color: rgba(0, 0, 0, 0.6);
+  padding: 0 4px;
+}
+
+.options-row {
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.separator {
+  color: rgba(0, 0, 0, 0.38);
+  padding: 0 4px;
+}
+
+.option-text {
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 0.875rem;
+}
+
+.option-link {
+  color: #1967d2;
+  text-decoration: none;
+  font-size: 0.875rem;
+}
+
+.option-link:hover {
+  text-decoration: underline;
 }
 
 .calendar-select :deep(.v-field__input) {
   font-size: 0.875rem;
+  padding: 4px 0;
 }
 
 .color-dot {
@@ -414,11 +680,109 @@ export default {
   flex-shrink: 0;
 }
 
+.all-day-checkbox {
+  margin-right: 0;
+}
+
 .all-day-checkbox :deep(.v-label) {
   font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
 }
 
 .all-day-checkbox :deep(.v-selection-control) {
   min-height: 24px;
+}
+
+.all-day-checkbox :deep(.v-selection-control__wrapper) {
+  height: 24px;
+}
+
+/* Mobile-specific styles */
+.mobile-bottom-sheet {
+  max-height: 50vh;
+}
+
+.mobile-content {
+  max-height: calc(50vh - 100px);
+  overflow-y: auto;
+}
+
+.mobile-title-input :deep(.v-field__input) {
+  font-size: 1.125rem;
+  font-weight: 400;
+  padding: 4px 0;
+}
+
+.mobile-title-input :deep(.v-field__input::placeholder) {
+  color: rgba(0, 0, 0, 0.38);
+}
+
+.mobile-option-link {
+  color: rgba(0, 0, 0, 0.87);
+  text-decoration: none;
+  font-size: 0.875rem;
+  display: block;
+  padding: 8px 0;
+}
+
+.mobile-option-link:hover {
+  text-decoration: underline;
+}
+
+.mobile-calendar-select :deep(.v-field__input) {
+  font-size: 0.875rem;
+}
+
+.mobile-checkbox {
+  margin-right: 0;
+}
+
+.mobile-checkbox :deep(.v-label) {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.mobile-checkbox :deep(.v-selection-control) {
+  min-height: 24px;
+}
+
+.mobile-checkbox :deep(.v-selection-control__wrapper) {
+  height: 24px;
+}
+
+.time-field-mobile {
+  flex: 1;
+}
+
+.time-field-mobile :deep(.v-field__input) {
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.time-field-mobile :deep(.v-field) {
+  border-radius: 4px;
+}
+
+.time-select-mobile {
+  flex: 1;
+}
+
+.time-select-mobile :deep(.v-field__input) {
+  font-size: 0.875rem;
+}
+
+.time-select-mobile :deep(.v-field) {
+  border-radius: 4px;
+}
+
+@media (max-width: 767px) {
+  .date-label {
+    white-space: normal;
+    line-height: 1.4;
+  }
+  
+  .title-input :deep(.v-field__input) {
+    font-size: 1.25rem;
+  }
 }
 </style>

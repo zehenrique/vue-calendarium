@@ -69,6 +69,7 @@ export default {
           title: 'Team Meeting',
           start: today.toString(),
           end: today.add({ hours: 1 }).toString(),
+          calendar: 'work',
           color: '#1967d2'
         },
         {
@@ -76,6 +77,7 @@ export default {
           title: 'Lunch Break',
           start: today.add({ hours: 2 }).toString(),
           end: today.add({ hours: 3 }).toString(),
+          calendar: 'personal',
           color: '#137333'
         },
         {
@@ -83,6 +85,7 @@ export default {
           title: 'Project Review',
           start: today.add({ hours: 4 }).toString(),
           end: today.add({ hours: 5, minutes: 30 }).toString(),
+          calendar: 'family',
           color: '#d93025'
         },
         {
@@ -90,6 +93,7 @@ export default {
           title: 'Design Discussion',
           start: today.add({ days: 1, hours: 1 }).toString(),
           end: today.add({ days: 1, hours: 2 }).toString(),
+          calendar: 'work',
           color: '#f9ab00'
         },
         {
@@ -97,6 +101,7 @@ export default {
           title: 'Code Review',
           start: today.add({ days: 2, hours: 3 }).toString(),
           end: today.add({ days: 2, hours: 4 }).toString(),
+          calendar: 'work',
           color: '#1967d2'
         },
         {
@@ -104,6 +109,7 @@ export default {
           title: 'Sprint Planning',
           start: today.add({ days: 3 }).toString(),
           end: today.add({ days: 3, hours: 2 }).toString(),
+          calendar: 'family',
           color: '#d93025'
         },
         {
@@ -111,6 +117,7 @@ export default {
           title: 'Client Presentation',
           start: today.add({ days: 5, hours: 2 }).toString(),
           end: today.add({ days: 5, hours: 3 }).toString(),
+          calendar: 'personal',
           color: '#137333'
         },
         {
@@ -118,6 +125,7 @@ export default {
           title: 'Team Building',
           start: today.subtract({ days: 2 }).add({ hours: 5 }).toString(),
           end: today.subtract({ days: 2 }).add({ hours: 7 }).toString(),
+          calendar: 'work',
           color: '#f9ab00'
         },
         {
@@ -125,13 +133,23 @@ export default {
           title: 'Conference',
           start: today.add({ days: 7 }).toString(),
           allDay: true,
+          calendar: 'work',
           color: '#1967d2'
+        },
+        {
+          id: '9a',
+          title: 'All-Day Meeting',
+          start: today.add({ days: 2 }).toString(),
+          allDay: true,
+          calendar: 'family',
+          color: '#d93025'
         },
         {
           id: '10',
           title: 'Workshop',
           start: today.subtract({ days: 5 }).add({ hours: 3 }).toString(),
           end: today.subtract({ days: 5 }).add({ hours: 5 }).toString(),
+          calendar: 'personal',
           color: '#137333'
         },
         {
@@ -139,6 +157,7 @@ export default {
           title: 'Weekly Standup (Recurring)',
           start: today.toString(),
           end: today.add({ hours: 0, minutes: 30 }).toString(),
+          calendar: 'work',
           color: '#e67c73',
           rrule: 'FREQ=WEEKLY;COUNT=6'
         }
@@ -206,6 +225,13 @@ export default {
   }
 };
 </script>
+
+<style>
+/* Global font family for Google Calendar look */
+* {
+  font-family: 'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif !important;
+}
+</style>
 
 <style scoped>
 /* Vuetify handles most styling */

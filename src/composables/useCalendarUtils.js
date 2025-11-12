@@ -3,19 +3,45 @@ import { Temporal } from '@js-temporal/polyfill';
 /**
  * Get event color styling
  * @param {string} hexColor - The hex color code
+ * @param {boolean} isPast - Whether the event is in the past
  */
-export function getEventColorStyle(hexColor) {
+export function getEventColorStyle(hexColor, isPast = false) {
   if (!hexColor) hexColor = '#1967d2';
+  
+  // Validate hex color format
+  if (!/^#[0-9A-F]{6}$/i.test(hexColor)) {
+    hexColor = '#1967d2';
+  }
   
   // Convert hex to RGB for lighter background
   const r = parseInt(hexColor.slice(1, 3), 16);
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
   
+  // Past events get more transparency (like Google Calendar)
+  const bgOpacity = isPast ? 0.40 : 0.90;
+  
   return {
-    backgroundColor: `rgba(${r}, ${g}, ${b}, 0.20)`,
-    color: hexColor
+    backgroundColor: `rgba(${r}, ${g}, ${b}, ${bgOpacity})`,
+    color: isPast ? '#000000' : '#ffffff',
+    opacity: isPast ? 0.7 : 1
   };
+}
+
+/**
+ * Check if an event is in the past
+ * @param {Object} event - The event object
+ * @returns {boolean} - True if event has ended
+ */
+export function isEventPast(event) {
+  try {
+    const now = Temporal.Now.plainDateTimeISO();
+    const eventEnd = event.end ? Temporal.PlainDateTime.from(event.end) : Temporal.PlainDateTime.from(event.start);
+    return Temporal.PlainDateTime.compare(eventEnd, now) < 0;
+  } catch (error) {
+    console.error('[isEventPast] Error checking if event is past:', error, event);
+    return false; // Default to not past if there's an error
+  }
 }
 
 /**
