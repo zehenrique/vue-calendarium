@@ -1,26 +1,12 @@
 <template>
-  <v-navigation-drawer
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    location="left"
-    temporary
-    touchless
-    width="280"
-    class="mobile-sidebar"
-  >
+  <v-navigation-drawer :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" location="left" temporary touchless width="280" class="mobile-sidebar">
     <v-list class="py-2">
       <v-list-item class="px-4 py-3">
         <template v-slot:prepend>
           <span class="text-h6 font-weight-medium">{{ t('menu') }}</span>
         </template>
         <template v-slot:append>
-          <v-btn
-            icon
-            variant="text"
-            size="small"
-            @click="handleClose"
-            :aria-label="t('close')"
-          >
+          <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')">
             <v-icon>mdi-close</v-icon>
           </v-btn>
         </template>
@@ -32,16 +18,7 @@
     <!-- View Selector -->
     <v-list-subheader class="px-4 py-2 text-caption font-weight-medium">{{ t('view') }}</v-list-subheader>
     <v-list density="comfortable" class="py-0">
-      <v-list-item
-        v-for="view in views"
-        :key="view"
-        :active="currentView === view"
-        :data-testid="`sidebar-view-${view}`"
-        @click="handleViewChange(view)"
-        :aria-label="`Switch to ${t(view)} view`"
-        class="px-4 my-1"
-        rounded="lg"
-      >
+      <v-list-item v-for="view in views" :key="view" :active="currentView === view" :data-testid="`sidebar-view-${view}`" @click="handleViewChange(view)" :aria-label="`Switch to ${t(view)} view`" class="px-4 my-1" rounded="lg">
         <v-list-item-title class="text-body-2">{{ t(view) }}</v-list-item-title>
       </v-list-item>
     </v-list>
@@ -59,22 +36,11 @@
         rounded="lg"
       >
         <template v-slot:prepend>
-          <v-checkbox
-            :model-value="isCalendarVisible(calendar.id)"
-            :color="calendar.color"
-            density="compact"
-            hide-details
-            class="calendar-checkbox"
-            @click.stop="toggleCalendar(calendar.id)"
-          ></v-checkbox>
+          <v-checkbox :model-value="isCalendarVisible(calendar.id)" :color="calendar.color" density="compact" hide-details class="calendar-checkbox" @click.stop="toggleCalendar(calendar.id)"></v-checkbox>
         </template>
         <template v-slot:default>
           <div class="d-flex align-center">
-            <v-avatar
-              :color="calendar.color"
-              size="12"
-              class="mr-3"
-            ></v-avatar>
+            <v-avatar :color="calendar.color" size="12" class="mr-3"></v-avatar>
             <v-list-item-title class="text-body-2">{{ calendar.name }}</v-list-item-title>
           </div>
         </template>

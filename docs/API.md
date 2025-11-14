@@ -212,15 +212,28 @@ start: '2025-10-27T14:30:00-05:00'
 
 #### color
 - **Type:** `String` (Hex color code)
-- **Default:** `'#1967d2'` (Google blue)
-- **Description:** Custom hex color for event display (e.g., `'#1967d2'`, `'#137333'`, `'#d93025'`)
-- **Note:** Any valid hex color code is accepted. Component automatically generates lighter background color.
+- **Default:** `'#1967D2'` (Cobalt - Google blue)
+- **Description:** Event color from the predefined Material Design color palette
+- **Allowed values:** Only colors from the `CALENDAR_COLORS` palette:
+  - `#D50000` (Tomato)
+  - `#E67C73` (Flamingo)
+  - `#F4511E` (Tangerine)
+  - `#F6BF26` (Banana)
+  - `#33B679` (Sage)
+  - `#0B8043` (Basil)
+  - `#039BE5` (Peacock)
+  - `#3F51B5` (Blueberry)
+  - `#7986CB` (Lavender)
+  - `#8E24AA` (Grape)
+  - `#616161` (Graphite)
+  - `#1967D2` (Cobalt - default)
+- **Note:** Use the exported `CALENDAR_COLORS` array and helper functions (`isValidColor`, `getClosestColor`) from `src/config/colors.js` to ensure colors are from the allowed palette. Component automatically generates lighter background colors for better readability.
 
-#### calendar
+#### calendarId
 - **Type:** `String`
 - **Default:** `'default'`
 - **Description:** Calendar/category ID that event belongs to. Used for filtering events in mobile sidebar.
-- **Note:** Events with the same `calendar` value will be shown/hidden together when toggling calendar visibility.
+- **Note:** Events with the same `calendarId` value will be shown/hidden together when toggling calendar visibility.
 
 #### rrule
 - **Type:** `String`

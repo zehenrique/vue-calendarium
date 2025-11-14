@@ -1,229 +1,241 @@
 <template>
   <v-app>
     <v-main>
-      <GoogleCalendar
-        :events="events"
-        :locale="selectedLocale"
-        :calendars="calendars"
-        initial-view="month"
-        :enable-modals="modalsEnabled"
-        @event-click="handleEventClick"
-        @date-change="handleDateChange"
-        @view-change="handleViewChange"
-        @event-create="handleEventCreate"
-        @event-delete="handleEventDelete"
-        @event-update="handleEventUpdate"
-        @event-create-request="handleEventCreateRequest"
-      />
+      <GoogleCalendar :calendar-app="calendarApp" />
     </v-main>
   </v-app>
 </template>
 
-<script>
+<script setup>
+import { onMounted } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
+import { useI18n } from 'vue-i18n';
+import { createCalendar } from './core/createCalendar.js';
+import { createViewDay, createViewWeek, createViewMonth } from './core/views.js';
 import GoogleCalendar from './Calendar.vue';
 
-export default {
-  name: 'App',
-  components: {
-    GoogleCalendar
-  },
-  data() {
-    return {
-      selectedLocale: 'en-US', // Set default locale at initialization
-      events: [],
-      calendars: [
-        { id: 'work', name: 'Work', color: '#1967d2' },
-        { id: 'personal', name: 'Personal', color: '#137333' },
-        { id: 'family', name: 'Family', color: '#d93025' }
-      ],
-      modalsEnabled: true
-    };
-  },
-  created() {
-    this.generateSampleEvents();
-    this.initializeLocale();
-    this.modalsEnabled = this.resolveModalPreference();
-  },
-  methods: {
-    initializeLocale() {
-      const localeMap = {
-        'en-US': 'en',
-        'pt-PT': 'pt'
-      };
-      this.$i18n.locale = localeMap[this.selectedLocale] || 'en';
-    },
-    generateSampleEvents() {
-      const now = Temporal.Now.plainDateISO();
-      const today = Temporal.PlainDateTime.from({
-        year: now.year,
-        month: now.month,
-        day: now.day,
-        hour: 10,
-        minute: 0
-      });
+const { locale } = useI18n();
 
-      this.events = [
-        {
-          id: '1',
-          title: 'Team Meeting',
-          start: today.toString(),
-          end: today.add({ hours: 1 }).toString(),
-          calendar: 'work',
-          color: '#1967d2'
-        },
-        {
-          id: '2',
-          title: 'Lunch Break',
-          start: today.add({ hours: 2 }).toString(),
-          end: today.add({ hours: 3 }).toString(),
-          calendar: 'personal',
-          color: '#137333'
-        },
-        {
-          id: '3',
-          title: 'Project Review',
-          start: today.add({ hours: 4 }).toString(),
-          end: today.add({ hours: 5, minutes: 30 }).toString(),
-          calendar: 'family',
-          color: '#d93025'
-        },
-        {
-          id: '4',
-          title: 'Design Discussion',
-          start: today.add({ days: 1, hours: 1 }).toString(),
-          end: today.add({ days: 1, hours: 2 }).toString(),
-          calendar: 'work',
-          color: '#f9ab00'
-        },
-        {
-          id: '5',
-          title: 'Code Review',
-          start: today.add({ days: 2, hours: 3 }).toString(),
-          end: today.add({ days: 2, hours: 4 }).toString(),
-          calendar: 'work',
-          color: '#1967d2'
-        },
-        {
-          id: '6',
-          title: 'Sprint Planning',
-          start: today.add({ days: 3 }).toString(),
-          end: today.add({ days: 3, hours: 2 }).toString(),
-          calendar: 'family',
-          color: '#d93025'
-        },
-        {
-          id: '7',
-          title: 'Client Presentation',
-          start: today.add({ days: 5, hours: 2 }).toString(),
-          end: today.add({ days: 5, hours: 3 }).toString(),
-          calendar: 'personal',
-          color: '#137333'
-        },
-        {
-          id: '8',
-          title: 'Team Building',
-          start: today.subtract({ days: 2 }).add({ hours: 5 }).toString(),
-          end: today.subtract({ days: 2 }).add({ hours: 7 }).toString(),
-          calendar: 'work',
-          color: '#f9ab00'
-        },
-        {
-          id: '9',
-          title: 'Conference',
-          start: today.add({ days: 7 }).toString(),
-          allDay: true,
-          calendar: 'work',
-          color: '#1967d2'
-        },
-        {
-          id: '9a',
-          title: 'All-Day Meeting',
-          start: today.add({ days: 2 }).toString(),
-          allDay: true,
-          calendar: 'family',
-          color: '#d93025'
-        },
-        {
-          id: '10',
-          title: 'Workshop',
-          start: today.subtract({ days: 5 }).add({ hours: 3 }).toString(),
-          end: today.subtract({ days: 5 }).add({ hours: 5 }).toString(),
-          calendar: 'personal',
-          color: '#137333'
-        },
-        {
-          id: '11',
-          title: 'Weekly Standup (Recurring)',
-          start: today.toString(),
-          end: today.add({ hours: 0, minutes: 30 }).toString(),
-          calendar: 'work',
-          color: '#e67c73',
-          rrule: 'FREQ=WEEKLY;COUNT=6'
-        }
-      ];
-    },
-    handleEventClick(event) {
-      console.log('Event clicked:', event);
-    },
-    handleDateChange(date) {
-      console.log('Date changed:', date.toString());
-    },
-    handleViewChange(view) {
-      console.log('View changed:', view);
-    },
-    handleEventCreate(newEvents) {
-      console.log('Events created:', newEvents);
-      
-      // Handle both creation and updates
-      newEvents.forEach(newEvent => {
-        const existingIndex = this.events.findIndex(e => e.id === newEvent.id);
-        if (existingIndex !== -1) {
-          // Update existing event
-          this.events[existingIndex] = newEvent;
-        } else {
-          // Add new event
-          this.events.push(newEvent);
-        }
-      });
-    },
-    handleEventDelete(event) {
-      console.log('Event deleted:', event);
-      // Remove the event and all its recurring instances
-      this.events = this.events.filter(e => {
-        // Remove the exact event or any recurring instance (has same base ID)
-        const baseId = e.id.split('-')[0];
-        const eventBaseId = event.id.split('-')[0];
-        return baseId !== eventBaseId;
-      });
-    },
-    handleEventUpdate(updatedEvent) {
-      console.log('Event updated:', updatedEvent);
-      // Find and update the existing event
-      const index = this.events.findIndex(e => e.id === updatedEvent.id);
-      if (index !== -1) {
-        // Use splice to ensure Vue reactivity detects the change
-        this.events.splice(index, 1, updatedEvent);
-      }
-    },
-    handleEventCreateRequest(payload) {
-      console.log('Event create request:', payload);
-    },
-    resolveModalPreference() {
-      if (typeof window === 'undefined') {
-        return true;
-      }
-
-      const params = new URLSearchParams(window.location.search);
-      const setting = params.get('modals');
-      if (!setting) {
-        return true;
-      }
-
-      return setting.toLowerCase() !== 'off';
-    }
+// Helper to get current date (respects test mode)
+function getCurrentDate() {
+  if (typeof window !== 'undefined' && window.__CALENDAR_TEST_NOW__) {
+    // Parse test date string to Temporal.PlainDateTime then convert to PlainDate
+    const testDateTime = Temporal.PlainDateTime.from(window.__CALENDAR_TEST_NOW__);
+    return testDateTime.toPlainDate();
   }
-};
+  return Temporal.Now.plainDateISO();
+}
+
+// Check URL parameters for test configuration
+const urlParams = new URLSearchParams(window.location.search);
+const modalsParam = urlParams.get('modals');
+const enableModalsFromUrl = modalsParam !== 'off';
+
+// Generate sample events
+function generateSampleEvents() {
+  const now = getCurrentDate();
+  const today = Temporal.PlainDateTime.from({
+    year: now.year,
+    month: now.month,
+    day: now.day,
+    hour: 10,
+    minute: 0
+  });
+
+  return [
+    {
+      id: '1',
+      title: 'Team Meeting',
+      start: today.toString(),
+      end: today.add({ hours: 1 }).toString(),
+      calendarId: 'work',
+      color: '#1967D2' // Cobalt
+    },
+    {
+      id: '2',
+      title: 'Lunch Break',
+      start: today.add({ hours: 2 }).toString(),
+      end: today.add({ hours: 3 }).toString(),
+      calendarId: 'personal',
+      color: '#0B8043' // Basil
+    },
+    {
+      id: '3',
+      title: 'Project Review',
+      start: today.add({ hours: 4 }).toString(),
+      end: today.add({ hours: 5, minutes: 30 }).toString(),
+      calendarId: 'family',
+      color: '#D50000' // Tomato
+    },
+    {
+      id: '4',
+      title: 'Design Discussion',
+      start: today.add({ days: 1, hours: 1 }).toString(),
+      end: today.add({ days: 1, hours: 2 }).toString(),
+      calendarId: 'work',
+      color: '#F6BF26' // Banana
+    },
+    {
+      id: '5',
+      title: 'Code Review',
+      start: today.add({ days: 2, hours: 3 }).toString(),
+      end: today.add({ days: 2, hours: 4 }).toString(),
+      calendarId: 'work',
+      color: '#1967D2' // Cobalt
+    },
+    {
+      id: '6',
+      title: 'Sprint Planning',
+      start: today.add({ days: 3 }).toString(),
+      end: today.add({ days: 3, hours: 2 }).toString(),
+      calendarId: 'family',
+      color: '#D50000' // Tomato
+    },
+    {
+      id: '7',
+      title: 'Client Presentation',
+      start: today.add({ days: 5, hours: 2 }).toString(),
+      end: today.add({ days: 5, hours: 3 }).toString(),
+      calendarId: 'personal',
+      color: '#0B8043' // Basil
+    },
+    {
+      id: '8',
+      title: 'Team Building',
+      start: today.subtract({ days: 2 }).add({ hours: 5 }).toString(),
+      end: today.subtract({ days: 2 }).add({ hours: 7 }).toString(),
+      calendarId: 'work',
+      color: '#F6BF26' // Banana
+    },
+    {
+      id: '9',
+      title: 'Conference',
+      start: today.add({ days: 7 }).toString(),
+      allDay: true,
+      calendarId: 'work',
+      color: '#1967D2' // Cobalt
+    },
+    {
+      id: '9a',
+      title: 'All-Day Meeting',
+      start: today.add({ days: 2 }).toString(),
+      allDay: true,
+      calendarId: 'family',
+      color: '#D50000' // Tomato
+    },
+    {
+      id: '10',
+      title: 'Workshop',
+      start: today.subtract({ days: 5 }).add({ hours: 3 }).toString(),
+      end: today.subtract({ days: 5 }).add({ hours: 5 }).toString(),
+      calendarId: 'personal',
+      color: '#0B8043' // Basil
+    },
+    {
+      id: '11',
+      title: 'Weekly Standup (Recurring)',
+      start: today.toString(),
+      end: today.add({ hours: 0, minutes: 30 }).toString(),
+      calendarId: 'work',
+      color: '#E67C73', // Flamingo
+      rrule: 'FREQ=WEEKLY;COUNT=6'
+    },
+    // Overlapping events for testing layout
+    {
+      id: '12',
+      title: 'Client Call',
+      start: today.add({ hours: 6 }).toString(),
+      end: today.add({ hours: 7 }).toString(),
+      calendarId: 'work',
+      color: '#1967D2' // Cobalt
+    },
+    {
+      id: '13',
+      title: 'Team Sync',
+      start: today.add({ hours: 6, minutes: 15 }).toString(),
+      end: today.add({ hours: 6, minutes: 45 }).toString(),
+      calendarId: 'work',
+      color: '#F6BF26' // Banana
+    },
+    {
+      id: '14',
+      title: 'Training Session',
+      start: today.add({ hours: 6, minutes: 30 }).toString(),
+      end: today.add({ hours: 7, minutes: 30 }).toString(),
+      calendarId: 'personal',
+      color: '#0B8043' // Basil
+    }
+  ];
+}
+
+// Create calendar instance
+const calendarApp = createCalendar({
+  // Define which views are available
+  views: [
+    createViewDay(),
+    createViewWeek(),
+    createViewMonth()
+  ],
+  
+  // Set default view
+  defaultView: 'month',
+  
+  // Initial events
+  events: generateSampleEvents(),
+  
+  // Calendar categories
+  calendars: [
+    { id: 'work', name: 'Work', color: '#1967D2' }, // Cobalt
+    { id: 'personal', name: 'Personal', color: '#0B8043' }, // Basil
+    { id: 'family', name: 'Family', color: '#D50000' } // Tomato
+  ],
+  
+  // Locale
+  locale: 'en-US',
+  
+  // Enable modals (can be disabled via ?modals=off URL parameter)
+  enableModals: enableModalsFromUrl,
+  
+  // Callbacks for when modals are disabled
+  onEventCreateRequest: (eventData) => {
+    console.log('Event create request:', eventData);
+  }
+});
+
+// Set i18n locale
+onMounted(() => {
+  const localeMap = {
+    'en-US': 'en',
+    'pt-PT': 'pt'
+  };
+  locale.value = localeMap[calendarApp.locale.value] || 'en';
+});
+
+// Example: Access events service
+console.log('Initial events:', calendarApp.eventsService.getAll());
+
+// Example: Add event programmatically
+// calendarApp.eventsService.add({
+//   title: 'New Event',
+//   start: Temporal.Now.plainDateISO().toString(),
+//   end: Temporal.Now.plainDateISO().toString(),
+//   calendarId: 'work'
+// });
+
+// Example: Update event
+// calendarApp.eventsService.update({
+//   id: '1',
+//   title: 'Updated Team Meeting'
+// });
+
+// Example: Remove event
+// calendarApp.eventsService.remove('1');
+
+// Example: Calendar controls
+// calendarApp.goToNext();
+// calendarApp.goToPrevious();
+// calendarApp.goToToday();
+// calendarApp.setView('week');
 </script>
 
 <style>
@@ -231,8 +243,4 @@ export default {
 * {
   font-family: 'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif !important;
 }
-</style>
-
-<style scoped>
-/* Vuetify handles most styling */
 </style>

@@ -7,8 +7,8 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   
-  // Maximum time one test can run
-  timeout: 30 * 1000,
+  // Maximum time one test can run (reduced from 30s to 15s)
+  timeout: 15 * 1000,
   
   // Run tests in files in parallel
   fullyParallel: true,
@@ -19,11 +19,17 @@ export default defineConfig({
   // Retry on CI only
   retries: process.env.CI ? 2 : 0,
   
-  // Run tests in parallel on CI
-  workers: process.env.CI ? 4 : undefined,
+  // Run tests in parallel (increased workers for speed)
+  workers: process.env.CI ? 4 : 8,
   
   // Reporter to use
-  reporter: 'html',
+  // Use a console-friendly reporter and keep HTML generation but do not open/serve it automatically.
+  // This prevents Playwright from serving the HTML report after the run while still producing
+  // artifacts for CI or manual inspection.
+  reporter: [
+    ['list'],
+    ['html', { open: 'never' }]
+  ],
   
   // Shared settings for all the projects below
   use: {
@@ -35,6 +41,12 @@ export default defineConfig({
     
     // Screenshot on failure
     screenshot: 'only-on-failure',
+    
+    // Reduce action timeout for faster failures (5s instead of default 30s)
+    actionTimeout: 5000,
+    
+    // Faster navigation timeout
+    navigationTimeout: 10000,
   },
 
   // Configure projects for major browsers
@@ -96,7 +108,7 @@ export default defineConfig({
   webServer: {
     command: 'npm run dev',
     url: 'http://localhost:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120 * 1000,
+    reuseExistingServer: true, // Always reuse existing server for speed
+    timeout: 60 * 1000, // Reduced from 120s to 60s
   },
 });

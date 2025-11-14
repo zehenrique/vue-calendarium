@@ -4,6 +4,9 @@ import App from './App.vue';
 import messages from './i18n.js';
 import vuetify from './plugins/vuetify.js';
 
+// Export color palette for users integrating this calendar
+export { CALENDAR_COLORS, DEFAULT_COLOR, getColorById, getColorIdByHex, isValidColor, getClosestColor } from './config/colors.js';
+
 // Create i18n instance
 // Default locale is 'en', but Calendar component can override via props
 const i18n = createI18n({

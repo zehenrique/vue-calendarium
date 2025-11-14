@@ -62,7 +62,7 @@
       v-if="modalsEnabled"
       v-model="showModal"
       :event="newEvent"
-      :calendars="props.calendars"
+      :calendars="calendars"
       @save="saveEvent"
     />
 
@@ -70,7 +70,7 @@
       v-if="modalsEnabled"
       v-model="showEventDetail"
       :event="selectedEvent"
-      :calendars="props.calendars"
+      :calendars="calendars"
       :locale="calendarLocale"
       @edit="editSelectedEvent"
       @delete="deleteSelectedEvent"
@@ -88,8 +88,8 @@
       v-model="showMobileSidebar"
       :current-view="currentView"
       :views="views"
-      :calendars="props.calendars"
-      :visible-calendars="visibleCalendars"
+      :calendars="calendars"
+      :visible-calendars="visibleCalendarIds"
       @view-change="handleViewChange"
       @update:visible-calendars="handleVisibleCalendarsUpdate"
     />
@@ -100,6 +100,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
+import { DEFAULT_COLOR } from './config/colors.js';
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
 import MonthView from './components/calendar/MonthView.vue';
 import WeekView from './components/calendar/WeekView.vue';
@@ -124,42 +125,30 @@ import { expandRecurrence } from './composables/useCalendarInterop.js';
 import { createSwipeController } from './composables/useSwipeGestures.js';
 
 const props = defineProps({
-  events: {
-    type: Array,
-    default: () => []
-  },
-  locale: {
-    type: String,
-    default: 'en-US'
-  },
-  initialView: {
-    type: String,
-    default: 'month',
-    validator: (value) => ['month', 'week', 'day'].includes(value)
-  },
-  initialDate: {
-    type: [String, Object],
-    default: null
-  },
-  calendars: {
-    type: Array,
-    default: () => [{ id: 'default', name: 'My Calendar', color: '#1967d2' }]
-  },
-  enableModals: {
-    type: Boolean,
-    default: true
-  },
-  enableMobileSidebar: {
-    type: Boolean,
-    default: true
+  // Calendar app instance (required)
+  calendarApp: {
+    type: Object,
+    required: true
   }
 });
 
-const emit = defineEmits(['eventClick', 'dateChange', 'viewChange', 'eventCreate', 'eventDelete', 'eventUpdate', 'eventCreateRequest']);
+defineEmits([]);
 
 defineOptions({ name: 'GoogleCalendar' });
 
 const { t, locale: i18nLocale } = useI18n();
+
+// Reactive data sources from calendar app
+const events = computed(() => props.calendarApp.visibleEvents.value);
+const calendars = computed(() => props.calendarApp.calendarsService.getAll());
+const calendarLocale = computed(() => props.calendarApp.locale.value);
+const modalsEnabled = computed(() => props.calendarApp.enableModals.value);
+const mobileSidebarEnabled = ref(true); // Always enabled for now
+
+// Computed to get visible calendar IDs
+const visibleCalendarIds = computed(() => 
+  props.calendarApp.calendarsService.getVisible().map(c => c.id)
+);
 
 const views = ['day', 'week', 'month'];
 const DESKTOP_PIXELS_PER_HOUR_WEEK = 60;
@@ -188,8 +177,33 @@ function getCurrentDateTime() {
   return readTestNow() ?? Temporal.Now.plainDateTimeISO();
 }
 
-const currentView = ref(props.initialView);
-const currentDate = ref(props.initialDate ? Temporal.PlainDate.from(props.initialDate) : getCurrentPlainDate());
+// Initialize current view and date from calendar app
+const currentView = ref(props.calendarApp._refs.currentView.value);
+const currentDate = ref(props.calendarApp._refs.currentDate.value);
+
+// Sync with calendar app
+watch(() => props.calendarApp._refs.currentView.value, (newView) => {
+  currentView.value = newView;
+});
+
+watch(() => props.calendarApp._refs.currentDate.value, (newDate) => {
+  currentDate.value = newDate;
+});
+
+watch(currentView, (newView) => {
+  const appView = props.calendarApp._refs.currentView;
+  if (appView.value !== newView) {
+    appView.value = newView;
+  }
+});
+
+watch(currentDate, (newDate) => {
+  const appDate = props.calendarApp._refs.currentDate;
+  if (appDate.value !== newDate) {
+    appDate.value = newDate;
+  }
+});
+
 const isMobile = ref(false);
 const showModal = ref(false);
 const showEventDetail = ref(false);
@@ -198,7 +212,6 @@ const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
 const ghostEvent = ref(null); // Ghost event displayed before saving
-const visibleCalendars = ref(props.calendars.map(c => c.id)); // Track which calendars are visible
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
@@ -208,14 +221,10 @@ const localeCodeMap = {
   'pt-PT': 'pt'
 };
 
-const calendarLocale = computed(() => props.locale);
-const modalsEnabled = computed(() => props.enableModals !== false);
-const mobileSidebarEnabled = computed(() => props.enableMobileSidebar !== false);
-
-const newEvent = ref(createDefaultEventDraft(props.calendars));
+const newEvent = ref(createDefaultEventDraft(calendars.value));
 
 watch(
-  () => props.locale,
+  () => calendarLocale.value,
   (newLocale) => {
     i18nLocale.value = localeCodeMap[newLocale] || 'en';
   },
@@ -223,16 +232,16 @@ watch(
 );
 
 watch(
-  () => props.calendars,
-  (calendars) => {
-    if (!calendars || !calendars.length) return;
-    newEvent.value = ensureDraftCalendar(newEvent.value, calendars);
+  () => calendars.value,
+  (cals) => {
+    if (!cals || !cals.length) return;
+    newEvent.value = ensureDraftCalendar(newEvent.value, cals);
   },
   { immediate: true, deep: true }
 );
 
 const weekDays = computed(() =>
-  createWeekdayLabels(currentDate.value, calendarLocale.value, isMobile.value)
+  createWeekdayLabels(currentDate.value, calendarLocale.value, isMobile.value, t)
 );
 
 // Expand RRULE-based events into occurrences for the visible range
@@ -273,7 +282,7 @@ const displayEvents = computed(() => {
     expanded.push(ghostEvent.value);
   }
   
-  for (const e of props.events) {
+  for (const e of events.value) {
     if (e && e.rrule) {
       expanded.push(
         ...expandRecurrence(e, range.start, range.end)
@@ -283,19 +292,8 @@ const displayEvents = computed(() => {
     }
   }
   
-  // Filter events by visible calendars
-  return expanded.filter(event => {
-    // Ghost events are always shown
-    if (event.isGhost) return true;
-    
-    // Filter by calendar ID - show only events from visible calendars
-    if (event.calendar) {
-      return visibleCalendars.value.includes(event.calendar);
-    }
-    
-    // If no calendar property, show the event by default
-    return true;
-  });
+  // Events are already filtered by visibleEvents in calendar app
+  return expanded;
 });
 
 const monthDays = computed(() => createMonthGrid(currentDate.value, displayEvents.value));
@@ -404,15 +402,21 @@ watch(isMobile, (mobile) => {
 });
 
 watch(currentView, (view) => {
-  emit('viewChange', view);
+  props.calendarApp.callbacks.onViewChange?.(view);
 });
 
 function toggleMobileSidebar() {
   showMobileSidebar.value = !showMobileSidebar.value;
 }
 
-function handleVisibleCalendarsUpdate(calendars) {
-  visibleCalendars.value = calendars;
+function handleVisibleCalendarsUpdate(calendarIds) {
+  // Update calendar visibility through calendarsService
+  calendars.value.forEach(cal => {
+    const shouldBeVisible = calendarIds.includes(cal.id);
+    if (cal.visible !== shouldBeVisible) {
+      props.calendarApp.calendarsService.toggleVisibility(cal.id);
+    }
+  });
 }
 
 function previousPeriod() {
@@ -424,7 +428,7 @@ function previousPeriod() {
     currentDate.value = currentDate.value.subtract({ days: 1 });
   }
 
-  emit('dateChange', currentDate.value);
+  props.calendarApp.callbacks.onDateChange?.(currentDate.value);
 }
 
 function nextPeriod() {
@@ -436,12 +440,12 @@ function nextPeriod() {
     currentDate.value = currentDate.value.add({ days: 1 });
   }
 
-  emit('dateChange', currentDate.value);
+  props.calendarApp.callbacks.onDateChange?.(currentDate.value);
 }
 
 function goToToday() {
   currentDate.value = getCurrentPlainDate();
-  emit('dateChange', currentDate.value);
+  props.calendarApp.callbacks.onDateChange?.(currentDate.value);
 }
 
 function handleViewChange(view) {
@@ -503,11 +507,11 @@ function onAllDaySlotClick(date) {
 }
 
 function openCreateModal(overrides = {}, context = {}) {
-  const draft = createDefaultEventDraft(props.calendars, overrides);
+  const draft = createDefaultEventDraft(calendars.value, overrides);
   newEvent.value = draft;
 
   // Create ghost event with lower opacity
-  const ghostEventData = buildEventPayloadFromDraft(draft, props.calendars);
+  const ghostEventData = buildEventPayloadFromDraft(draft, calendars.value);
   ghostEvent.value = {
     ...ghostEventData,
     id: 'ghost-event',
@@ -520,7 +524,7 @@ function openCreateModal(overrides = {}, context = {}) {
       ...context
     };
 
-    emit('eventCreateRequest', { draft, context: requestContext });
+    props.calendarApp.callbacks.onEventCreateRequest?.({ draft, context: requestContext });
     return;
   }
 
@@ -529,7 +533,7 @@ function openCreateModal(overrides = {}, context = {}) {
 
 function onEventClick(event) {
   selectedEvent.value = event;
-  emit('eventClick', event);
+  props.calendarApp.callbacks.onEventClick?.(event);
 
   if (!modalsEnabled.value) {
     return;
@@ -545,7 +549,7 @@ function editSelectedEvent(event) {
   const start = Temporal.PlainDateTime.from(target.start);
   const end = target.end ? Temporal.PlainDateTime.from(target.end) : start.add({ hours: 1 });
 
-  newEvent.value = createDefaultEventDraft(props.calendars, {
+  newEvent.value = createDefaultEventDraft(calendars.value, {
     id: target.id,
     title: target.title,
     startDate: start.toPlainDate().toString(),
@@ -553,8 +557,8 @@ function editSelectedEvent(event) {
     endDate: end.toPlainDate().toString(),
     endTime: `${String(end.hour).padStart(2, '0')}:${String(end.minute).padStart(2, '0')}`,
     rrule: target.rrule || '',
-    calendar: target.calendar || props.calendars[0]?.id || 'default',
-    color: target.color || props.calendars[0]?.color || '#1967d2',
+    calendarId: target.calendarId || calendars.value[0]?.id || 'default',
+    color: target.color || calendars.value[0]?.color || DEFAULT_COLOR,
     allDay: target.allDay || false
   });
 
@@ -588,20 +592,20 @@ function confirmDelete(options = {}) {
   
   // If deleting all events in the series, or if not a recurring event
   if (deleteAll || (!selectedEvent.value.rrule && !selectedEvent.value.recurringEventId)) {
-    emit('eventDelete', selectedEvent.value);
+    props.calendarApp.eventsService.remove(selectedEvent.value.id);
+    props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
   } else {
     // Deleting single occurrence - find the base event and add EXDATE
-    // selectedEvent might be an expanded occurrence (id like 'event-1-2')
-    // We need to find the original base event
     const selectedId = selectedEvent.value.id.toString();
     const baseEventId = selectedId.includes('-') ? selectedId.split('-')[0] : selectedId;
     
-    // Find the base event from props.events (not the expanded displayEvents)
-    const baseEvent = props.events.find(e => e.id.toString() === baseEventId);
+    // Find the base event from events (not the expanded displayEvents)
+    const baseEvent = events.value.find(e => e.id.toString() === baseEventId);
     
     if (!baseEvent || !baseEvent.rrule) {
       // Fallback: if we can't find base event or it doesn't have rrule, delete normally
-      emit('eventDelete', selectedEvent.value);
+      props.calendarApp.eventsService.remove(selectedEvent.value.id);
+      props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
       selectedEvent.value = null;
       showDeleteConfirm.value = false;
       showEventDetail.value = false;
@@ -638,7 +642,8 @@ function confirmDelete(options = {}) {
     }
     
     eventToUpdate.rrule = rruleString;
-    emit('eventUpdate', eventToUpdate);
+    props.calendarApp.eventsService.update(eventToUpdate);
+    props.calendarApp.callbacks.onEventUpdate?.(eventToUpdate);
   }
   
   selectedEvent.value = null;
@@ -654,15 +659,26 @@ function saveEvent(eventDataFromModal) {
     return;
   }
 
-  const normalizedDraft = ensureDraftCalendar(eventToSave, props.calendars);
-  const eventPayload = buildEventPayloadFromDraft(normalizedDraft, props.calendars);
+  const normalizedDraft = ensureDraftCalendar(eventToSave, calendars.value);
+  const eventPayload = buildEventPayloadFromDraft(normalizedDraft, calendars.value);
 
-  // Emit single event with RRULE - expansion happens in displayEvents computed
-  emit('eventCreate', [eventPayload]);
+  // Check if event exists in the service (not just if it has an ID)
+  const existingEvent = eventPayload.id ? props.calendarApp.eventsService.get(eventPayload.id) : null;
+  
+  if (existingEvent) {
+    // Update existing event
+    props.calendarApp.eventsService.update(eventPayload);
+    props.calendarApp.callbacks.onEventUpdate?.(eventPayload);
+  } else {
+    // Add new event (remove any auto-generated ID first)
+    delete eventPayload.id;
+    props.calendarApp.eventsService.add(eventPayload);
+    props.calendarApp.callbacks.onEventCreate?.([eventPayload]);
+  }
 
   // Clear ghost event after saving
   ghostEvent.value = null;
-  newEvent.value = createDefaultEventDraft(props.calendars);
+  newEvent.value = createDefaultEventDraft(calendars.value);
 }
 
 // Watch for modal close to clear ghost event if cancelled
@@ -670,6 +686,8 @@ watch(showModal, (isOpen) => {
   if (!isOpen && ghostEvent.value) {
     // Modal was closed without saving, clear ghost event
     ghostEvent.value = null;
+    // Also reset newEvent when modal closes
+    newEvent.value = createDefaultEventDraft(calendars.value);
   }
 });
 

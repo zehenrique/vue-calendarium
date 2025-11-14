@@ -1,36 +1,16 @@
 <template>
-  <v-dialog
-    :model-value="modelValue && !!event"
-    @update:model-value="handleClose"
-    max-width="500"
-    data-testid="event-detail-modal"
-  >
-    <v-card v-if="event" class="pa-0 event-detail-card">
+  <v-dialog :model-value="modelValue && !!event" @update:model-value="handleClose" max-width="520" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal">
+    <v-card v-if="event" class="pa-0 event-detail-card" rounded="xl">
       <!-- Header with action buttons -->
       <v-card-title class="d-flex align-center px-4 py-3 border-b">
         <v-spacer></v-spacer>
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="handleEdit"
-          :aria-label="t('edit')">
+        <v-btn icon variant="text" size="small" @click="handleEdit" :aria-label="t('edit')">
           <v-icon>mdi-pencil</v-icon>
         </v-btn>
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="handleDelete"
-          :aria-label="t('delete')">
+        <v-btn icon variant="text" size="small" @click="handleDelete" :aria-label="t('delete')">
           <v-icon>mdi-delete</v-icon>
         </v-btn>
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="handleClose"
-          :aria-label="t('close')">
+        <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
@@ -38,10 +18,7 @@
       <v-card-text class="px-6 py-4">
         <!-- Title with color indicator -->
         <div class="d-flex align-start mb-4">
-          <div 
-            class="color-dot mr-3 mt-1" 
-            :style="{ backgroundColor: event?.color || '#1967d2' }"
-          ></div>
+          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
           <h2 class="text-h5 font-weight-regular">{{ event?.title }}</h2>
         </div>
 
@@ -128,9 +105,9 @@ export default {
     });
 
     const calendarName = computed(() => {
-      if (!props.event?.calendar) return '';
-      const calendar = props.calendars.find(c => c.id === props.event.calendar);
-      return calendar ? calendar.name : props.event.calendar;
+      if (!props.event?.calendarId) return '';
+      const calendar = props.calendars.find(c => c.id === props.event.calendarId);
+      return calendar ? calendar.name : props.event.calendarId;
     });
 
     const handleClose = () => {

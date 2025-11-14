@@ -6,12 +6,12 @@ const SIDEBAR_SELECTOR = '.mobile-sidebar';
 async function openSidebar(page) {
   await page.getByTestId('mobile-menu-button').click();
   const sidebar = page.locator(SIDEBAR_SELECTOR);
-  await expect(sidebar).toHaveClass(/v-navigation-drawer--active/, { timeout: 3000 });
+  await expect(sidebar).toHaveClass(/v-navigation-drawer--active/, { timeout: 2000 });
 }
 
 async function waitForSidebarClosed(page) {
   const sidebar = page.locator(SIDEBAR_SELECTOR);
-  await expect(sidebar).not.toHaveClass(/v-navigation-drawer--active/, { timeout: 3000 });
+  await expect(sidebar).not.toHaveClass(/v-navigation-drawer--active/, { timeout: 2000 });
 }
 
 test.describe('Calendar Views (Mobile)', () => {
@@ -21,7 +21,7 @@ test.describe('Calendar Views (Mobile)', () => {
     }, { testNow: TEST_NOW });
 
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('.calendar-title')).toHaveText('January 2025', { timeout: 5000 });
   });
 
@@ -35,8 +35,8 @@ test.describe('Calendar Views (Mobile)', () => {
     await page.getByTestId('sidebar-view-week').click();
     await waitForSidebarClosed(page);
 
-    await expect(page.locator('.week-view')).toBeVisible({ timeout: 4000 });
-    await expect(page.locator('.week-grid')).toBeVisible({ timeout: 4000 });
+    await expect(page.locator('.week-view')).toBeVisible({ timeout: 2000 });
+    await expect(page.locator('.week-grid')).toBeVisible({ timeout: 2000 });
   });
 
   test('should switch to day view via mobile sidebar', async ({ page }) => {
@@ -44,8 +44,8 @@ test.describe('Calendar Views (Mobile)', () => {
     await page.getByTestId('sidebar-view-day').click();
     await waitForSidebarClosed(page);
 
-    await expect(page.locator('.day-view')).toBeVisible({ timeout: 4000 });
-    await expect(page.locator('.day-grid')).toBeVisible({ timeout: 4000 });
+    await expect(page.locator('.day-view')).toBeVisible({ timeout: 2000 });
+    await expect(page.locator('.day-grid')).toBeVisible({ timeout: 2000 });
   });
 
   test('should display "Today" button on mobile', async ({ page }) => {

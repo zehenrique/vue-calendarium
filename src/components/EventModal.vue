@@ -1,22 +1,9 @@
 <template>
-  <v-dialog
-    v-if="!mobile"
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    max-width="680"
-    persistent
-    data-testid="event-modal"
-  >
-    <v-card class="pa-0 event-modal-card">
+  <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480" scrim="rgba(0, 0, 0, 0.5)" content-class="event-modal-positioning" data-testid="event-modal">
+    <v-card class="pa-0 event-modal-card" rounded="xl">
       <!-- Header with tabs and close button -->
       <div class="modal-header">
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="handleClose"
-          :aria-label="t('close')"
-          class="ml-auto mr-2">
+        <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')" class="ml-auto mr-2">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </div>
@@ -25,38 +12,26 @@
         <v-container fluid class="pa-0">
           <v-form>
             <!-- Event title -->
-            <v-text-field
-              v-model="eventData.title"
-              :placeholder="t('eventTitle')"
-              variant="plain"
-              class="text-h5 mb-4 title-input"
-              hide-details
-              autofocus
-            ></v-text-field>
+            <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="text-h5 mb-4 title-input" hide-details autofocus></v-text-field>
 
             <!-- Date and time row -->
             <div class="d-flex align-center mb-2">
               <v-icon class="mr-4 flex-shrink-0" size="20">mdi-clock-outline</v-icon>
-              <span class="date-label mr-3">{{ startDateDisplay }}</span>
-              <v-select
-                v-if="!eventData.allDay"
-                v-model="eventData.startTime"
-                :items="timeOptions"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="time-select mr-2"
-              ></v-select>
+              <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+                <template v-slot:activator="{ props }">
+                  <v-text-field :model-value="startDateDisplay" variant="outlined" hide-details density="compact" class="date-input mr-3" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
+                </template>
+                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                  <template v-slot:actions>
+                    <v-btn variant="text" color="primary" @click="handleTodayClick">
+                      {{ t('today') || 'Today' }}
+                    </v-btn>
+                  </template>
+                </v-date-picker>
+              </v-menu>
+              <v-select v-if="!eventData.allDay" v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select mr-2"></v-select>
               <span v-if="!eventData.allDay" class="time-separator">–</span>
-              <v-select
-                v-if="!eventData.allDay"
-                v-model="eventData.endTime"
-                :items="endTimeOptions"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="time-select ml-2"
-              >
+              <v-select v-if="!eventData.allDay" v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select ml-2">
                 <template v-slot:selection="{ item }">
                   {{ item.value }}
                 </template>
@@ -68,15 +43,9 @@
               <div class="icon-spacer mr-4"></div>
               <div class="flex-grow-1">
                 <div class="text-body-2 d-flex align-center flex-wrap options-row">
-                  <v-checkbox
-                    v-model="eventData.allDay"
-                    :label="t('allDay')"
-                    hide-details
-                    density="compact"
-                    class="all-day-checkbox"
-                  ></v-checkbox>
+                  <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
                   <span class="separator">•</span>
-                  <a href="#" class="option-link" @click.prevent="toggleRepeatPicker">
+                  <a href="#" class="option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
                     {{ repeatDisplayText }}
                   </a>
                 </div>
@@ -87,33 +56,17 @@
             <div class="d-flex align-center">
               <v-icon class="mr-4" size="20">mdi-calendar-blank</v-icon>
               <div class="flex-grow-1">
-                <v-select
-                  v-model="eventData.calendar"
-                  :items="calendars"
-                  item-title="name"
-                  item-value="id"
-                  variant="plain"
-                  hide-details
-                  density="compact"
-                  class="calendar-select"
-                  data-testid="calendar-select"
-                >
+                <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="plain" hide-details density="compact" class="calendar-select" data-testid="calendar-select">
                   <template v-slot:selection="{ item }">
                     <div class="d-flex align-center">
-                      <div
-                        class="color-dot mr-2"
-                        :style="{ backgroundColor: eventData.color }"
-                      ></div>
+                      <div class="color-dot mr-2" :style="{ backgroundColor: eventData.color }"></div>
                       <span>{{ item.title }}</span>
                     </div>
                   </template>
                   <template v-slot:item="{ item, props }">
                     <v-list-item v-bind="props">
                       <template v-slot:prepend>
-                        <div
-                          class="color-dot mr-2"
-                          :style="{ backgroundColor: getCalendarColor(item.value) }"
-                        ></div>
+                        <div class="color-dot mr-2" :style="{ backgroundColor: getCalendarColor(item.value) }"></div>
                       </template>
                     </v-list-item>
                   </template>
@@ -125,20 +78,11 @@
       </v-card-text>
 
       <v-card-actions class="px-8 pb-4 pt-0">
-        <v-btn
-          variant="text"
-          @click="handleClose">
+        <v-btn variant="text" @click="handleClose">
           {{ t('cancel') }}
         </v-btn>
         <v-spacer></v-spacer>
-        <v-btn
-          color="primary"
-          variant="flat"
-          size="large"
-          @click="handleSave"
-          :disabled="!eventData.title"
-          class="px-8"
-        >
+        <v-btn color="primary" variant="flat" size="large" @click="handleSave" :disabled="!eventData.title" class="px-8">
           {{ t('save') }}
         </v-btn>
       </v-card-actions>
@@ -146,28 +90,15 @@
   </v-dialog>
 
   <!-- Mobile Bottom Sheet -->
-  <v-bottom-sheet
-    v-if="mobile"
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    data-testid="event-modal-mobile"
-  >
+  <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-modal-mobile">
     <v-card class="mobile-bottom-sheet" rounded="t-xl">
       <!-- Action buttons at top -->
       <v-card-actions class="pa-4 pb-2">
-        <v-btn
-          variant="text"
-          @click="handleClose"
-        >
+        <v-btn variant="text" @click="handleClose">
           {{ t('cancel') }}
         </v-btn>
         <v-spacer></v-spacer>
-        <v-btn
-          color="primary"
-          variant="text"
-          @click="handleSave"
-          :disabled="!eventData.title"
-        >
+        <v-btn color="primary" variant="text" @click="handleSave" :disabled="!eventData.title">
           {{ t('save') }}
         </v-btn>
       </v-card-actions>
@@ -177,50 +108,33 @@
       <v-card-text class="px-4 pt-3 pb-4 mobile-content">
         <v-form>
           <!-- Event title -->
-          <v-text-field
-            v-model="eventData.title"
-            :placeholder="t('eventTitle')"
-            variant="plain"
-            class="mobile-title-input mb-3"
-            hide-details
-            autofocus
-          ></v-text-field>
+          <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="mobile-title-input mb-3" hide-details autofocus></v-text-field>
 
           <!-- Date and time -->
           <div class="mb-2">
             <div class="d-flex align-center mb-2">
               <v-icon size="20" class="mr-3 flex-shrink-0 text-medium-emphasis">mdi-clock-outline</v-icon>
               <!-- Date picker -->
-              <v-text-field
-                v-model="eventData.startDate"
-                type="date"
-                variant="outlined"
-                density="compact"
-                hide-details
-                class="flex-grow-1"
-              ></v-text-field>
+              <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+                <template v-slot:activator="{ props }">
+                  <v-text-field :model-value="startDateDisplay" variant="outlined" density="compact" hide-details class="flex-grow-1" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
+                </template>
+                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                  <template v-slot:actions>
+                    <v-btn variant="text" color="primary" @click="handleTodayClick">
+                      {{ t('today') || 'Today' }}
+                    </v-btn>
+                  </template>
+                </v-date-picker>
+              </v-menu>
             </div>
             
             <!-- Time pickers -->
             <div v-if="!eventData.allDay" class="d-flex align-center">
               <div class="icon-spacer mr-3"></div>
-              <v-select
-                v-model="eventData.startTime"
-                :items="timeOptions"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="time-select-mobile mr-2"
-              ></v-select>
+              <v-select v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile mr-2"></v-select>
               <span class="time-separator">–</span>
-              <v-select
-                v-model="eventData.endTime"
-                :items="endTimeOptions"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="time-select-mobile ml-2"
-              >
+              <v-select v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile ml-2">
                 <template v-slot:selection="{ item }">
                   {{ item.value }}
                 </template>
@@ -233,13 +147,7 @@
             <div class="d-flex align-center">
               <div class="icon-spacer mr-3"></div>
               <div class="flex-grow-1">
-                <v-checkbox
-                  v-model="eventData.allDay"
-                  :label="t('allDay')"
-                  hide-details
-                  density="compact"
-                  class="mobile-checkbox"
-                ></v-checkbox>
+                <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="mobile-checkbox"></v-checkbox>
               </div>
             </div>
           </div>
@@ -248,7 +156,7 @@
           <div class="mb-3 d-flex align-center">
             <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-repeat</v-icon>
             <div class="flex-grow-1">
-              <a href="#" class="mobile-option-link" @click.prevent="toggleRepeatPicker">
+              <a href="#" class="mobile-option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
                 {{ repeatDisplayText }}
               </a>
             </div>
@@ -259,7 +167,7 @@
             <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-calendar-blank</v-icon>
             <div class="flex-grow-1">
               <v-select
-                v-model="eventData.calendar"
+                v-model="eventData.calendarId"
                 :items="calendars"
                 item-title="name"
                 item-value="id"
@@ -306,10 +214,11 @@
 </template>
 
 <script>
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
+import { DEFAULT_COLOR } from '../config/colors.js';
 import RecurrencePickerModal from './RecurrencePickerModal.vue';
 
 export default {
@@ -328,7 +237,7 @@ export default {
     },
     calendars: {
       type: Array,
-      default: () => [{ id: 'default', name: 'My Calendar', color: '#1967d2' }]
+      default: () => [{ id: 'default', name: 'My Calendar', color: DEFAULT_COLOR }]
     }
   },
   emits: ['update:modelValue', 'save'],
@@ -343,13 +252,14 @@ export default {
       endDate: '',
       endTime: '10:00',
       rrule: '',
-      calendar: 'default',
-      color: '#1967d2',
+      calendarId: 'default',
+      color: DEFAULT_COLOR,
       allDay: false
     });
 
     const repeatSelection = ref('none');
     const showCustomRecurrence = ref(false);
+    const showDatePicker = ref(false);
 
     // Generate time options in 15-minute intervals
     const timeOptions = computed(() => {
@@ -407,20 +317,96 @@ export default {
         .filter(option => option.durationMinutes > 0); // Only allow end times after start time
     });
 
-    const startDateDisplay = computed(() => {
-      if (!eventData.value.startDate) return '';
-      try {
-        const date = Temporal.PlainDate.from(eventData.value.startDate);
-        const locale = 'pt-PT'; // Use Portuguese format like in the image
-        const dayOfWeek = date.toLocaleString(locale, { weekday: 'long' });
-        const dayNumber = date.day;
-        const month = date.toLocaleString(locale, { month: 'long' });
-        
-        return `${dayOfWeek.charAt(0).toUpperCase() + dayOfWeek.slice(1)}, ${dayNumber} de ${month}`;
-      } catch (e) {
-        return eventData.value.startDate;
+    const startDateDisplay = computed({
+      get() {
+        if (!eventData.value.startDate) return '';
+        try {
+          const date = Temporal.PlainDate.from(eventData.value.startDate);
+          const day = String(date.day).padStart(2, '0');
+          const month = String(date.month).padStart(2, '0');
+          const year = date.year;
+          return `${day}/${month}/${year}`;
+        } catch (e) {
+          return eventData.value.startDate;
+        }
+      },
+      set(value) {
+        // Parse dd/mm/yyyy format
+        const parts = value.split('/');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          
+          if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year > 0) {
+            try {
+              const date = Temporal.PlainDate.from({
+                year,
+                month,
+                day
+              });
+              eventData.value.startDate = date.toString();
+              eventData.value.endDate = date.toString();
+            } catch (e) {
+              // Invalid date, keep current value
+            }
+          }
+        }
       }
     });
+
+    // Convert Temporal.PlainDate to Date object for v-date-picker
+    const datePickerValue = computed(() => {
+      if (!eventData.value.startDate) return null;
+      try {
+        const date = Temporal.PlainDate.from(eventData.value.startDate);
+        return new Date(date.year, date.month - 1, date.day);
+      } catch (e) {
+        return null;
+      }
+    });
+
+    const handleDatePickerChange = (date) => {
+      if (date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        
+        try {
+          const plainDate = Temporal.PlainDate.from({
+            year,
+            month,
+            day
+          });
+          eventData.value.startDate = plainDate.toString();
+          eventData.value.endDate = plainDate.toString();
+          showDatePicker.value = false;
+        } catch (e) {
+          // Invalid date
+        }
+      }
+    };
+
+    const handleTodayClick = () => {
+      const today = Temporal.Now.plainDateISO();
+      eventData.value.startDate = today.toString();
+      eventData.value.endDate = today.toString();
+      showDatePicker.value = false;
+    };
+
+    const handleDateChange = () => {
+      // Force re-validation when user leaves the date field
+      if (eventData.value.startDate) {
+        try {
+          Temporal.PlainDate.from(eventData.value.startDate);
+        } catch (e) {
+          // Reset to today if invalid
+          const today = Temporal.Now.plainDateISO();
+          eventData.value.startDate = today.toString();
+          eventData.value.endDate = today.toString();
+        }
+      }
+    };
 
     const repeatDisplayText = computed(() => {
       if (!eventData.value.rrule || eventData.value.rrule === '') {
@@ -442,26 +428,27 @@ export default {
 
     const getCalendarColor = (calendarId) => {
       const calendar = props.calendars.find(c => c.id === calendarId);
-      return calendar ? calendar.color : '#1967d2';
+      return calendar ? calendar.color : DEFAULT_COLOR;
     };
 
     // Watch for event prop changes to update form
     watch(() => props.event, (newEvent) => {
       if (newEvent) {
         eventData.value = {
+          id: newEvent.id, // Preserve ID for updates
           title: newEvent.title || '',
           startDate: newEvent.startDate || '',
           startTime: newEvent.startTime || '09:00',
           endDate: newEvent.endDate || '',
           endTime: newEvent.endTime || '10:00',
           rrule: newEvent.rrule || '',
-          calendar: newEvent.calendar || 'default',
-          color: newEvent.color || '#1967d2',
+          calendarId: newEvent.calendarId || 'default',
+          color: newEvent.color || DEFAULT_COLOR,
           allDay: newEvent.allDay || false
         };
         
         // Update color from calendar
-        const calendar = props.calendars.find(c => c.id === eventData.value.calendar);
+        const calendar = props.calendars.find(c => c.id === eventData.value.calendarId);
         if (calendar) {
           eventData.value.color = calendar.color;
         }
@@ -484,7 +471,7 @@ export default {
     }, { immediate: true, deep: true });
 
     // Watch calendar selection to update color
-    watch(() => eventData.value.calendar, (calendarId) => {
+    watch(() => eventData.value.calendarId, (calendarId) => {
       const calendar = props.calendars.find(c => c.id === calendarId);
       if (calendar) {
         eventData.value.color = calendar.color;
@@ -541,7 +528,10 @@ export default {
         return;
       }
       emit('save', { ...eventData.value });
-      handleClose();
+      // Close modal after emitting save event
+      nextTick(() => {
+        handleClose();
+      });
     };
 
     return {
@@ -550,16 +540,21 @@ export default {
       eventData,
       repeatSelection,
       showCustomRecurrence,
+      showDatePicker,
       timeOptions,
       endTimeOptions,
       startDateDisplay,
+      datePickerValue,
+      handleDatePickerChange,
+      handleTodayClick,
       repeatDisplayText,
       getCalendarColor,
       toggleRepeatPicker,
       handleRepeatChange,
       handleCustomRecurrenceSave,
       handleClose,
-      handleSave
+      handleSave,
+      handleDateChange
     };
   }
 };
@@ -621,8 +616,8 @@ export default {
 }
 
 .time-select {
-  min-width: 80px;
-  max-width: 120px;
+  min-width: 90px;
+  max-width: 100px;
 }
 
 .time-select :deep(.v-field__input) {
@@ -633,6 +628,19 @@ export default {
   border-radius: 4px;
 }
 
+.date-input {
+  min-width: 120px;
+  max-width: 140px;
+}
+
+.date-input :deep(.v-field__input) {
+  font-size: 0.875rem;
+}
+
+.date-input :deep(.v-field) {
+  border-radius: 4px;
+}
+
 .date-field :deep(.v-field__input) {
   font-size: 0.875rem;
   padding: 4px 0;
@@ -640,7 +648,6 @@ export default {
 
 .time-separator {
   color: rgba(0, 0, 0, 0.6);
-  padding: 0 4px;
 }
 
 .options-row {
@@ -699,11 +706,11 @@ export default {
 
 /* Mobile-specific styles */
 .mobile-bottom-sheet {
-  max-height: 50vh;
+  max-height: 90vh;
 }
 
 .mobile-content {
-  max-height: calc(50vh - 100px);
+  max-height: calc(90vh - 80px);
   overflow-y: auto;
 }
 
@@ -783,6 +790,14 @@ export default {
   
   .title-input :deep(.v-field__input) {
     font-size: 1.25rem;
+  }
+}
+
+/* Desktop modal positioning - align more naturally like Google Calendar */
+@media (min-width: 768px) {
+  .event-modal-positioning {
+    align-items: flex-start !important;
+    padding-top: 80px !important;
   }
 }
 </style>

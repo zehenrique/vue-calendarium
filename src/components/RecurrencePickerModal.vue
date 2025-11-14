@@ -1,23 +1,10 @@
 <template>
-  <v-dialog
-    :model-value="modelValue"
-    @update:model-value="$emit('update:modelValue', $event)"
-    max-width="500"
-    persistent
-    data-testid="recurrence-picker-modal"
-  >
-    <v-card class="pa-0">
+  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
+    <v-card class="pa-0" rounded="xl">
       <v-card-title class="d-flex align-center pa-6 pb-4">
         <span class="text-h6 font-weight-medium">{{ t('customRecurrence') }}</span>
         <v-spacer></v-spacer>
-        <v-btn
-          icon
-          variant="text"
-          size="small"
-          @click="handleCancel"
-          :aria-label="t('close')"
-          class="text-medium-emphasis"
-        >
+        <v-btn icon variant="text" size="small" @click="handleCancel" :aria-label="t('close')" class="text-medium-emphasis">
           <v-icon>mdi-close</v-icon>
         </v-btn>
       </v-card-title>
@@ -26,25 +13,12 @@
         <v-container fluid class="pa-0">
           <v-form>
             <!-- Frequency -->
-            <v-select
-              v-model="frequency"
-              :label="t('repeatFrequency')"
-              :items="frequencyOptions"
-              item-title="text"
-              item-value="value"
-              class="mb-4"
-            ></v-select>
+            <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4"></v-select>
 
             <!-- Interval -->
             <v-row class="mb-4">
               <v-col cols="12">
-                <v-text-field
-                  v-model.number="interval"
-                  :label="intervalLabel"
-                  type="number"
-                  min="1"
-                  max="999"
-                ></v-text-field>
+                <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999"></v-text-field>
               </v-col>
             </v-row>
 
@@ -71,14 +45,8 @@
             <!-- Monthly: Day of month or day of week -->
             <div v-if="frequency === 'MONTHLY'" class="mb-4">
               <v-radio-group v-model="monthlyType">
-                <v-radio
-                  :label="t('repeatMonthlyByDay')"
-                  value="bymonthday"
-                ></v-radio>
-                <v-radio
-                  :label="t('repeatMonthlyByWeekday')"
-                  value="byweekday"
-                ></v-radio>
+                <v-radio :label="t('repeatMonthlyByDay')" value="bymonthday"></v-radio>
+                <v-radio :label="t('repeatMonthlyByWeekday')" value="byweekday"></v-radio>
               </v-radio-group>
             </div>
 
@@ -87,10 +55,7 @@
             <div class="text-body-2 text-medium-emphasis mb-3">{{ t('ends') }}</div>
             
             <v-radio-group v-model="endType" class="mb-2">
-              <v-radio
-                :label="t('never')"
-                value="never"
-              ></v-radio>
+              <v-radio :label="t('never')" value="never"></v-radio>
               
               <v-radio value="until">
                 <template v-slot:label>

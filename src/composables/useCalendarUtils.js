@@ -1,4 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill';
+import { DEFAULT_COLOR } from '../config/colors.js';
 
 /**
  * Get event color styling
@@ -6,11 +7,11 @@ import { Temporal } from '@js-temporal/polyfill';
  * @param {boolean} isPast - Whether the event is in the past
  */
 export function getEventColorStyle(hexColor, isPast = false) {
-  if (!hexColor) hexColor = '#1967d2';
+  if (!hexColor) hexColor = DEFAULT_COLOR;
   
   // Validate hex color format
   if (!/^#[0-9A-F]{6}$/i.test(hexColor)) {
-    hexColor = '#1967d2';
+    hexColor = DEFAULT_COLOR;
   }
   
   // Convert hex to RGB for lighter background
@@ -107,15 +108,16 @@ export function getEventStyle(event, pixelsPerHour = 60) {
   };
   
   // If event has column information (from calculateEventColumns), apply it
-  if (event._column !== undefined && event._totalColumns !== undefined) {
+  if (event._column !== undefined && event._totalColumns !== undefined && event._columnSpan !== undefined) {
     const columnWidth = 100 / event._totalColumns;
     const leftOffset = event._column * columnWidth;
+    const widthPercent = event._columnSpan * columnWidth;
 
     style.left = `${leftOffset}%`;
-    style.width = `calc(${columnWidth}% - 3%)`;
+    style.width = `calc(${widthPercent}% - 2px)`;
   } else {
     style.left = '0';
-    style.width = 'calc(100% - 3%)';
+    style.width = 'calc(100% - 2px)';
   }
   
   return style;
@@ -141,6 +143,7 @@ export function calculateEventColumns(events) {
       _end: end,
       _column: 0,
       _totalColumns: 1,
+      _columnSpan: 1,
     };
   });
 
@@ -202,10 +205,33 @@ export function calculateEventColumns(events) {
       event._totalColumns = columnEndTimes.length;
     }
 
-    // Ensure all events in group know total columns (accounts for backtracking)
+    // Ensure all events in group know total columns
     const totalColumns = columnEndTimes.length;
     for (const event of group.events) {
       event._totalColumns = totalColumns;
+    }
+    
+    // Calculate column span for each event (Google Calendar style)
+    // Events should expand to fill available space to their right
+    for (const event of group.events) {
+      let maxSpan = totalColumns - event._column;
+      
+      // Find events that would collide if we expand
+      for (const otherEvent of group.events) {
+        if (otherEvent === event) continue;
+        
+        // Check if events overlap in time
+        const overlaps = Temporal.PlainDateTime.compare(event._start, otherEvent._end) < 0 &&
+                        Temporal.PlainDateTime.compare(event._end, otherEvent._start) > 0;
+        
+        if (overlaps && otherEvent._column > event._column) {
+          // This event blocks expansion
+          const availableSpan = otherEvent._column - event._column;
+          maxSpan = Math.min(maxSpan, availableSpan);
+        }
+      }
+      
+      event._columnSpan = maxSpan;
     }
   }
 

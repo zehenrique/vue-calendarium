@@ -9,17 +9,20 @@ test('debug modal styling', async ({ page }) => {
   }, { testNow: TEST_NOW });
 
   await page.goto('/');
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
 
-  await page.getByTestId('view-toggle').getByRole('button', { name: /^Week/i }).click();
-  await expect(page.locator('.week-view')).toBeVisible({ timeout: 4000 });
+  // Switch to week view using dropdown
+  const viewToggle = page.getByTestId('view-toggle');
+  await viewToggle.click();
+  await page.getByRole('option', { name: /Week/i }).click();
+  await expect(page.locator('.week-view')).toBeVisible({ timeout: 2000 });
 
   const slot = page.locator('.hour-slot').nth(10);
-  await expect(slot).toBeVisible({ timeout: 4000 });
+  await expect(slot).toBeVisible({ timeout: 2000 });
   await slot.click({ force: true });
 
   const modalContent = page.getByTestId('event-modal').first();
-  await expect(modalContent).toBeVisible({ timeout: 4000 });
+  await expect(modalContent).toBeVisible({ timeout: 2000 });
 
   const modalHTML = await modalContent.evaluate(el => el.outerHTML);
   const modalClasses = await modalContent.evaluate(el => el.className || '');

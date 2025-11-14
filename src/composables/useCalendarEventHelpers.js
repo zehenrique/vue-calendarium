@@ -1,8 +1,9 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { rrulestr } from 'rrule';
 import { getStartOfWeek, getEndOfWeek, calculateEventColumns } from './useCalendarUtils.js';
+import { DEFAULT_COLOR } from '../config/colors.js';
 
-const DEFAULT_EVENT_COLOR = '#1967d2';
+const DEFAULT_EVENT_COLOR = DEFAULT_COLOR;
 const MAX_RECURRING_OCCURRENCES = 52;
 
 function resolvePrimaryCalendar(calendars) {
@@ -28,7 +29,7 @@ export function createDefaultEventDraft(calendars, overrides = {}) {
     endDate: today.toString(),
     endTime: '10:00',
     rrule: '', // RRULE string per RFC 5545, e.g. 'FREQ=WEEKLY;COUNT=4;BYDAY=MO'
-    calendar: calendar.id,
+    calendarId: calendar.id,
     color: calendar.color || DEFAULT_EVENT_COLOR,
     allDay: false,
     ...overrides
@@ -37,9 +38,9 @@ export function createDefaultEventDraft(calendars, overrides = {}) {
 
 export function ensureDraftCalendar(draft, calendars) {
   const nextDraft = { ...draft };
-  const calendar = resolveCalendarById(calendars, nextDraft.calendar);
+  const calendar = resolveCalendarById(calendars, nextDraft.calendarId);
 
-  nextDraft.calendar = calendar.id;
+  nextDraft.calendarId = calendar.id;
   nextDraft.color = nextDraft.color || calendar.color || DEFAULT_EVENT_COLOR;
 
   return nextDraft;
@@ -123,13 +124,20 @@ export function createWeekViewDays(currentDate, events, locale) {
   });
 }
 
-export function createWeekdayLabels(currentDate, locale, isMobile) {
+export function createWeekdayLabels(currentDate, locale, isMobile, t) {
   const startOfWeek = getStartOfWeek(currentDate);
-  const format = isMobile ? 'narrow' : 'short';
-
+  
+  // Use i18n translations for consistent, unique labels
+  const weekdayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+  
   return Array.from({ length: 7 }, (_, index) => {
+    if (t && isMobile) {
+      // Use i18n translations which have unique single letters
+      return t(weekdayKeys[index]);
+    }
+    // For desktop, use browser's short format
     const date = startOfWeek.add({ days: index });
-    return date.toLocaleString(locale, { weekday: format });
+    return date.toLocaleString(locale, { weekday: 'short' });
   });
 }
 
@@ -181,7 +189,7 @@ export function shouldDisplayCurrentTimeIndicator(view, currentDate) {
 }
 
 export function buildEventPayloadFromDraft(draft, calendars) {
-  const calendar = resolveCalendarById(calendars, draft.calendar);
+  const calendar = resolveCalendarById(calendars, draft.calendarId);
   const startDateTime = `${draft.startDate}T${draft.startTime}:00`;
   const endDateTime = `${draft.endDate}T${draft.endTime}:00`;
 
@@ -191,7 +199,7 @@ export function buildEventPayloadFromDraft(draft, calendars) {
     start: startDateTime,
     end: endDateTime,
     color: draft.color || calendar.color || DEFAULT_EVENT_COLOR,
-    calendar: draft.calendar || calendar.id,
+    calendarId: draft.calendarId || calendar.id,
     rrule: draft.rrule || '',
     allDay: Boolean(draft.allDay)
   };

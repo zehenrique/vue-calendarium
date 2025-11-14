@@ -28,6 +28,12 @@
      - Create separate files for styling/theme configuration if needed
      - For example, break complex views into sub-components and composables
      - Keep component files under 300 lines when possible
+   - **HTML/Template Formatting**:
+     - Component opening tags must be on a single line with all props/attributes
+     - Never split component props across multiple lines
+     - Example: `<v-btn icon variant="text" size="small" @click="handler" :aria-label="label">` ✅
+     - NOT: `<v-btn\n  icon\n  variant="text">` ❌
+     - Exception: Template slots and children can span multiple lines
 
 4. **Documentation**:
    - Always update ALL documentation to reflect any changes made to the code

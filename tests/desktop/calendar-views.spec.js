@@ -12,8 +12,8 @@ test.describe('Calendar Views (Desktop)', () => {
     }, { testNow: TEST_NOW });
 
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
-    await expect(getHeaderTitle(page)).toHaveText(CURRENT_MONTH_TEXT, { timeout: 5000 });
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(getHeaderTitle(page)).toHaveText(CURRENT_MONTH_TEXT, { timeout: 3000 });
   });
 
   test('should display calendar with default month view', async ({ page }) => {
@@ -26,15 +26,21 @@ test.describe('Calendar Views (Desktop)', () => {
 
     await expect(page.locator('.calendar-days')).toBeVisible();
 
-    await viewToggle.getByRole('button', { name: /^Week/i }).click();
+    // Click the select to open dropdown, then click Week option
+    await viewToggle.click();
+    await page.getByRole('option', { name: /Week/i }).click();
     await expect(page.locator('.week-view')).toBeVisible();
     await expect(page.locator('.week-grid')).toBeVisible();
 
-    await viewToggle.getByRole('button', { name: /^Day/i }).click();
+    // Switch to Day view
+    await viewToggle.click();
+    await page.getByRole('option', { name: /Day/i }).click();
     await expect(page.locator('.day-view')).toBeVisible();
     await expect(page.locator('.day-grid')).toBeVisible();
 
-    await viewToggle.getByRole('button', { name: /^Month/i }).click();
+    // Switch back to Month view
+    await viewToggle.click();
+    await page.getByRole('option', { name: /Month/i }).click();
     await expect(page.locator('.calendar-days')).toBeVisible();
   });
 
@@ -43,10 +49,10 @@ test.describe('Calendar Views (Desktop)', () => {
     const initialMonth = (await header.textContent())?.trim();
 
     await page.getByRole('button', { name: /Next/i }).click();
-    await expect(header).not.toHaveText(initialMonth || '', { timeout: 2000 });
+    await expect(header).not.toHaveText(initialMonth || '', { timeout: 1000 });
 
     await page.getByRole('button', { name: /Previous/i }).click();
-    await expect(header).toHaveText(initialMonth || '', { timeout: 2000 });
+    await expect(header).toHaveText(initialMonth || '', { timeout: 1000 });
   });
 
   test('should navigate to today', async ({ page }) => {
@@ -57,6 +63,6 @@ test.describe('Calendar Views (Desktop)', () => {
 
     await page.getByTestId('today-button').click();
 
-    await expect(header).toHaveText(CURRENT_MONTH_TEXT, { timeout: 2000 });
+    await expect(header).toHaveText(CURRENT_MONTH_TEXT, { timeout: 1000 });
   });
 });

@@ -8,7 +8,7 @@ async function loadCalendar(page) {
   }, { testNow: TEST_NOW });
 
   await page.goto('/');
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
 }
 
 test.describe('Basic Smoke Tests', () => {
@@ -20,7 +20,7 @@ test.describe('Basic Smoke Tests', () => {
     await loadCalendar(page);
 
     // Check for the main heading - use first() to avoid strict mode violation
-    await expect(page.locator('h1').first()).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('h1').first()).toBeVisible({ timeout: 5000 });
     
     // Take a screenshot for debugging
     await page.screenshot({ path: 'test-results/homepage.png', fullPage: true });
