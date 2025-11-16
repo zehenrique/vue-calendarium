@@ -76,7 +76,7 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 .calendar-body {
   flex: 1;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--calendar-bg, #ffffff);
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -85,7 +85,7 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 }
 
 .month-view {
-  padding: 8px;
+  padding: var(--calendar-spacing-md, 8px);
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -106,11 +106,11 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 }
 
 .day-header {
-  padding: 2px;
+  padding: var(--calendar-spacing-xs, 2px);
   text-align: center;
-  font-size: 11px;
-  font-weight: 500;
-  color: #70757a;
+  font-size: var(--calendar-week-day-font-size, 11px);
+  font-weight: var(--calendar-font-weight-medium, 500);
+  color: var(--calendar-text-secondary, #70757a);
   text-transform: uppercase;
 }
 
@@ -118,96 +118,96 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   grid-template-rows: repeat(auto-fit, 1fr);
-  gap: 1px;
-  background: #d0d0d0;
-  border-bottom: 1px solid #d0d0d0;
+  gap: var(--calendar-grid-gap, 1px);
+  background: var(--calendar-border-color-dark, #d0d0d0);
+  border-bottom: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   text-align: center;
   flex: 1;
   overflow: hidden;
 }
 
 .calendar-day {
-  background: white;
-  padding: 4px;
+  background: var(--calendar-day-bg, white);
+  padding: var(--calendar-spacing-sm, 4px);
   position: relative;
   overflow: hidden;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--calendar-transition-fast, 0.2s);
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .calendar-day:hover {
-  background-color: #f8f9fa;
+  background-color: var(--calendar-day-hover-bg, #f8f9fa);
 }
 
 .calendar-day.other-month {
-  background-color: #fafafa;
+  background-color: var(--calendar-day-other-month-bg, #fafafa);
 }
 
 .calendar-day.other-month .day-number {
-  color: #70757a;
+  color: var(--calendar-text-secondary, #70757a);
 }
 
 .calendar-day.today .day-number {
-  background-color: #1a73e8;
-  color: white;
-  border-radius: 50%;
-  width: 24px;
-  height: 24px;
+  background-color: var(--calendar-today-bg, #1a73e8);
+  color: var(--calendar-today-color, white);
+  border-radius: var(--calendar-border-radius-circle, 50%);
+  width: var(--calendar-day-number-size, 24px);
+  height: var(--calendar-day-number-size, 24px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: var(--calendar-day-number-font-size, 12px);
 }
 
 .day-number {
-  font-size: 12px;
-  font-weight: 500;
-  color: #3c4043;
-  padding: 4px;
-  margin-bottom: 2px;
+  font-size: var(--calendar-day-number-font-size, 12px);
+  font-weight: var(--calendar-font-weight-medium, 500);
+  color: var(--calendar-text-primary, #3c4043);
+  padding: var(--calendar-spacing-sm, 4px);
+  margin-bottom: var(--calendar-spacing-xs, 2px);
   flex-shrink: 0;
 }
 
 .day-events {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--calendar-event-gap, 2px);
   flex: 1;
   overflow: hidden;
   min-height: 0;
 }
 
 .event {
-  font-size: 11px;
-  padding: 2px 6px;
-  border-radius: 6px;
+  font-size: var(--calendar-event-font-size, 11px);
+  padding: var(--calendar-event-padding, 2px 6px);
+  border-radius: var(--calendar-event-border-radius, 6px);
   cursor: pointer;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  transition: opacity 0.2s;
+  transition: opacity var(--calendar-transition-fast, 0.2s);
   text-align: left;
-  line-height: 1.2;
-  max-height: 20px;
+  line-height: var(--calendar-event-line-height, 1.2);
+  max-height: var(--calendar-event-max-height, 20px);
 }
 
 .event:hover {
-  opacity: 0.8;
+  opacity: var(--calendar-event-hover-opacity, 0.8);
 }
 
 .ghost-event {
-  opacity: 0.5 !important;
+  opacity: var(--calendar-ghost-event-opacity, 0.5) !important;
   pointer-events: none;
   border: 2px dashed currentColor !important;
 }
 
 .more-events {
-  font-size: 11px;
-  color: #5f6368;
-  padding: 2px 6px;
+  font-size: var(--calendar-event-font-size, 11px);
+  color: var(--calendar-text-disabled, #5f6368);
+  padding: var(--calendar-event-padding, 2px 6px);
   background: none;
   border: none;
   cursor: pointer;
@@ -220,16 +220,16 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 
 @media (max-width: 768px) {
   .month-view {
-    padding: 4px;
+    padding: var(--calendar-spacing-sm, 4px);
   }
   
   .day-number {
-    font-size: 11px;
-    padding: 2px;
+    font-size: var(--calendar-mobile-day-number-font-size, 11px);
+    padding: var(--calendar-spacing-xs, 2px);
   }
   
   .event {
-    font-size: 10px;
+    font-size: var(--calendar-mobile-event-font-size, 10px);
     padding: 1px 4px;
   }
 }

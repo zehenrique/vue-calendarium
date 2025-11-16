@@ -4,6 +4,54 @@
 
 ### Props
 
+#### calendarApp
+- **Type:** `Object`
+- **Required:** Yes
+- **Description:** Calendar application instance created using `createCalendar()`
+
+Example:
+```javascript
+import { createCalendar, createViewDay, createViewWeek, createViewMonth } from './src/index.js';
+
+const calendarApp = createCalendar({
+  views: [createViewDay(), createViewWeek(), createViewMonth()],
+  events: [...]
+});
+```
+
+#### theme
+- **Type:** `Object`
+- **Required:** No
+- **Default:** `null` (uses default theme)
+- **Description:** Custom theme object to override CSS custom properties. Only specify the properties you want to change; unspecified properties will use default values.
+
+Example:
+```javascript
+const customTheme = {
+  '--calendar-primary-color': '#e91e63',
+  '--calendar-today-bg': '#e91e63',
+  '--calendar-header-bg': '#fce4ec',
+  '--calendar-border-color': '#f8bbd0',
+  '--calendar-font-family': '"Inter", sans-serif'
+};
+```
+
+**Available Theme Presets:**
+```javascript
+import { THEME_PRESETS } from './src/index.js';
+
+// Use a preset
+:theme="THEME_PRESETS.dark"
+:theme="THEME_PRESETS.compact"
+:theme="THEME_PRESETS.highContrast"
+```
+
+For complete theming documentation, see [STYLING.md](./STYLING.md).
+
+---
+
+### Legacy Props (Deprecated)
+
 #### events
 - **Type:** `Array`
 - **Default:** `[]`

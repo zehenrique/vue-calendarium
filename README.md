@@ -10,6 +10,7 @@ A production-ready, reusable calendar component for Vue.js that replicates Googl
 📅 **Multiple Views** - Month, Week, and Day views with smooth transitions  
 ⏰ **Temporal API** - Uses modern Temporal API for all date/time handling  
 🎨 **Predefined Color Palette** - 12 Material Design colors matching Google Calendar (see [COLORS.md](./COLORS.md))  
+🎨 **Full Theme Customization** - Complete CSS customization via theme prop and CSS custom properties (see [STYLING.md](./docs/STYLING.md))  
 💻 **Vue 3 Composition API** - Built with Vue 3 Composition API best practices  
 📊 **Event Management** - Create, view, edit, and delete events via UI and programmatically  
 🔁 **Recurring Events** - RFC 5545 compliant recurring events with RRULE support and iCalendar import/export  
@@ -51,6 +52,49 @@ const calendar = {
 ```
 
 See [COLORS.md](./COLORS.md) for complete documentation.
+
+## Theme Customization
+
+The calendar is **fully customizable** through CSS custom properties. You can override all colors, spacing, typography, and sizing:
+
+```vue
+<template>
+  <GoogleCalendar :calendar-app="calendarApp" :theme="customTheme" />
+</template>
+
+<script setup>
+import { THEME_PRESETS } from './src/index.js';
+
+// Use a preset
+const customTheme = THEME_PRESETS.dark;
+
+// Or create your own
+const customTheme = {
+  '--calendar-primary-color': '#e91e63',
+  '--calendar-today-bg': '#e91e63',
+  '--calendar-header-bg': '#fce4ec',
+  '--calendar-font-family': '"Inter", sans-serif'
+};
+</script>
+```
+
+**Available Theme Presets:**
+- `THEME_PRESETS.default` - Standard light theme
+- `THEME_PRESETS.dark` - Dark mode theme
+- `THEME_PRESETS.compact` - Smaller spacing and sizing
+- `THEME_PRESETS.highContrast` - High contrast for accessibility
+
+**Complete theming documentation:** [STYLING.md](./docs/STYLING.md)
+
+You can customize:
+- 🎨 All colors (backgrounds, borders, text, accent colors)
+- 📐 Spacing and sizing (padding, margins, dimensions)
+- ✍️ Typography (fonts, sizes, weights)
+- 🔲 Borders and radius
+- ⏱️ Transitions and animations
+- 📱 Mobile-specific overrides
+
+See [STYLING.md](./docs/STYLING.md) for complete documentation with examples.
 
 ## Installation
 

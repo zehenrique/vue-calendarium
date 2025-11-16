@@ -1,5 +1,5 @@
 <template>
-  <div class="google-calendar" :class="{ 'is-mobile': isMobile }">
+  <div ref="calendarRoot" class="google-calendar" :class="{ 'is-mobile': isMobile }">
     <CalendarHeader
       :current-title="currentTitle"
       :current-view="currentView"
@@ -101,6 +101,7 @@ import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
 import { DEFAULT_COLOR } from './config/colors.js';
+import { mergeTheme, applyTheme } from './config/theme.js';
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
 import MonthView from './components/calendar/MonthView.vue';
 import WeekView from './components/calendar/WeekView.vue';
@@ -129,6 +130,11 @@ const props = defineProps({
   calendarApp: {
     type: Object,
     required: true
+  },
+  // Theme customization (optional)
+  theme: {
+    type: Object,
+    default: null
   }
 });
 
@@ -212,6 +218,7 @@ const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
 const ghostEvent = ref(null); // Ghost event displayed before saving
+const calendarRoot = ref(null); // Reference to root element for theme application
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
@@ -380,6 +387,12 @@ onMounted(() => {
 
   timeIntervalId = setInterval(updateCurrentTime, 60000);
   scheduleSwipeInitialization(isMobile.value);
+  
+  // Apply theme if provided
+  if (props.theme && calendarRoot.value) {
+    const mergedTheme = mergeTheme(props.theme);
+    applyTheme(calendarRoot.value, mergedTheme);
+  }
 });
 
 onBeforeUnmount(() => {
@@ -404,6 +417,14 @@ watch(isMobile, (mobile) => {
 watch(currentView, (view) => {
   props.calendarApp.callbacks.onViewChange?.(view);
 });
+
+// Watch for theme changes
+watch(() => props.theme, (newTheme) => {
+  if (calendarRoot.value) {
+    const mergedTheme = mergeTheme(newTheme);
+    applyTheme(calendarRoot.value, mergedTheme);
+  }
+}, { deep: true });
 
 function toggleMobileSidebar() {
   showMobileSidebar.value = !showMobileSidebar.value;
@@ -695,9 +716,10 @@ watch(showModal, (isOpen) => {
 
 <style scoped>
 .google-calendar {
-  font-family: 'Google Sans', 'Roboto', Arial, sans-serif;
-  background: #ffffff;
-  color: #3c4043;
+  /* Use CSS custom properties from theme */
+  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', Arial, sans-serif);
+  background: var(--calendar-bg, #ffffff);
+  color: var(--calendar-text-primary, #3c4043);
   display: flex;
   flex-direction: column;
   height: 100%;

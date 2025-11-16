@@ -209,7 +209,7 @@ const dayInfo = computed(() => {
 
 <style scoped>
 .calendar-header {
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
 }
 
 .calendar-header.month-view {
@@ -219,23 +219,23 @@ const dayInfo = computed(() => {
 .header-sticky {
   position: sticky;
   top: 0;
-  z-index: 10;
-  background: #f8f9fa;
+  z-index: var(--calendar-header-z-index, 10);
+  background: var(--calendar-header-bg, #f8f9fa);
 }
 
 .header-content {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  gap: 12px;
+  padding: var(--calendar-header-padding, 16px 20px);
+  gap: var(--calendar-header-gap, 12px);
   flex-wrap: wrap;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--calendar-spacing-md, 8px);
   flex-wrap: wrap;
   flex: 1;
   min-width: 0;
@@ -255,13 +255,13 @@ const dayInfo = computed(() => {
 .header-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--calendar-header-gap, 12px);
 }
 
 .calendar-title {
   margin: 0;
-  font-weight: 400;
-  color: #3c4043;
+  font-weight: var(--calendar-font-weight-normal, 400);
+  color: var(--calendar-text-primary, #3c4043);
   flex-shrink: 1;
   min-width: 0;
   white-space: nowrap;
@@ -274,42 +274,41 @@ const dayInfo = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  margin-right: 16px;
-  padding: 4px;
+  margin-right: var(--calendar-spacing-xl, 16px);
+  padding: var(--calendar-spacing-sm, 4px);
   min-width: 50px;
 }
 
 .day-view-weekday {
-  font-size: 11px;
-  color: #70757a;
+  font-size: var(--calendar-day-view-weekday-font-size, 11px);
+  color: var(--calendar-text-secondary, #70757a);
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: var(--calendar-font-weight-medium, 500);
   letter-spacing: 0.5px;
 }
 
 .day-view-number {
-  font-size: 26px;
-  color: #3c4043;
-  font-weight: 400;
+  font-size: var(--calendar-day-view-number-font-size, 26px);
+  color: var(--calendar-text-primary, #3c4043);
+  font-weight: var(--calendar-font-weight-normal, 400);
   line-height: 1;
-  margin-top: 2px;
+  margin-top: var(--calendar-day-view-number-margin-top, 2px);
 }
 
 .day-view-number.today {
-  color: #1a73e8;
-  font-weight: 500;
+  color: var(--calendar-primary-color, #1a73e8);
+  font-weight: var(--calendar-font-weight-medium, 500);
 }
 
 .week-day-headers-container {
   display: flex;
-  padding-bottom: 2px;
-  padding-top: 2px;
+  padding-bottom: var(--calendar-spacing-xs, 2px);
+  padding-top: var(--calendar-spacing-xs, 2px);
 }
 
 .time-column-spacer {
-  width: 60px;
+  width: var(--calendar-time-column-width, 60px);
   flex-shrink: 0;
-  /* border-right: 1px solid #d0d0d0; */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -323,8 +322,8 @@ const dayInfo = computed(() => {
 
 .week-all-day-container {
   display: flex;
-  min-height: 20px;
-  border-bottom: 1px solid #d0d0d0;
+  min-height: var(--calendar-all-day-min-height, 20px);
+  border-bottom: 1px solid var(--calendar-border-color-dark, #d0d0d0);
 }
 
 .week-all-day-events {
@@ -334,10 +333,10 @@ const dayInfo = computed(() => {
 }
 
 .all-day-events-column {
-  border-right: 1px solid #e0e0e0;
-  padding: 4px;
+  border-right: 1px solid var(--calendar-border-color, #e0e0e0);
+  padding: var(--calendar-all-day-padding, 4px);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--calendar-transition-fast, 0.2s);
   min-height: 40px;
 }
 
@@ -346,23 +345,23 @@ const dayInfo = computed(() => {
 }
 
 .all-day-events-column:hover {
-  background-color: #f8f9fa;
+  background-color: var(--calendar-day-hover-bg, #f8f9fa);
 }
 
 .all-day-event {
-  font-size: 12px;
-  padding: 2px 8px;
-  margin: 2px 0;
-  border-radius: 8px;
+  font-size: var(--calendar-all-day-event-font-size, 12px);
+  padding: var(--calendar-all-day-event-padding, 2px 8px);
+  margin: var(--calendar-spacing-xs, 2px) 0;
+  border-radius: var(--calendar-all-day-event-border-radius, 8px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity var(--calendar-transition-fast, 0.2s);
 }
 
 .all-day-event:hover {
-  opacity: 0.8;
+  opacity: var(--calendar-event-hover-opacity, 0.8);
 }
 
 .week-day-header {
@@ -370,51 +369,51 @@ const dayInfo = computed(() => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  gap: var(--calendar-spacing-sm, 4px);
 }
 
 .week-day-name {
-  font-size: 11px;
-  color: #70757a;
+  font-size: var(--calendar-week-day-font-size, 11px);
+  color: var(--calendar-text-secondary, #70757a);
   text-transform: uppercase;
-  font-weight: 500;
+  font-weight: var(--calendar-font-weight-medium, 500);
 }
 
 .week-day-number {
   font-size: 20px;
-  color: #3c4043;
-  width: 36px;
-  height: 36px;
+  color: var(--calendar-text-primary, #3c4043);
+  width: var(--calendar-week-day-number-size, 36px);
+  height: var(--calendar-week-day-number-size, 36px);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
+  border-radius: var(--calendar-border-radius-circle, 50%);
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color var(--calendar-transition-fast, 0.2s);
 }
 
 .week-day-number:hover {
-  background-color: #f1f3f4;
+  background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
 
 .week-day-number.today {
-  background-color: #1a73e8;
-  color: white;
+  background-color: var(--calendar-today-bg, #1a73e8);
+  color: var(--calendar-today-color, white);
 }
 
 .week-day-number.today:hover {
-  background-color: #1557b0;
+  background-color: var(--calendar-primary-hover, #1557b0);
 }
 
 @media (max-width: 768px) {
   .header-content {
-    padding: 2px 2px;
+    padding: var(--calendar-mobile-header-padding, 2px 2px);
     flex-wrap: nowrap;
-    gap: 8px;
+    gap: var(--calendar-mobile-header-gap, 8px);
   }
   
   .header-left {
-    gap: 4px;
+    gap: var(--calendar-spacing-sm, 4px);
     flex-wrap: nowrap;
     overflow: hidden;
   }
@@ -424,21 +423,21 @@ const dayInfo = computed(() => {
   }
 
   .time-column-spacer {
-    width: 50px;
+    width: var(--calendar-time-column-width-mobile, 50px);
   }
 
   .week-day-name {
-    font-size: 10px;
+    font-size: var(--calendar-week-day-font-size-mobile, 10px);
   }
 
   .week-day-number {
     font-size: 18px;
-    width: 32px;
-    height: 32px;
+    width: var(--calendar-week-day-number-size-mobile, 32px);
+    height: var(--calendar-week-day-number-size-mobile, 32px);
   }
 
   .all-day-events-column {
-    border-right: 1px solid #e0e0e0;
+    border-right: 1px solid var(--calendar-border-color, #e0e0e0);
     padding: 1px;
     min-height: auto;
     max-height: auto;
@@ -449,10 +448,10 @@ const dayInfo = computed(() => {
   }
 
   .all-day-event {
-    font-size: 8.5px;
-    padding: 2px 1px;
+    font-size: var(--calendar-all-day-event-font-size-mobile, 8.5px);
+    padding: var(--calendar-all-day-event-padding-mobile, 2px 1px);
     margin: 1px 0;
-    border-radius: 5px;
+    border-radius: var(--calendar-all-day-event-border-radius-mobile, 5px);
     line-height: 1.3;
     text-align: center;
     width: 100%;

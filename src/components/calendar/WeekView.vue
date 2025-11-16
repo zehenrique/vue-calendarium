@@ -69,7 +69,7 @@ defineProps({
 .calendar-body {
   flex: 1;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--calendar-bg, #ffffff);
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -82,35 +82,34 @@ defineProps({
 .week-grid {
   display: flex;
   height: 100%;
-  min-height: calc(23 * 60px);
+  min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px));
 }
 
 .time-column {
-  width: 60px;
-  border-right: 1px solid #d0d0d0;
+  width: var(--calendar-time-column-width, 60px);
+  border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   flex-shrink: 0;
   position: relative;
 }
 
 .time-header {
-  min-height: 60px;
-  padding-bottom: 8px;
+  min-height: var(--calendar-pixels-per-hour-week, 60px);
+  padding-bottom: var(--calendar-spacing-md, 8px);
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
 }
 
 .time-slot-label {
-  height: 60px;
-  padding: 0 8px;
-  font-size: 10px;
-  color: #70757a;
+  height: var(--calendar-pixels-per-hour-week, 60px);
+  padding: 0 var(--calendar-spacing-md, 8px);
+  font-size: var(--calendar-font-size-xsmall, 10px);
+  color: var(--calendar-text-secondary, #70757a);
   text-align: right;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  /* Position label at the top grid line */
   transform: translateY(-8px);
 }
 
@@ -128,7 +127,7 @@ defineProps({
 }
 
 .week-day-column {
-  border-right: 1px solid #e0e0e0;
+  border-right: 1px solid var(--calendar-border-color, #e0e0e0);
   position: relative;
 }
 
@@ -137,8 +136,8 @@ defineProps({
 }
 
 .hour-slot {
-  height: 60px;
-  border-bottom: 1px solid #e0e0e0;
+  height: var(--calendar-pixels-per-hour-week, 60px);
+  border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
 }
@@ -148,26 +147,25 @@ defineProps({
 }
 
 .hour-slot:hover {
-  background-color: #f1f3f4;
+  background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
 
 .week-event {
   position: absolute;
-  border-radius: 8px;
-  padding: 4px;
-  font-size: 12px;
+  border-radius: var(--calendar-event-border-radius, 8px);
+  padding: var(--calendar-spacing-sm, 4px);
+  font-size: var(--calendar-event-font-size, 12px);
   cursor: pointer;
   overflow: hidden;
-  transition: opacity 0.2s;
-  z-index: 1;
+  transition: opacity var(--calendar-transition-fast, 0.2s);
+  z-index: var(--calendar-event-z-index, 1);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* Position, width, and padding are set via inline styles from getEventStyle */
 }
 
 .event-title {
-  font-weight: 500;
+  font-weight: var(--calendar-font-weight-medium, 500);
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
@@ -183,7 +181,7 @@ defineProps({
 }
 
 .ghost-event {
-  opacity: 0.5 !important;
+  opacity: var(--calendar-ghost-event-opacity, 0.5) !important;
   pointer-events: none;
   border: 2px dashed currentColor !important;
 }
@@ -192,29 +190,29 @@ defineProps({
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 5;
+  z-index: var(--calendar-current-time-z-index, 5);
   pointer-events: none;
   display: flex;
   align-items: center;
 }
 
 .time-indicator-circle {
-  width: 12px;
-  height: 12px;
-  background-color: #ea4335;
-  border-radius: 50%;
-  margin-left: -6px;
+  width: var(--calendar-current-time-circle-size, 12px);
+  height: var(--calendar-current-time-circle-size, 12px);
+  background-color: var(--calendar-current-time-color, #ea4335);
+  border-radius: var(--calendar-border-radius-circle, 50%);
+  margin-left: calc(var(--calendar-current-time-circle-size, 12px) / -2);
   flex-shrink: 0;
 }
 
 .time-indicator-line {
   flex: 1;
   height: 2px;
-  background-color: #ea4335;
+  background-color: var(--calendar-current-time-color, #ea4335);
 }
 
 @media (max-width: 768px) {
-.week-event {
+  .week-event {
     font-size: 8px;
     padding: 1px 2px;
     border-radius: 3px;
@@ -224,30 +222,29 @@ defineProps({
   }
 
   .week-grid {
-    min-height: calc(23 * 50px);
+    min-height: calc(23 * var(--calendar-pixels-per-hour-week-mobile, 50px));
   }
   
   .time-column {
-    width: 50px;
+    width: var(--calendar-time-column-width-mobile, 50px);
   }
   
   .time-slot-label {
     font-size: 9px;
-    padding: 0 4px;
-    height: 50px;
+    padding: 0 var(--calendar-spacing-sm, 4px);
+    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
     align-items: flex-start;
-    /* Slightly smaller nudge on mobile */
     transform: translateY(-7px);
   }
   
   .week-day-number {
     font-size: 18px;
-    width: 32px;
-    height: 32px;
+    width: var(--calendar-week-day-number-size-mobile, 32px);
+    height: var(--calendar-week-day-number-size-mobile, 32px);
   }
   
   .hour-slot {
-    height: 50px;
+    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
   }
   
   .week-event {
@@ -267,19 +264,19 @@ defineProps({
     overflow: visible;
     text-overflow: ellipsis;
     max-width: 100%;
-    font-weight: 500;
+    font-weight: var(--calendar-font-weight-medium, 500);
   }
   
   .week-event .event-time {
-    display: none; /* Hide time in mobile week view to save space */
+    display: none;
   }
 
   .time-header {
-    min-height: 50px;
+    min-height: var(--calendar-pixels-per-hour-week-mobile, 50px);
   }
 
   .time-slot-label {
-    height: 50px;
+    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
   }
 }
 </style>

@@ -106,7 +106,7 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 .calendar-body {
   flex: 1;
   overflow: hidden;
-  background: #ffffff;
+  background: var(--calendar-bg, #ffffff);
   position: relative;
   width: 100%;
   max-width: 100%;
@@ -118,32 +118,32 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 
 .day-grid {
   display: grid;
-  grid-template-columns: 60px 1fr;
+  grid-template-columns: var(--calendar-time-column-width, 60px) 1fr;
   height: 100%;
-  min-height: calc(24 * 45px);
+  min-height: calc(24 * var(--calendar-pixels-per-hour-day, 45px));
 }
 
 .time-column {
   display: grid;
-  grid-template-rows: auto repeat(24, 45px);
-  border-right: 1px solid #d0d0d0;
+  grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day, 45px));
+  border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   position: relative;
 }
 
 .time-header {
   min-height: 40px;
-  padding: 4px;
+  padding: var(--calendar-spacing-sm, 4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
 }
 
 .time-slot-label {
-  height: 45px;
-  padding: 0 8px;
-  font-size: 10px;
-  color: #70757a;
+  height: var(--calendar-pixels-per-hour-day, 45px);
+  padding: 0 var(--calendar-spacing-md, 8px);
+  font-size: var(--calendar-font-size-xsmall, 10px);
+  color: var(--calendar-text-secondary, #70757a);
   text-align: right;
   position: relative;
   display: flex;
@@ -165,42 +165,42 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 
 .day-all-day-section {
   min-height: 40px;
-  padding: 4px 8px;
+  padding: var(--calendar-spacing-sm, 4px) var(--calendar-spacing-md, 8px);
   cursor: pointer;
-  transition: background-color 0.2s;
-  border-bottom: 1px solid #e0e0e0;
+  transition: background-color var(--calendar-transition-fast, 0.2s);
+  border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
 }
 
 .day-all-day-section:hover {
-  background-color: #f8f9fa;
+  background-color: var(--calendar-day-hover-bg, #f8f9fa);
 }
 
 .all-day-event {
-  font-size: 12px;
-  padding: 2px 8px;
-  margin: 2px 0;
-  border-radius: 8px;
+  font-size: var(--calendar-event-font-size, 12px);
+  padding: var(--calendar-event-padding, 2px 8px);
+  margin: var(--calendar-spacing-xs, 2px) 0;
+  border-radius: var(--calendar-event-border-radius, 8px);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity var(--calendar-transition-fast, 0.2s);
 }
 
 .all-day-event:hover {
-  opacity: 0.8;
+  opacity: var(--calendar-event-hover-opacity, 0.8);
 }
 
 .day-column {
   position: relative;
-  border-right: 1px solid #d0d0d0;
+  border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   display: grid;
-  grid-template-rows: repeat(24, 45px);
+  grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day, 45px));
 }
 
 .hour-slot {
-  height: 45px;
-  border-bottom: 1px solid #e0e0e0;
+  height: var(--calendar-pixels-per-hour-day, 45px);
+  border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
 }
@@ -210,26 +210,25 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 .day-view:not(.has-all-day-events) .hour-slot:first-child {
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--calendar-border-color, #e0e0e0);
 }
 
 .hour-slot:hover {
-  background-color: #f1f3f4;
+  background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
 
 .day-event {
   position: absolute;
-  border-radius: 8px;
+  border-radius: var(--calendar-event-border-radius, 8px);
   padding: 2px 4px 0px 8px;
   font-size: 13px;
   cursor: pointer;
   overflow: hidden;
-  transition: opacity 0.2s;
-  z-index: 1;
+  transition: opacity var(--calendar-transition-fast, 0.2s);
+  z-index: var(--calendar-event-z-index, 1);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* Position, width, and padding are set via inline styles from getEventStyle */
 }
 
 .day-event:hover {
@@ -238,8 +237,8 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 .event-title {
-  font-weight: 500;
-  margin-bottom: 4px;
+  font-weight: var(--calendar-font-weight-medium, 500);
+  margin-bottom: var(--calendar-spacing-sm, 4px);
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
@@ -250,7 +249,7 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
 }
 
 .ghost-event {
-  opacity: 0.5 !important;
+  opacity: var(--calendar-ghost-event-opacity, 0.5) !important;
   pointer-events: none;
   border: 2px dashed currentColor !important;
 }
@@ -259,56 +258,56 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
   position: absolute;
   left: 0;
   right: 0;
-  z-index: 5;
+  z-index: var(--calendar-current-time-z-index, 5);
   pointer-events: none;
   display: flex;
   align-items: center;
 }
 
 .time-indicator-circle {
-  width: 12px;
-  height: 12px;
-  background-color: #ea4335;
-  border-radius: 50%;
-  margin-left: -6px;
+  width: var(--calendar-current-time-circle-size, 12px);
+  height: var(--calendar-current-time-circle-size, 12px);
+  background-color: var(--calendar-current-time-color, #ea4335);
+  border-radius: var(--calendar-border-radius-circle, 50%);
+  margin-left: calc(var(--calendar-current-time-circle-size, 12px) / -2);
   flex-shrink: 0;
 }
 
 .time-indicator-line {
   flex: 1;
   height: 2px;
-  background-color: #ea4335;
+  background-color: var(--calendar-current-time-color, #ea4335);
 }
 
 @media (max-width: 768px) {
   .day-event {
     font-size: 11px;
-    border-radius: 6px;
+    border-radius: var(--calendar-border-radius-sm, 6px);
   }
   
   .event-title {
     font-size: 11px;
     line-height: 1.2;
-    margin-bottom: 2px;
+    margin-bottom: var(--calendar-spacing-xs, 2px);
   }
   
   .day-grid {
-    grid-template-columns: 50px 1fr;
-    min-height: calc(24 * 38px);
+    grid-template-columns: var(--calendar-time-column-width-mobile, 50px) 1fr;
+    min-height: calc(24 * var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
 
   .time-column {
-    grid-template-rows: auto repeat(24, 38px);
+    grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
   
   .day-column {
-    grid-template-rows: repeat(24, 38px);
+    grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
 
   .time-slot-label {
-    height: 38px;
+    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
     font-size: 9px;
-    padding: 0 4px;
+    padding: 0 var(--calendar-spacing-sm, 4px);
     align-items: flex-start;
   }
   
@@ -317,7 +316,7 @@ const hasAllDayEvents = computed(() => (allDayEvents.value?.length || 0) > 0);
   }
   
   .hour-slot {
-    height: 38px;
+    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
   }
 }
 </style>
