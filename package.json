@@ -1,6 +1,6 @@
 {
   "name": "vue-google-calendar",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A Google Calendar-like component for Vue.js with Temporal API support",
   "main": "src/Calendar.vue",
   "scripts": {
