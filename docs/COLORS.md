@@ -1,5 +1,7 @@
 # Color Palette Guide
 
+<!-- markdownlint-disable MD022 MD031 MD032 -->
+
 The Vue Google Calendar component uses a predefined color palette inspired by Google Calendar's Material Design colors. This ensures visual consistency and a professional appearance.
 
 ## Available Colors
@@ -33,7 +35,7 @@ import {
   getColorIdByHex,
   isValidColor,
   getClosestColor
-} from './src/config/colors.js';
+} from '@zehenrique/vue-google-calendar';
 ```
 
 ### Using Colors in Calendars
@@ -126,7 +128,7 @@ const fallback = getClosestColor('#FFFFFF');
 ### Accessing the Full Palette
 
 ```javascript
-import { CALENDAR_COLORS } from './src/config/colors.js';
+import { CALENDAR_COLORS } from '@zehenrique/vue-google-calendar';
 
 // Display all colors in a UI picker
 CALENDAR_COLORS.forEach(color => {
@@ -207,7 +209,7 @@ const event = {
 };
 
 // Or use helper
-import { getClosestColor } from './src/config/colors.js';
+import { getClosestColor } from '@zehenrique/vue-google-calendar';
 
 const event = {
   color: getClosestColor('#FF5733') // Falls back to DEFAULT_COLOR
@@ -224,7 +226,7 @@ const event = {
 2. **Limit color variety**: Don't use all 12 colors for 3 calendars
    - Stick to 3-5 distinct colors for clarity
 
-3. **Consider accessibility**: 
+3. **Consider accessibility**:
    - Avoid relying solely on color to convey information
    - Use both color AND calendar name for identification
 
@@ -237,8 +239,7 @@ const event = {
 ### Complete Calendar Setup
 
 ```javascript
-import { createCalendar } from './src/core/createCalendar.js';
-import { CALENDAR_COLORS, DEFAULT_COLOR } from './src/config/colors.js';
+import { createCalendar, CALENDAR_COLORS, DEFAULT_COLOR } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   calendars: [
@@ -286,7 +287,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { CALENDAR_COLORS } from './src/config/colors.js';
+import { CALENDAR_COLORS } from '@zehenrique/vue-google-calendar';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

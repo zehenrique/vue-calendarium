@@ -1,5 +1,7 @@
 # Quick Theme Customization Examples
 
+<!-- markdownlint-disable MD022 MD031 MD032 -->
+
 ## Example 1: Using Built-in Theme Presets
 
 ```vue
@@ -19,7 +21,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from './src/index.js';
+import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const isDark = ref(false);
 
@@ -38,7 +40,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from './src/index.js';
+import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
 
 // Your company's brand colors
 const brandTheme = {
@@ -64,7 +66,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from './src/index.js';
+import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
 
 // Only change what you need - rest stays default
 const customTheme = {
@@ -90,7 +92,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from './src/index.js';
+import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -118,7 +120,7 @@ const calendarApp = createCalendar({
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from './src/index.js';
+import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const isMobile = ref(false);
 
@@ -155,7 +157,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar, THEME_PRESETS, mergeTheme } from './src/index.js';
+import { createCalendar, GoogleCalendar, THEME_PRESETS, mergeTheme } from '@zehenrique/vue-google-calendar';
 
 // Start with dark theme, customize specific properties
 const customDarkTheme = mergeTheme({
@@ -174,7 +176,7 @@ const calendarApp = createCalendar({
 ## Available Theme Presets
 
 ```javascript
-import { THEME_PRESETS } from './src/index.js';
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 // Available presets:
 THEME_PRESETS.default        // Standard light theme

@@ -1,5 +1,7 @@
 # Calendar Component API
 
+<!-- markdownlint-disable MD022 MD031 MD032 -->
+
 ## Component Interface
 
 ### Props
@@ -11,7 +13,7 @@
 
 Example:
 ```javascript
-import { createCalendar, createViewDay, createViewWeek, createViewMonth } from './src/index.js';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -38,7 +40,7 @@ const customTheme = {
 
 **Available Theme Presets:**
 ```javascript
-import { THEME_PRESETS } from './src/index.js';
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 // Use a preset
 :theme="THEME_PRESETS.dark"
@@ -286,7 +288,7 @@ start: '2025-10-27T14:30:00-05:00'
 #### rrule
 - **Type:** `String`
 - **Required:** No
-- **Description:** RFC 5545 recurrence rule string (e.g. `FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4` or `RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4`). 
+- **Description:** RFC 5545 recurrence rule string (e.g. `FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4` or `RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4`).
 - **Usage:** All recurrence is stored and processed using RRULE internally. The UI provides a Google Calendar-like interface where users select repeat patterns (Daily, Weekly, Monthly, Yearly, or Custom), and these selections are converted to RRULE strings automatically.
 - **Display:** When viewing events, RRULE strings are converted to human-readable text (e.g., "Weekly on Monday, Friday").
 
@@ -397,7 +399,7 @@ export default {
 
 <script>
 import { Temporal } from '@js-temporal/polyfill';
-import GoogleCalendar from './src/Calendar.vue';
+import { GoogleCalendar } from '@zehenrique/vue-google-calendar';
 
 export default {
   components: { GoogleCalendar },
@@ -597,16 +599,16 @@ The calendar provides a Google Calendar-like interface for recurrence. Users **n
 
 For developers, a composable `useCalendarInterop` is provided for importing/exporting iCalendar data and handling RRULE recurrence.
 
-- parseICal(icsString) -> Array<Event>: Parses ICS text into the component's event objects.
+- parseICal(icsString) -> Array&lt;Event&gt;: Parses ICS text into the component's event objects.
 - serializeICal(events, opts?) -> string: Generates ICS text from event objects. Optional opts: { prodId, tzid }.
 - parseRRule(rruleString) -> { rule, options }: Parses an RRULE (with or without DTSTART) into an RRule instance.
 - serializeRRule(optionsOrRule) -> string: Serializes RRule options or an RRule instance to RFC string.
-- expandRecurrence(event, rangeStart, rangeEnd) -> Array<Event>: Expands an event with event.rrule into occurrences within range.
+- expandRecurrence(event, rangeStart, rangeEnd) -> Array&lt;Event&gt;: Expands an event with event.rrule into occurrences within range.
 
 Example:
 
 ```js
-import useCalendarInterop from './src/composables/useCalendarInterop.js';
+import useCalendarInterop from '@zehenrique/vue-google-calendar/composables/useCalendarInterop.js';
 
 const { parseICal, serializeICal, parseRRule, serializeRRule, expandRecurrence } = useCalendarInterop();
 

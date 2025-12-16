@@ -4,30 +4,30 @@ A production-ready, reusable calendar component for Vue.js that replicates Googl
 
 ## Features
 
-✨ **Google Calendar Look & Feel** - Closely matches Google Calendar's design and interactions  
-📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile with swipe gestures  
-🌍 **Internationalization** - Full support for English (en-US) and Portuguese Portugal (pt-PT)  
-📅 **Multiple Views** - Month, Week, and Day views with smooth transitions  
-⏰ **Temporal API** - Uses modern Temporal API for all date/time handling  
-🎨 **Predefined Color Palette** - 12 Material Design colors matching Google Calendar (see [COLORS.md](./COLORS.md))  
-🎨 **Full Theme Customization** - Complete CSS customization via theme prop and CSS custom properties (see [STYLING.md](./docs/STYLING.md))  
-💻 **Vue 3 Composition API** - Built with Vue 3 Composition API best practices  
-📊 **Event Management** - Create, view, edit, and delete events via UI and programmatically  
-🔁 **Recurring Events** - RFC 5545 compliant recurring events with RRULE support and iCalendar import/export  
+- ✨ **Google Calendar Look & Feel** - Closely matches Google Calendar's design and interactions  
+- 📱 **Responsive Design** - Works seamlessly on desktop, tablet, and mobile with swipe gestures  
+- 🌍 **Internationalization** - Full support for English (en-US) and Portuguese Portugal (pt-PT)  
+- 📅 **Multiple Views** - Month, Week, and Day views with smooth transitions  
+- ⏰ **Temporal API** - Uses modern Temporal API for all date/time handling  
+- 🎨 **Predefined Color Palette** - 12 Material Design colors matching Google Calendar (see [COLORS.md](./COLORS.md))  
+- 🎨 **Full Theme Customization** - Complete CSS customization via theme prop and CSS custom properties (see [STYLING.md](./docs/STYLING.md))  
+- 💻 **Vue 3 Composition API** - Built with Vue 3 Composition API best practices  
+- 📊 **Event Management** - Create, view, edit, and delete events via UI and programmatically  
+- 🔁 **Recurring Events** - RFC 5545 compliant recurring events with RRULE support and iCalendar import/export  
   - Google Calendar-like interface: Daily, Weekly, Monthly, Yearly, or Custom recurrence  
   - Delete single occurrence or entire series with EXDATE support  
   - Human-readable recurrence descriptions  
-📂 **Multiple Calendars** - Support for event categories/calendars with color coding  
-♿ **Accessibility** - Full ARIA labels, keyboard navigation, and screen reader support  
-🧩 **Pluggable API** - Use as a standalone component or integrate into existing applications  
-🎯 **Event Overlap Handling** - Column-based layout for overlapping events (Google Calendar style)  
-☀️ **All-Day Events** - Dedicated header section for all-day events  
-🕐 **Current Time Indicator** - Red line showing current time in week/day views  
-📱 **Mobile Swipe Gestures** - Navigate with left/right swipes on mobile  
-☰ **Mobile Sidebar** - Full-featured navigation sidebar for mobile devices  
-💎 **Vuetify (Material Design)** - Modern, beautiful Material Design styling with Vuetify  
-📌 **Sticky Calendar Header** - Header stays visible while scrolling for better navigation  
-🎛️ **Services API** - Dedicated services for managing events and calendars programmatically
+- 📂 **Multiple Calendars** - Support for event categories/calendars with color coding  
+- ♿ **Accessibility** - Full ARIA labels, keyboard navigation, and screen reader support  
+- 🧩 **Pluggable API** - Use as a standalone component or integrate into existing applications  
+- 🎯 **Event Overlap Handling** - Column-based layout for overlapping events (Google Calendar style)  
+- ☀️ **All-Day Events** - Dedicated header section for all-day events  
+- 🕐 **Current Time Indicator** - Red line showing current time in week/day views  
+- 📱 **Mobile Swipe Gestures** - Navigate with left/right swipes on mobile  
+- ☰ **Mobile Sidebar** - Full-featured navigation sidebar for mobile devices  
+- 💎 **Vuetify (Material Design)** - Modern, beautiful Material Design styling with Vuetify  
+- 📌 **Sticky Calendar Header** - Header stays visible while scrolling for better navigation  
+- 🎛️ **Services API** - Dedicated services for managing events and calendars programmatically
 
 ## Color Palette
 
@@ -36,12 +36,13 @@ The calendar uses a **predefined color palette** with 12 Material Design colors 
 🔴 Tomato • 🌸 Flamingo • 🟠 Tangerine • 🟡 Banana • 🟢 Sage • 🌿 Basil • 🔵 Peacock • 💙 Blueberry • 💜 Lavender • 🍇 Grape • ⚫ Graphite • 🔷 **Cobalt (default)**
 
 **Quick Reference:**
+
 - 📖 [Complete Color Guide](./COLORS.md) - Detailed usage guide with examples
 - 📋 [Quick Reference](./COLOR_REFERENCE.md) - Color codes and helper functions
 - 🛠️ [Implementation Details](./COLOR_IMPLEMENTATION.md) - Technical implementation
 
 ```javascript
-import { CALENDAR_COLORS, DEFAULT_COLOR, isValidColor } from './src/config/colors.js';
+import { CALENDAR_COLORS, DEFAULT_COLOR, isValidColor } from '@zehenrique/vue-google-calendar';
 
 // Use predefined colors
 const calendar = {
@@ -63,7 +64,7 @@ The calendar is **fully customizable** through CSS custom properties. You can ov
 </template>
 
 <script setup>
-import { THEME_PRESETS } from './src/index.js';
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 // Use a preset
 const customTheme = THEME_PRESETS.dark;
@@ -79,6 +80,7 @@ const customTheme = {
 ```
 
 **Available Theme Presets:**
+
 - `THEME_PRESETS.default` - Standard light theme
 - `THEME_PRESETS.dark` - Dark mode theme
 - `THEME_PRESETS.compact` - Smaller spacing and sizing
@@ -87,6 +89,7 @@ const customTheme = {
 **Complete theming documentation:** [STYLING.md](./docs/STYLING.md)
 
 You can customize:
+
 - 🎨 All colors (backgrounds, borders, text, accent colors)
 - 📐 Spacing and sizing (padding, margins, dimensions)
 - ✍️ Typography (fonts, sizes, weights)
@@ -99,8 +102,17 @@ See [STYLING.md](./docs/STYLING.md) for complete documentation with examples.
 ## Installation
 
 ```bash
-npm install
+npm install @zehenrique/vue-google-calendar
 ```
+
+> **GitHub Packages:** Add the following to your project-level `.npmrc` so npm knows to install the scoped package from GitHub's registry:
+
+```ini
+@zehenrique:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Replace `GITHUB_TOKEN` with a [personal access token](https://github.com/settings/tokens) that has the `read:packages` scope.
 
 ## Development
 
@@ -108,7 +120,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000 to view the demo.
+Open [http://localhost:3000](http://localhost:3000) to view the demo.
 
 ## Quick Start
 
@@ -130,7 +142,7 @@ import {
   createViewWeek, 
   createViewMonth,
   GoogleCalendar 
-} from './src/index.js';
+} from '@zehenrique/vue-google-calendar';
 
 // Create calendar instance
 const calendarApp = createCalendar({
@@ -291,6 +303,7 @@ const temporalEvent = {
 ### Creating Events via UI
 
 Users can click the "Create event" button to open a modal dialog with:
+
 - Event title
 - Start and end date/time
 - Recurring options (none, daily, weekly, monthly, yearly)
@@ -420,7 +433,7 @@ const event = {
 The calendar uses a predefined color palette inspired by Google Calendar's Material Design colors. Only these colors are available for calendars and events to ensure visual consistency:
 
 ```javascript
-import { CALENDAR_COLORS, DEFAULT_COLOR } from './src/config/colors.js';
+import { CALENDAR_COLORS, DEFAULT_COLOR } from '@zehenrique/vue-google-calendar';
 
 // Available colors:
 const colors = [
@@ -439,7 +452,7 @@ const colors = [
 ];
 
 // Helper functions
-import { getColorById, getColorIdByHex, isValidColor, getClosestColor } from './src/config/colors.js';
+import { getColorById, getColorIdByHex, isValidColor, getClosestColor } from '@zehenrique/vue-google-calendar';
 
 // Get color by ID
 const color = getColorById('tomato'); // Returns '#D50000'
@@ -453,6 +466,7 @@ const validColor = getClosestColor('#FF0000'); // Returns DEFAULT_COLOR
 ```
 
 **Usage in calendars:**
+
 ```javascript
 const calendars = [
   { id: 'work', name: 'Work', color: '#1967D2' }, // Cobalt
@@ -473,15 +487,18 @@ The component uses scoped styles that closely match Google Calendar. You can cus
 The calendar component follows a modular architecture with focused, single-responsibility components:
 
 ### Main Component
+
 - **`Calendar.vue`** - Main calendar container managing state and view rendering
 
 ### Sub-Components
+
 - **`EventModal.vue`** - Event creation and editing form modal
 - **`EventDetailModal.vue`** - Event details display with edit/delete actions
 - **`DeleteConfirmModal.vue`** - Confirmation dialog for event deletion
 - **`MobileSidebar.vue`** - Mobile navigation sidebar with view and calendar selection
 
 ### Utilities
+
 - **`composables/useCalendarUtils.js`** - Shared utility functions for:
   - Event styling and positioning
   - Date/time formatting (24-hour format)
@@ -489,6 +506,7 @@ The calendar component follows a modular architecture with focused, single-respo
   - Week/day calculations
 
 This modular structure makes the codebase:
+
 - **Maintainable**: Each component has a clear, focused purpose
 - **Testable**: Components can be tested in isolation
 - **Reusable**: Modal and utility components can be used elsewhere

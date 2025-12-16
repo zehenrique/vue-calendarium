@@ -1,5 +1,7 @@
 # Calendar Styling Guide
 
+<!-- markdownlint-disable MD022 MD031 MD032 -->
+
 Complete guide to customizing the appearance of the Vue Google Calendar component.
 
 ## Table of Contents
@@ -32,7 +34,7 @@ All styling values are centralized in `src/config/theme.js` and can be overridde
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from './src/index.js';
+import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
 
 const customTheme = {
   '--calendar-primary-color': '#e91e63',  // Pink primary color
@@ -76,7 +78,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from './src/index.js';
+import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -113,7 +115,7 @@ const myTheme = {
 You only need to specify the properties you want to change. The component automatically merges your theme with the default theme:
 
 ```javascript
-import { mergeTheme, DEFAULT_THEME } from './src/config/theme.js';
+import { mergeTheme, DEFAULT_THEME } from '@zehenrique/vue-google-calendar';
 
 const partialTheme = {
   '--calendar-primary-color': '#00bcd4'
@@ -220,7 +222,7 @@ The component includes several built-in theme presets:
 ### Default Theme
 
 ```javascript
-import { THEME_PRESETS } from './src/index.js';
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 <GoogleCalendar :theme="THEME_PRESETS.default" />
 ```
@@ -265,7 +267,7 @@ Enhanced accessibility with high contrast colors:
 ### Creating Custom Presets
 
 ```javascript
-import { DEFAULT_THEME } from './src/config/theme.js';
+import { DEFAULT_THEME } from '@zehenrique/vue-google-calendar';
 
 const BRAND_THEME = {
   ...DEFAULT_THEME,
@@ -296,7 +298,7 @@ const BRAND_THEME = {
 
 <script setup>
 import { ref } from 'vue';
-import { THEME_PRESETS } from './src/index.js';
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const currentTheme = ref('light');
 
@@ -310,7 +312,7 @@ const themes = {
 ### Generating CSS from Theme
 
 ```javascript
-import { generateThemeCSS, THEME_PRESETS } from './src/config/theme.js';
+import { generateThemeCSS, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 // Generate CSS string
 const cssString = generateThemeCSS(THEME_PRESETS.dark);
@@ -327,7 +329,7 @@ console.log(cssString);
 ### Programmatic Theme Application
 
 ```javascript
-import { applyTheme } from './src/config/theme.js';
+import { applyTheme } from '@zehenrique/vue-google-calendar';
 
 const calendarElement = document.querySelector('.google-calendar');
 const myTheme = {
