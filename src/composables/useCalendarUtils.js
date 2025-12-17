@@ -19,13 +19,13 @@ export function getEventColorStyle(hexColor, isPast = false) {
   const g = parseInt(hexColor.slice(3, 5), 16);
   const b = parseInt(hexColor.slice(5, 7), 16);
   
-  // Past events get more transparency (like Google Calendar)
-  const bgOpacity = isPast ? 0.40 : 0.90;
+  // Past events get more transparency
+  const bgOpacity = isPast ? 0.50 : 1;
   
   return {
     backgroundColor: `rgba(${r}, ${g}, ${b}, ${bgOpacity})`,
     color: isPast ? '#000000' : '#ffffff',
-    opacity: isPast ? 0.7 : 1
+    opacity: bgOpacity
   };
 }
 

@@ -209,6 +209,11 @@ onMounted(() => {
     'pt-PT': 'pt'
   };
   locale.value = localeMap[calendarApp.locale.value] || 'en';
+  
+  // Expose calendar app for testing
+  if (typeof window !== 'undefined') {
+    window.calendarApp = calendarApp;
+  }
 });
 
 // Example: Access events service
@@ -242,5 +247,19 @@ console.log('Initial events:', calendarApp.eventsService.getAll());
 /* Global font family for Google Calendar look */
 * {
   font-family: 'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif !important;
+}
+
+/* Ensure Vuetify main container fills height */
+.v-application .v-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.v-application .v-main__wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 </style>

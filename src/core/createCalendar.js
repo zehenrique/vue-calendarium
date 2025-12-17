@@ -23,6 +23,10 @@ import { Temporal } from '@js-temporal/polyfill';
  * @param {Function} config.onEventCreateRequest - Callback when event create is requested (modals disabled)
  * 
  * @returns {Object} Calendar instance with methods and services
+ * @returns {Function} .showGhostEvent - Show a ghost event (preview) on the calendar
+ * @returns {Function} .updateGhostEvent - Update the currently displayed ghost event
+ * @returns {Function} .hideGhostEvent - Hide the currently displayed ghost event
+ * @returns {Object} .ghostEvent - Computed property containing current ghost event or null
  */
 export function createCalendar(config = {}) {
   // Helper to get current date (respects test mode)
@@ -70,6 +74,9 @@ export function createCalendar(config = {}) {
 
   // Available views
   const availableViews = ref(views);
+
+  // Ghost event state (for external control)
+  const ghostEvent = ref(null);
 
   // Computed properties
   const visibleEvents = computed(() => {
@@ -130,6 +137,29 @@ export function createCalendar(config = {}) {
     }
   };
 
+  // Ghost event methods (for external control when modals are disabled)
+  const showGhostEvent = (eventData) => {
+    ghostEvent.value = {
+      ...eventData,
+      id: eventData.id || 'ghost-event',
+      isGhost: true
+    };
+  };
+
+  const updateGhostEvent = (eventData) => {
+    if (ghostEvent.value) {
+      ghostEvent.value = {
+        ...ghostEvent.value,
+        ...eventData,
+        isGhost: true
+      };
+    }
+  };
+
+  const hideGhostEvent = () => {
+    ghostEvent.value = null;
+  };
+
   // Return calendar instance
   return {
     // Services
@@ -143,6 +173,7 @@ export function createCalendar(config = {}) {
     enableModals: computed(() => modalsEnabled.value),
     views: computed(() => availableViews.value),
     visibleEvents,
+    ghostEvent: computed(() => ghostEvent.value),
 
     // Methods
     setView,
@@ -151,6 +182,9 @@ export function createCalendar(config = {}) {
     goToToday,
     goToNext,
     goToPrevious,
+    showGhostEvent,
+    updateGhostEvent,
+    hideGhostEvent,
 
     // Callbacks
     callbacks: {
@@ -168,7 +202,8 @@ export function createCalendar(config = {}) {
       currentView,
       currentDate,
       currentLocale,
-      modalsEnabled
+      modalsEnabled,
+      ghostEvent
     }
   };
 }

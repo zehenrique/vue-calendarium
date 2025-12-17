@@ -17,6 +17,7 @@
       @all-day-select="onAllDaySlotClick"
       @event-select="onEventClick"
       @day-number-click="onAllDaySlotClick"
+      @date-change="handleDateChange"
     />
 
     <MonthView
@@ -86,11 +87,8 @@
     <MobileSidebar
       v-if="mobileSidebarEnabled"
       v-model="showMobileSidebar"
-      :current-view="currentView"
-      :views="views"
       :calendars="calendars"
       :visible-calendars="visibleCalendarIds"
-      @view-change="handleViewChange"
       @update:visible-calendars="handleVisibleCalendarsUpdate"
     />
   </div>
@@ -217,7 +215,7 @@ const showDeleteConfirm = ref(false);
 const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
-const ghostEvent = ref(null); // Ghost event displayed before saving
+const ghostEvent = props.calendarApp._refs.ghostEvent; // Ghost event controlled by app instance
 const calendarRoot = ref(null); // Reference to root element for theme application
 
 let timeIntervalId = null;
@@ -306,7 +304,7 @@ const displayEvents = computed(() => {
 const monthDays = computed(() => createMonthGrid(currentDate.value, displayEvents.value));
 
 const weekViewDays = computed(() =>
-  createWeekViewDays(currentDate.value, displayEvents.value, calendarLocale.value)
+  createWeekViewDays(currentDate.value, displayEvents.value, calendarLocale.value, t)
 );
 
 const weekPixelsPerHour = computed(() =>
@@ -469,6 +467,17 @@ function goToToday() {
   props.calendarApp.callbacks.onDateChange?.(currentDate.value);
 }
 
+function handleDateChange(dateString) {
+  try {
+    // Convert ISO date string (YYYY-MM-DD) to Temporal.PlainDate
+    const newDate = Temporal.PlainDate.from(dateString);
+    currentDate.value = newDate;
+    props.calendarApp.callbacks.onDateChange?.(newDate);
+  } catch (error) {
+    console.error('Invalid date format:', dateString, error);
+  }
+}
+
 function handleViewChange(view) {
   if (currentView.value !== view) {
     currentView.value = view;
@@ -531,13 +540,12 @@ function openCreateModal(overrides = {}, context = {}) {
   const draft = createDefaultEventDraft(calendars.value, overrides);
   newEvent.value = draft;
 
-  // Create ghost event with lower opacity
+  // Create ghost event with lower opacity using app method
   const ghostEventData = buildEventPayloadFromDraft(draft, calendars.value);
-  ghostEvent.value = {
+  props.calendarApp.showGhostEvent({
     ...ghostEventData,
-    id: 'ghost-event',
-    isGhost: true // Mark as ghost for styling
-  };
+    id: 'ghost-event'
+  });
 
   if (!modalsEnabled.value) {
     const requestContext = {
@@ -698,7 +706,7 @@ function saveEvent(eventDataFromModal) {
   }
 
   // Clear ghost event after saving
-  ghostEvent.value = null;
+  props.calendarApp.hideGhostEvent();
   newEvent.value = createDefaultEventDraft(calendars.value);
 }
 
@@ -706,7 +714,7 @@ function saveEvent(eventDataFromModal) {
 watch(showModal, (isOpen) => {
   if (!isOpen && ghostEvent.value) {
     // Modal was closed without saving, clear ghost event
-    ghostEvent.value = null;
+    props.calendarApp.hideGhostEvent();
     // Also reset newEvent when modal closes
     newEvent.value = createDefaultEventDraft(calendars.value);
   }

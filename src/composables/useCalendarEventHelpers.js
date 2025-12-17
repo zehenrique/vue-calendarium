@@ -5,6 +5,7 @@ import { DEFAULT_COLOR } from '../config/colors.js';
 
 const DEFAULT_EVENT_COLOR = DEFAULT_COLOR;
 const MAX_RECURRING_OCCURRENCES = 52;
+const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 function resolvePrimaryCalendar(calendars) {
   if (Array.isArray(calendars) && calendars.length > 0) {
@@ -104,19 +105,22 @@ export function createMonthGrid(currentDate, events) {
   return days;
 }
 
-export function createWeekViewDays(currentDate, events, locale) {
+export function createWeekViewDays(currentDate, events, locale, t = null) {
   const startOfWeek = getStartOfWeek(currentDate);
   const today = Temporal.Now.plainDateISO();
 
   return Array.from({ length: 7 }, (_, index) => {
     const date = startOfWeek.add({ days: index });
     const eventSummary = summarizeEventsForDate(date, events);
+    
+    // Use i18n translation if available, otherwise fallback to browser locale
+    const dayName = t ? t(WEEKDAY_KEYS[index]) : date.toLocaleString(locale, { weekday: 'short' });
 
     return {
       key: date.toString(),
       day: date.day,
       date,
-      dayName: date.toLocaleString(locale, { weekday: 'short' }),
+      dayName,
       isToday: Temporal.PlainDate.compare(date, today) === 0,
       events: eventSummary.timedEvents,
       allDayEvents: eventSummary.allDayEvents
@@ -127,13 +131,10 @@ export function createWeekViewDays(currentDate, events, locale) {
 export function createWeekdayLabels(currentDate, locale, isMobile, t) {
   const startOfWeek = getStartOfWeek(currentDate);
   
-  // Use i18n translations for consistent, unique labels
-  const weekdayKeys = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  
   return Array.from({ length: 7 }, (_, index) => {
     if (t && isMobile) {
       // Use i18n translations which have unique single letters
-      return t(weekdayKeys[index]);
+      return t(WEEKDAY_KEYS[index]);
     }
     // For desktop, use browser's short format
     const date = startOfWeek.add({ days: index });

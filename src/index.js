@@ -21,6 +21,7 @@ export { Calendar } from './core/Calendar.js';
 export { createEventsService, EventsService } from './services/EventsService.js';
 export { createCalendarsService, CalendarsService } from './services/CalendarsService.js';
 export { default as GoogleCalendar } from './Calendar.vue';
+export { translations } from './i18n.js';
 
 // Export color configuration
 export { 
@@ -40,6 +41,9 @@ export {
   mergeTheme,
   generateThemeCSS
 } from './config/theme.js';
+
+// Import translations
+import { translations } from './i18n.js';
 
 // Import for default export
 import { createCalendar } from './core/createCalendar.js';
@@ -88,5 +92,6 @@ export default {
   THEME_PRESETS,
   applyTheme,
   mergeTheme,
-  generateThemeCSS
+  generateThemeCSS,
+  translations
 };

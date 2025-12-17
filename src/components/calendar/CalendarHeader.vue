@@ -72,6 +72,21 @@
           <v-icon size="20">mdi-calendar-today</v-icon>
         </v-btn>
         
+        <!-- View selector: Mobile compact dropdown -->
+        <v-select
+          v-if="isMobile"
+          :items="viewItems"
+          item-title="title"
+          item-value="value"
+          :model-value="currentView"
+          variant="outlined"
+          density="compact"
+          hide-details
+          data-testid="view-toggle"
+          class="mobile-view-select"
+          @update:model-value="$emit('view-change', $event)"
+        ></v-select>
+        
         <!-- Desktop: compact dropdown for view selection -->
         <v-select
           v-if="!isMobile"
@@ -86,6 +101,37 @@
           style="min-width: 120px"
           @update:model-value="$emit('view-change', $event)"
         ></v-select>
+        
+        <!-- Desktop: Date picker -->
+        <v-menu v-if="!isMobile" :close-on-content-click="false" ref="datePickerMenu">
+          <template v-slot:activator="{ props: menuProps }">
+            <v-text-field
+              :model-value="formattedDate"
+              variant="outlined"
+              density="compact"
+              hide-details
+              readonly
+              :aria-label="t('selectDate')"
+              data-testid="date-picker"
+              style="min-width: 140px; max-width: 140px"
+              v-bind="menuProps">
+              <template v-slot:append-inner>
+                <v-icon size="small">mdi-calendar</v-icon>
+              </template>
+            </v-text-field>
+          </template>
+          <v-date-picker
+            :model-value="datePickerValue"
+            @update:model-value="handleDatePickerChange">
+            <template v-slot:header>
+              <div class="date-picker-header">
+                <v-btn variant="text" size="small" @click="goToTodayFromPicker">
+                  {{ t('today') }}
+                </v-btn>
+              </div>
+            </template>
+          </v-date-picker>
+        </v-menu>
       </div>
     </div>
 
@@ -128,8 +174,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { getEventColorStyle, isEventPast } from '../../composables/useCalendarUtils.js';
+
+const datePickerMenu = ref(null);
 
 function abbreviateTitle(title) {
   if (!title) return '';
@@ -174,7 +222,7 @@ const props = defineProps({
   }
 });
 
-defineEmits(['toggle-sidebar', 'previous', 'next', 'today', 'view-change', 'all-day-select', 'event-select', 'day-number-click']);
+const emit = defineEmits(['toggle-sidebar', 'previous', 'next', 'today', 'view-change', 'all-day-select', 'event-select', 'day-number-click', 'date-change']);
 
 const viewItems = computed(() => {
   return props.views.map(v => ({
@@ -182,6 +230,49 @@ const viewItems = computed(() => {
     value: v
   }));
 });
+
+const formattedDate = computed(() => {
+  if (!props.currentDate) return '';
+  const year = props.currentDate.year;
+  const month = String(props.currentDate.month).padStart(2, '0');
+  const day = String(props.currentDate.day).padStart(2, '0');
+  return `${day}/${month}/${year}`;
+});
+
+const datePickerValue = computed(() => {
+  if (!props.currentDate) return null;
+  const year = props.currentDate.year;
+  const month = props.currentDate.month - 1; // v-date-picker uses 0-indexed months
+  const day = props.currentDate.day;
+  return new Date(year, month, day);
+});
+
+const handleDatePickerChange = (date) => {
+  if (!date) return;
+  
+  // Convert Date to ISO string format (YYYY-MM-DD)
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+  
+  emit('date-change', dateString);
+};
+
+const goToTodayFromPicker = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+  
+  emit('date-change', dateString);
+  
+  // Close the menu
+  if (datePickerMenu.value) {
+    datePickerMenu.value.isActive = false;
+  }
+};
 
 const hasAllDayEvents = computed(() => {
   if (!props.weekDays) return false;
@@ -252,10 +343,27 @@ const dayInfo = computed(() => {
   margin: 0 -4px;
 }
 
+.date-picker-header {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
 .header-right {
   display: flex;
   align-items: center;
   gap: var(--calendar-header-gap, 12px);
+}
+
+.mobile-view-select {
+  min-width: 120px;
+  max-width: 120px;
+  padding-right: 8px;
+}
+
+:deep(.v-picker-title) {
+  display: none;
 }
 
 .calendar-title {
@@ -288,7 +396,7 @@ const dayInfo = computed(() => {
 }
 
 .day-view-number {
-  font-size: var(--calendar-day-view-number-font-size, 26px);
+  font-size: var(--calendar-day-view-number-font-size, 22px);
   color: var(--calendar-text-primary, #3c4043);
   font-weight: var(--calendar-font-weight-normal, 400);
   line-height: 1;
@@ -318,6 +426,7 @@ const dayInfo = computed(() => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   flex: 1;
+  padding-right: 6px; /* Match scrollbar width in WeekView */
 }
 
 .week-all-day-container {
@@ -330,6 +439,7 @@ const dayInfo = computed(() => {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   flex: 1;
+  padding-right: 6px; /* Match scrollbar width in WeekView */
 }
 
 .all-day-events-column {
@@ -416,6 +526,10 @@ const dayInfo = computed(() => {
     gap: var(--calendar-spacing-sm, 4px);
     flex-wrap: nowrap;
     overflow: hidden;
+  }
+  
+  .header-right {
+    gap: var(--calendar-spacing-sm, 4px);
   }
   
   .calendar-title {

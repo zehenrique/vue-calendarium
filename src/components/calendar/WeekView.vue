@@ -1,5 +1,5 @@
 <template>
-  <div class="calendar-body week-view">
+  <div ref="scrollContainer" class="calendar-body week-view">
     <div class="week-grid">
       <div class="time-column no-border">
         <div class="time-header"></div>
@@ -35,9 +35,10 @@
 </template>
 
 <script setup>
+import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
 import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
-defineProps({
+const props = defineProps({
   days: {
     type: Array,
     default: () => []
@@ -63,25 +64,98 @@ defineProps({
     required: true
   }
 });
+
+const { days, showCurrentTimeIndicator, currentTimePosition } = toRefs(props);
+const todayKey = computed(() => days.value?.find(day => day.isToday)?.key ?? '');
+
+const scrollContainer = ref(null);
+const hasAutoScrolled = ref(false);
+const SCROLL_PADDING = 120;
+
+const scrollToCurrentTime = () => {
+  if (!scrollContainer.value || hasAutoScrolled.value) {
+    return;
+  }
+
+  // Wait for next tick to ensure DOM is fully rendered
+  nextTick(() => {
+    requestAnimationFrame(() => {
+      const container = scrollContainer.value;
+      if (!container) {
+        return;
+      }
+
+      // Only scroll if we have a current time position
+      // This means we're viewing a week that contains today
+      if (!currentTimePosition.value || currentTimePosition.value <= 0) {
+        hasAutoScrolled.value = true;
+        return;
+      }
+
+      const target = Math.max(0, currentTimePosition.value - SCROLL_PADDING);
+      container.scrollTop = target;
+      hasAutoScrolled.value = true;
+    });
+  });
+};const scheduleScroll = () => nextTick(scrollToCurrentTime);
+
+onMounted(scheduleScroll);
+
+watch(todayKey, () => {
+  hasAutoScrolled.value = false;
+});
+
+watch(showCurrentTimeIndicator, value => {
+  if (!value) {
+    hasAutoScrolled.value = false;
+  }
+});
+
+watch([showCurrentTimeIndicator, todayKey], scheduleScroll);
+
+// Also watch for currentTimePosition changes in case it updates after mount
+watch(currentTimePosition, (newVal) => {
+  if (newVal > 0 && !hasAutoScrolled.value) {
+    scheduleScroll();
+  }
+});
 </script>
 
 <style scoped>
-.calendar-body {
+.calendar-body.week-view {
   flex: 1;
-  overflow: hidden;
   background: var(--calendar-bg, #ffffff);
   position: relative;
   width: 100%;
   max-width: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto; /* Auto show scrollbar only when needed */
+  overflow-x: hidden;
+  display: block;
+  touch-action: pan-y; /* Allow vertical scroll but enable horizontal swipe gestures */
 }
 
-.week-view {
-  padding: 0;
+/* Style the scrollbar to be thin and match Google Calendar */
+.calendar-body.week-view::-webkit-scrollbar {
+  width: 6px;
+}
+
+.calendar-body.week-view::-webkit-scrollbar-track {
+  background: #f1f3f4;
+}
+
+.calendar-body.week-view::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 3px;
+}
+
+.calendar-body.week-view::-webkit-scrollbar-thumb:hover {
+  background: #bdc1c6;
 }
 
 .week-grid {
   display: flex;
-  height: 100%;
   min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px));
 }
 

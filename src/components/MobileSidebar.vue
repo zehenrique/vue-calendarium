@@ -15,16 +15,6 @@
 
     <v-divider class="my-2"></v-divider>
 
-    <!-- View Selector -->
-    <v-list-subheader class="px-4 py-2 text-caption font-weight-medium">{{ t('view') }}</v-list-subheader>
-    <v-list density="comfortable" class="py-0">
-      <v-list-item v-for="view in views" :key="view" :active="currentView === view" :data-testid="`sidebar-view-${view}`" @click="handleViewChange(view)" :aria-label="`Switch to ${t(view)} view`" class="px-4 my-1" rounded="lg">
-        <v-list-item-title class="text-body-2">{{ t(view) }}</v-list-item-title>
-      </v-list-item>
-    </v-list>
-
-    <v-divider class="my-2"></v-divider>
-
     <!-- Calendars -->
     <v-list-subheader class="px-4 py-2 text-caption font-weight-medium">{{ t('calendars') }}</v-list-subheader>
     <v-list density="comfortable" class="py-0">
@@ -60,14 +50,6 @@ export default {
       type: Boolean,
       required: true
     },
-    currentView: {
-      type: String,
-      required: true
-    },
-    views: {
-      type: Array,
-      default: () => ['day', 'week', 'month']
-    },
     calendars: {
       type: Array,
       default: () => []
@@ -77,7 +59,7 @@ export default {
       default: () => []
     }
   },
-  emits: ['update:modelValue', 'view-change', 'update:visibleCalendars'],
+  emits: ['update:modelValue', 'update:visibleCalendars'],
   setup(props, { emit }) {
     const { t } = useI18n();
     let hammer = null;
@@ -98,11 +80,6 @@ export default {
 
     const handleClose = () => {
       emit('update:modelValue', false);
-    };
-
-    const handleViewChange = (view) => {
-      emit('view-change', view);
-      handleClose();
     };
 
     const isCalendarVisible = (calendarId) => {
@@ -225,7 +202,6 @@ export default {
     return {
       t,
       handleClose,
-      handleViewChange,
       isCalendarVisible,
       toggleCalendar
     };

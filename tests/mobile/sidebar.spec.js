@@ -32,14 +32,6 @@ test.describe('Mobile Sidebar Navigation', () => {
     await openSidebar(page);
   });
 
-  test('should display view buttons in sidebar', async ({ page }) => {
-    await openSidebar(page);
-
-    await expect(page.getByTestId('sidebar-view-month')).toBeVisible();
-    await expect(page.getByTestId('sidebar-view-week')).toBeVisible();
-    await expect(page.getByTestId('sidebar-view-day')).toBeVisible();
-  });
-
   test('should close mobile sidebar when clicking close button', async ({ page }) => {
     await openSidebar(page);
     await page.locator(SIDEBAR_SELECTOR).getByRole('button', { name: /Close/i }).click();
@@ -52,18 +44,6 @@ test.describe('Mobile Sidebar Navigation', () => {
 
     await clickScrim(page);
     await expectSidebarClosed(page);
-  });
-
-  test('should switch views from mobile sidebar', async ({ page }) => {
-    await openSidebar(page);
-    await page.getByTestId('sidebar-view-week').click();
-    await expectSidebarClosed(page);
-    await expect(page.locator('.week-view')).toBeVisible();
-
-    await openSidebar(page);
-    await page.getByTestId('sidebar-view-day').click();
-    await expectSidebarClosed(page);
-    await expect(page.locator('.day-view')).toBeVisible();
   });
 
   test('should display calendar list in sidebar', async ({ page }) => {

@@ -276,6 +276,133 @@ function switchToWeek() {
 </script>
 ```
 
+## Custom Modals and Ghost Events
+
+When using the calendar in a larger application with custom event creation/editing modals, you can disable the built-in modals and control ghost events (preview events) programmatically.
+
+### Disabling Built-in Modals
+
+```javascript
+const calendarApp = createCalendar({
+  views: [createViewDay(), createViewWeek(), createViewMonth()],
+  enableModals: false, // Disable built-in modals
+  onEventCreateRequest: ({ draft, context }) => {
+    // Handle event creation in your custom modal
+    console.log('User wants to create event:', draft);
+    console.log('Source:', context.source); // 'time-slot', 'day-cell', 'all-day', etc.
+    
+    // Show your custom modal with the draft data
+    openCustomModal(draft);
+  },
+  onEventClick: (event) => {
+    // Handle event click in your custom modal
+    openCustomEditModal(event);
+  }
+});
+```
+
+### Controlling Ghost Events
+
+Ghost events are semi-transparent preview events displayed while the user is creating or editing an event. When modals are disabled, you can control ghost events manually:
+
+```javascript
+// Show a ghost event (preview) when user starts creating an event
+function openCustomModal(draft) {
+  // Display the ghost event on the calendar
+  calendarApp.showGhostEvent({
+    title: draft.title,
+    start: draft.start,
+    end: draft.end,
+    calendarId: draft.calendarId,
+    color: draft.color
+  });
+  
+  // Show your custom modal
+  showModal.value = true;
+}
+
+// Update ghost event as user edits in the modal
+function onDraftChange(updatedDraft) {
+  calendarApp.updateGhostEvent({
+    title: updatedDraft.title,
+    start: updatedDraft.start,
+    end: updatedDraft.end
+  });
+}
+
+// Hide ghost event when modal closes
+function onModalClose(saved) {
+  if (saved) {
+    // Add the actual event
+    calendarApp.eventsService.add({
+      title: finalEvent.title,
+      start: finalEvent.start,
+      end: finalEvent.end,
+      calendarId: finalEvent.calendarId
+    });
+  }
+  
+  // Always hide the ghost event
+  calendarApp.hideGhostEvent();
+}
+
+// Check if a ghost event is currently displayed
+if (calendarApp.ghostEvent.value) {
+  console.log('Ghost event visible:', calendarApp.ghostEvent.value);
+}
+```
+
+### Example: Integration with Custom Modal
+
+```vue
+<template>
+  <div>
+    <GoogleCalendar :calendar-app="calendarApp" />
+    
+    <CustomEventModal
+      v-model="showCustomModal"
+      :draft="eventDraft"
+      @update:draft="updateGhostPreview"
+      @save="saveEvent"
+      @cancel="cancelEvent"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import { createCalendar, createViewWeek } from './calendar';
+
+const showCustomModal = ref(false);
+const eventDraft = ref(null);
+
+const calendarApp = createCalendar({
+  views: [createViewWeek()],
+  enableModals: false,
+  onEventCreateRequest: ({ draft }) => {
+    eventDraft.value = draft;
+    calendarApp.showGhostEvent(draft);
+    showCustomModal.value = true;
+  }
+});
+
+function updateGhostPreview(updatedDraft) {
+  calendarApp.updateGhostEvent(updatedDraft);
+}
+
+function saveEvent(finalEvent) {
+  calendarApp.eventsService.add(finalEvent);
+  calendarApp.hideGhostEvent();
+  showCustomModal.value = false;
+}
+
+function cancelEvent() {
+  calendarApp.hideGhostEvent();
+  showCustomModal.value = false;
+}
+</script>
+```
+
 ## API Reference
 
 ### `createCalendar(config)`
@@ -297,12 +424,16 @@ Creates a calendar instance.
 - `currentView`: Current view (computed)
 - `currentDate`: Current date (computed)
 - `locale`: Current locale (computed)
+- `ghostEvent`: Current ghost event or null (computed)
 - `setView(name)`: Change view
 - `setDate(date)`: Change date
 - `setLocale(locale)`: Change locale
 - `goToNext()`: Navigate forward
 - `goToPrevious()`: Navigate backward
 - `goToToday()`: Go to today
+- `showGhostEvent(eventData)`: Display a ghost event (preview)
+- `updateGhostEvent(eventData)`: Update the current ghost event
+- `hideGhostEvent()`: Hide the current ghost event
 
 ### `createViewDay()`, `createViewWeek()`, `createViewMonth()`
 

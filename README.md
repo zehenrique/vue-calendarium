@@ -52,11 +52,11 @@ const calendar = {
 };
 ```
 
-See [COLORS.md](./COLORS.md) for complete documentation.
+See [COLORS.md](./docs/COLORS.md) for complete documentation.
 
 ## Theme Customization
 
-The calendar is **fully customizable** through CSS custom properties. You can override all colors, spacing, typography, and sizing:
+The calendar is **100% customizable** - every visual aspect can be styled through CSS custom properties:
 
 ```vue
 <template>
@@ -64,40 +64,88 @@ The calendar is **fully customizable** through CSS custom properties. You can ov
 </template>
 
 <script setup>
-import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
-// Use a preset
+// Use a built-in preset
 const customTheme = THEME_PRESETS.dark;
 
-// Or create your own
+// Or create your own custom theme
 const customTheme = {
+  // Brand colors
   '--calendar-primary-color': '#e91e63',
   '--calendar-today-bg': '#e91e63',
   '--calendar-header-bg': '#fce4ec',
-  '--calendar-font-family': '"Inter", sans-serif'
+  
+  // Typography
+  '--calendar-font-family': '"Inter", sans-serif',
+  '--calendar-font-size-base': '15px',
+  
+  // Spacing
+  '--calendar-spacing-md': '10px',
+  
+  // ... customize 60+ properties
 };
 </script>
 ```
 
-**Available Theme Presets:**
+### Customizable Properties
 
-- `THEME_PRESETS.default` - Standard light theme
-- `THEME_PRESETS.dark` - Dark mode theme
-- `THEME_PRESETS.compact` - Smaller spacing and sizing
-- `THEME_PRESETS.highContrast` - High contrast for accessibility
+**All aspects are customizable:**
 
-**Complete theming documentation:** [STYLING.md](./docs/STYLING.md)
+- 🎨 **Colors** (10+ properties)
+  - Backgrounds, borders, text colors
+  - Accent colors, today indicator
+  - Current time line, event colors
+  
+- 📐 **Spacing** (6+ levels)
+  - Padding, margins, gaps
+  - Header spacing, grid spacing
+  
+- ✍️ **Typography** (8+ properties)
+  - Font family, sizes, weights
+  - Line heights, text styles
+  
+- 📏 **Sizing** (15+ properties)
+  - Header dimensions, time column width
+  - Day numbers, hour slot heights
+  - Event sizes, all-day event sizing
+  
+- 🔲 **Borders & Radius** (5+ properties)
+  - Border colors and widths
+  - Border radius (square to round)
+  
+- ⏱️ **Transitions** - Animation speeds
+- 📱 **Mobile Overrides** - Mobile-specific values
+- 📊 **Z-Index** - Layer stacking
 
-You can customize:
+**60+ CSS custom properties available!**
 
-- 🎨 All colors (backgrounds, borders, text, accent colors)
-- 📐 Spacing and sizing (padding, margins, dimensions)
-- ✍️ Typography (fonts, sizes, weights)
-- 🔲 Borders and radius
-- ⏱️ Transitions and animations
-- 📱 Mobile-specific overrides
+### Built-in Theme Presets
 
-See [STYLING.md](./docs/STYLING.md) for complete documentation with examples.
+```javascript
+import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+
+THEME_PRESETS.default       // Standard light theme
+THEME_PRESETS.dark          // Dark mode
+THEME_PRESETS.compact       // Space-efficient
+THEME_PRESETS.highContrast  // Accessibility-focused
+```
+
+### Complete Theming Docs
+
+- **[STYLING.md](./docs/STYLING.md)** - Complete customization guide with examples
+- **[THEME_REFERENCE.md](./docs/THEME_REFERENCE.md)** - All 60+ customizable properties
+- **[examples/theming-examples.js](./examples/theming-examples.js)** - 10 pre-made themes
+
+**What you can customize:**
+- Text fonts and colors
+- Calendar header color and styling
+- Selected day indicator (today) color
+- All backgrounds and borders
+- Event styling and hover states
+- Spacing and sizing
+- Mobile-specific overrides
+- And much more!
 
 ## Installation
 
@@ -192,9 +240,59 @@ calendarApp.eventsService.add({
 
 ## Documentation
 
-For comprehensive documentation, see [USAGE.md](./USAGE.md).
+For comprehensive documentation, see:
 
-For API reference, see [API.md](./API.md).
+- **[USAGE.md](./docs/USAGE.md)** - Complete usage guide and examples
+- **[API.md](./docs/API.md)** - API reference and event structure
+- **[STYLING.md](./docs/STYLING.md)** - Complete theming and customization guide
+- **[THEME_REFERENCE.md](./docs/THEME_REFERENCE.md)** - All 60+ customizable CSS properties
+- **[GHOST_EVENTS.md](./docs/GHOST_EVENTS.md)** - Ghost events API for custom modals
+- **[COLORS.md](./docs/COLORS.md)** - Event color palette (12 Material Design colors)
+- **[examples/theming-examples.js](./examples/theming-examples.js)** - 10 pre-made theme examples
+
+## Internationalization
+
+The calendar includes built-in translations for English (en-US) and Portuguese Portugal (pt-PT). The translations are also exported for use in your application's own i18n setup.
+
+### Using Exported Translations
+
+```javascript
+// Import translations
+import { translations } from '@zehenrique/vue-google-calendar';
+
+// Access translations
+console.log(translations.en.today);     // "Today"
+console.log(translations.pt.today);     // "Hoje"
+
+// Use with vue-i18n or other i18n libraries
+import { createI18n } from 'vue-i18n';
+
+const i18n = createI18n({
+  locale: 'en',
+  messages: {
+    en: {
+      calendar: translations.en,
+      // ... your other translations
+    },
+    pt: {
+      calendar: translations.pt,
+      // ... your other translations
+    }
+  }
+});
+```
+
+### Available Translation Keys
+
+The `translations` object includes keys for all calendar UI elements:
+
+- View names: `today`, `day`, `week`, `month`
+- Event management: `createEvent`, `eventTitle`, `startDate`, `endDate`, `save`, `delete`, etc.
+- Recurrence: `repeat`, `repeatDaily`, `repeatWeekly`, `repeatMonthly`, `repeatYearly`
+- Colors: `tomato`, `flamingo`, `tangerine`, `banana`, `sage`, `basil`, etc.
+- And many more...
+
+See [src/i18n.js](./src/i18n.js) for the complete list of available translations.
 
 ## Event Structure
 
