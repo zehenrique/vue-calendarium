@@ -121,7 +121,8 @@ const scrollToCurrentTime = () => {
       // Only scroll if we have a current time position
       // This means we're viewing today's date
       if (!currentTimePosition.value || currentTimePosition.value <= 0) {
-        hasAutoScrolled.value = true;
+        // Don't set hasAutoScrolled - we didn't actually scroll yet
+        // This allows retry when currentTimePosition becomes available
         return;
       }
 
