@@ -174,7 +174,7 @@ export function createCalendar(config = {}) {
     currentDate: computed(() => currentDate.value),
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
-    enableMobileSidebar: computed(() => mobileSidebarEnabled.value),
+    enableMobileSidebar: mobileSidebarEnabled,
     views: computed(() => availableViews.value),
     visibleEvents,
     ghostEvent: computed(() => ghostEvent.value),
