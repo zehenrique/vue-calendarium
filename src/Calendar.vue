@@ -147,7 +147,7 @@ const events = computed(() => props.calendarApp.visibleEvents.value);
 const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
 const modalsEnabled = computed(() => props.calendarApp.enableModals.value);
-const mobileSidebarEnabled = ref(true); // Always enabled for now
+const mobileSidebarEnabled = computed(() => props.calendarApp.enableMobileSidebar?.value ?? true);
 
 // Computed to get visible calendar IDs
 const visibleCalendarIds = computed(() => 

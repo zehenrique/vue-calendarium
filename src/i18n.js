@@ -153,7 +153,7 @@ const translations = {
     weeks: 'semanas',
     months: 'meses',
     years: 'anos',
-    sunday: 'Do',
+    sunday: 'DOM',
     monday: 'SEG',
     tuesday: 'TER',
     wednesday: 'QUA',

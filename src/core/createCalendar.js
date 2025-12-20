@@ -13,7 +13,8 @@ import { Temporal } from '@js-temporal/polyfill';
  * @param {Array} config.calendars - Initial calendars array
  * @param {String} config.locale - Locale for internationalization ('en-US', 'pt-PT')
  * @param {Object} config.selectedDate - Initial selected date (Temporal.PlainDate)
- * @param {Boolean} config.enableModals - Enable/disable modals
+ * @param {Boolean} config.enableModals - Enable/disable modals (default: true)
+ * @param {Boolean} config.enableMobileSidebar - Enable/disable mobile sidebar (default: true)
  * @param {Function} config.onEventClick - Callback when event is clicked
  * @param {Function} config.onDateChange - Callback when date changes
  * @param {Function} config.onViewChange - Callback when view changes
@@ -48,6 +49,7 @@ export function createCalendar(config = {}) {
     locale = 'en-US',
     selectedDate,
     enableModals = true,
+    enableMobileSidebar = true,
     onEventClick,
     onDateChange,
     onViewChange,
@@ -70,6 +72,7 @@ export function createCalendar(config = {}) {
   const currentView = ref(defaultView);
   const currentDate = ref(selectedDate !== undefined ? selectedDate : _getCurrentDate());
   const modalsEnabled = ref(enableModals);
+  const mobileSidebarEnabled = ref(enableMobileSidebar);
   const currentLocale = ref(locale);
 
   // Available views
@@ -171,6 +174,7 @@ export function createCalendar(config = {}) {
     currentDate: computed(() => currentDate.value),
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
+    enableMobileSidebar: computed(() => mobileSidebarEnabled.value),
     views: computed(() => availableViews.value),
     visibleEvents,
     ghostEvent: computed(() => ghostEvent.value),
@@ -203,6 +207,7 @@ export function createCalendar(config = {}) {
       currentDate,
       currentLocale,
       modalsEnabled,
+      mobileSidebarEnabled,
       ghostEvent
     }
   };
