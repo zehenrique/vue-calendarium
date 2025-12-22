@@ -517,7 +517,7 @@ const dayInfo = computed(() => {
 
 @media (max-width: 768px) {
   .header-content {
-    padding: var(--calendar-mobile-header-padding, 2px 2px);
+    padding: var(--calendar-mobile-header-padding, 10px 2px);
     flex-wrap: nowrap;
     gap: var(--calendar-mobile-header-gap, 8px);
   }

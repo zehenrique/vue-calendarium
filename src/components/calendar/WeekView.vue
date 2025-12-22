@@ -23,7 +23,7 @@
               :key="event.id"
               class="week-event"
               :class="{ 'ghost-event': event.isGhost }"
-              :style="{ ...getEventStyle(event, pixelsPerHour), ...getEventColorStyle(event.color, isEventPast(event)) }"
+              :style="{ ...getEventStyle(event, pixelsPerHour, isMobile), ...getEventColorStyle(event.color, isEventPast(event)) }"
               @click.stop="$emit('event-select', event)">
               <div class="event-title">{{ event.title || '(Sem título)' }}</div>
             </div>
@@ -58,6 +58,10 @@ const props = defineProps({
   currentTimePosition: {
     type: Number,
     default: 0
+  },
+  isMobile: {
+    type: Boolean,
+    default: false
   },
   t: {
     type: Function,

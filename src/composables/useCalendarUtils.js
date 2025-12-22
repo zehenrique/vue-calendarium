@@ -90,8 +90,11 @@ export function getEndOfWeek(date) {
 
 /**
  * Calculate event positioning style for week/day views
+ * @param {Object} event - The event object
+ * @param {number} pixelsPerHour - Pixels per hour for sizing
+ * @param {boolean} isMobile - Whether in mobile mode (5px padding) or desktop (10px padding)
  */
-export function getEventStyle(event, pixelsPerHour = 60) {
+export function getEventStyle(event, pixelsPerHour = 60, isMobile = false) {
   const start = Temporal.PlainDateTime.from(event.start);
   const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
   
@@ -102,9 +105,12 @@ export function getEventStyle(event, pixelsPerHour = 60) {
   const top = (startMinutes / 60) * pixelsPerHour;
   const height = (duration / 60) * pixelsPerHour;
   
+  // Responsive padding: 5px on mobile, 10px on desktop
+  const horizontalPadding = isMobile ? 5 : 10;
+  
   const style = {
     top: `${top}px`,
-    height: `${height}px`
+    height: `calc(${height}px - 2px)`
   };
   
   // If event has column information (from calculateEventColumns), apply it
@@ -114,10 +120,18 @@ export function getEventStyle(event, pixelsPerHour = 60) {
     const widthPercent = event._columnSpan * columnWidth;
 
     style.left = `${leftOffset}%`;
-    style.width = `calc(${widthPercent}% - 2px)`;
+    // Single event: responsive padding. Multiple events: resize all to leave 2px gap on right
+    if (event._totalColumns === 1) {
+      style.width = `calc(100% - ${horizontalPadding}px)`;
+    } else {
+      // For multiple columns, reduce total width by 2px so all columns together leave space on right
+      const totalWidth = 100 - 2;
+      const adjustedWidthPercent = (event._columnSpan / event._totalColumns) * totalWidth;
+      style.width = `${adjustedWidthPercent}%`;
+    }
   } else {
     style.left = '0';
-    style.width = 'calc(100% - 2px)';
+    style.width = `calc(100% - ${horizontalPadding}px)`;
   }
   
   return style;
