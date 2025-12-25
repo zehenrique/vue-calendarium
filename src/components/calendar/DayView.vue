@@ -201,12 +201,12 @@ watch(currentTimePosition, (newVal) => {
 .day-grid {
   display: grid;
   grid-template-columns: var(--calendar-time-column-width, 60px) 1fr;
-  min-height: calc(24 * var(--calendar-pixels-per-hour-day, 45px));
+  min-height: calc(24 * var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
 }
 
 .time-column {
   display: grid;
-  grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day, 45px));
+  grid-template-rows: auto repeat(24, calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1)));
   border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   position: relative;
 }
@@ -221,7 +221,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-slot-label {
-  height: var(--calendar-pixels-per-hour-day, 45px);
+  height: calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
   padding: 0 var(--calendar-spacing-md, 8px);
   font-size: var(--calendar-font-size-xsmall, 10px);
   color: var(--calendar-text-secondary, #70757a);
@@ -276,11 +276,11 @@ watch(currentTimePosition, (newVal) => {
   position: relative;
   border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   display: grid;
-  grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day, 45px));
+  grid-template-rows: repeat(24, calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1)));
 }
 
 .hour-slot {
-  height: var(--calendar-pixels-per-hour-day, 45px);
+  height: calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
   border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
@@ -374,19 +374,19 @@ watch(currentTimePosition, (newVal) => {
   
   .day-grid {
     grid-template-columns: var(--calendar-time-column-width-mobile, 50px) 1fr;
-    min-height: calc(24 * var(--calendar-pixels-per-hour-day-mobile, 38px));
+    min-height: calc(24 * var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
   }
 
   .time-column {
-    grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
+    grid-template-rows: auto repeat(24, calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1)));
   }
   
   .day-column {
-    grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
+    grid-template-rows: repeat(24, calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1)));
   }
 
   .time-slot-label {
-    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
+    height: calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
     font-size: 9px;
     padding: 0 var(--calendar-spacing-sm, 4px);
     align-items: flex-start;
@@ -397,7 +397,7 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .hour-slot {
-    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
+    height: calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
   }
 }
 </style>

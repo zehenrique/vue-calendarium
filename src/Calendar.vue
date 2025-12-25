@@ -157,10 +157,10 @@ const visibleCalendarIds = computed(() =>
 );
 
 const views = ['day', 'week', 'month'];
-const DESKTOP_PIXELS_PER_HOUR_WEEK = 60;
-const MOBILE_PIXELS_PER_HOUR_WEEK = 50;
-const DESKTOP_PIXELS_PER_HOUR_DAY = 45;
-const MOBILE_PIXELS_PER_HOUR_DAY = 38;
+const DESKTOP_PIXELS_PER_HOUR_WEEK = 54;  // 60 * 0.90
+const MOBILE_PIXELS_PER_HOUR_WEEK = 45;   // 50 * 0.90
+const DESKTOP_PIXELS_PER_HOUR_DAY = 40.5; // 45 * 0.90
+const MOBILE_PIXELS_PER_HOUR_DAY = 34.2;  // 38 * 0.90
 
 function readTestNow() {
   if (typeof window === 'undefined') return null;
@@ -726,6 +726,14 @@ watch(showModal, (isOpen) => {
 
 <style scoped>
 .google-calendar {
+  /* 
+   * Centralized height scaling for all grid cells
+   * Change this single value to adjust heights across Week and Day views
+   * Examples: 1.0 = 100% (default), 0.90 = 90%, 0.80 = 80%
+   * Affects: hour slots, time labels, and ensures events stay aligned
+   */
+  --calendar-height-scale: 0.90;
+  
   /* Use CSS custom properties from theme */
   font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', Arial, sans-serif);
   background: var(--calendar-bg, #ffffff);

@@ -161,7 +161,7 @@ watch(currentTimePosition, (newVal) => {
 
 .week-grid {
   display: flex;
-  min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px));
+  min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
 }
 
 .time-column {
@@ -172,7 +172,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-header {
-  min-height: var(--calendar-pixels-per-hour-week, 60px);
+  min-height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
   padding-bottom: var(--calendar-spacing-md, 8px);
   display: flex;
   flex-direction: column;
@@ -180,7 +180,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-slot-label {
-  height: var(--calendar-pixels-per-hour-week, 60px);
+  height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
   padding: 0 var(--calendar-spacing-md, 8px);
   font-size: var(--calendar-font-size-xsmall, 10px);
   color: var(--calendar-text-secondary, #70757a);
@@ -215,7 +215,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .hour-slot {
-  height: var(--calendar-pixels-per-hour-week, 60px);
+  height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
   border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
@@ -301,7 +301,7 @@ watch(currentTimePosition, (newVal) => {
   }
 
   .week-grid {
-    min-height: calc(23 * var(--calendar-pixels-per-hour-week-mobile, 50px));
+    min-height: calc(23 * var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
   
   .time-column {
@@ -323,7 +323,7 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .hour-slot {
-    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
+    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
   
   .week-event {
@@ -351,11 +351,11 @@ watch(currentTimePosition, (newVal) => {
   }
 
   .time-header {
-    min-height: var(--calendar-pixels-per-hour-week-mobile, 50px);
+    min-height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
 
   .time-slot-label {
-    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
+    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
 }
 </style>
