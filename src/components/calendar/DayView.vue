@@ -141,6 +141,11 @@ const scheduleScroll = () => nextTick(scrollToCurrentTime);
 
 onMounted(scheduleScroll);
 
+// Reset hasAutoScrolled when the date prop changes (view change or navigation)
+watch(date, () => {
+  hasAutoScrolled.value = false;
+}, { deep: false });
+
 watch([showCurrentTimeIndicator, dateKey, allDayCount], scheduleScroll);
 
 watch(dateKey, () => {

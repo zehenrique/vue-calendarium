@@ -106,6 +106,11 @@ const scrollToCurrentTime = () => {
 
 onMounted(scheduleScroll);
 
+// Reset hasAutoScrolled when the days change (view change or navigation)
+watch(days, () => {
+  hasAutoScrolled.value = false;
+}, { deep: false });
+
 watch(todayKey, () => {
   hasAutoScrolled.value = false;
 });

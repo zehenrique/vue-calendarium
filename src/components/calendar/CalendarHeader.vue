@@ -12,8 +12,7 @@
           variant="text"
           :aria-label="t('menu')"
           data-testid="mobile-menu-button"
-          @click="$emit('toggle-sidebar')"
-        >
+          @click="$emit('toggle-sidebar')">
           <v-icon>mdi-menu</v-icon>
         </v-btn>
         
@@ -359,7 +358,6 @@ const dayInfo = computed(() => {
 .mobile-view-select {
   min-width: 120px;
   max-width: 120px;
-  padding-right: 8px;
 }
 
 :deep(.v-picker-title) {
@@ -517,7 +515,7 @@ const dayInfo = computed(() => {
 
 @media (max-width: 768px) {
   .header-content {
-    padding: var(--calendar-mobile-header-padding, 10px 2px);
+    padding: var(--calendar-mobile-header-padding, 10px 12px);
     flex-wrap: nowrap;
     gap: var(--calendar-mobile-header-gap, 8px);
   }
