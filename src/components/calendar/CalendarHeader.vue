@@ -446,6 +446,9 @@ const dayInfo = computed(() => {
   cursor: pointer;
   transition: background-color var(--calendar-transition-fast, 0.2s);
   min-height: 40px;
+  max-height: 40px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
 .all-day-events-column:last-child {
@@ -466,6 +469,8 @@ const dayInfo = computed(() => {
   text-overflow: ellipsis;
   cursor: pointer;
   transition: opacity var(--calendar-transition-fast, 0.2s);
+  max-height: 20px;
+  box-sizing: border-box;
 }
 
 .all-day-event:hover {
@@ -552,11 +557,13 @@ const dayInfo = computed(() => {
     border-right: 1px solid var(--calendar-border-color, #e0e0e0);
     padding: 1px;
     min-height: auto;
-    max-height: auto;
+    max-height: 35px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
+    overflow: hidden;
+    box-sizing: border-box;
   }
 
   .all-day-event {
@@ -570,6 +577,8 @@ const dayInfo = computed(() => {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-height: 16px;
+    box-sizing: border-box;
   }
 }
 </style>
