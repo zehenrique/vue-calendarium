@@ -124,8 +124,8 @@ export function getEventStyle(event, pixelsPerHour = 60, isMobile = false) {
     if (event._totalColumns === 1) {
       style.width = `calc(100% - ${horizontalPadding}px)`;
     } else {
-      // For multiple columns, reduce total width by 2px so all columns together leave space on right
-      const totalWidth = 100 - 2;
+      // For multiple columns, reduce total width by 5px so all columns together leave space on right
+      const totalWidth = 100 - 5;
       const adjustedWidthPercent = (event._columnSpan / event._totalColumns) * totalWidth;
       style.width = `${adjustedWidthPercent}%`;
     }

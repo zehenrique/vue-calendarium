@@ -191,7 +191,7 @@ const calendarApp = createCalendar({
   ],
   
   // Locale
-  locale: 'en-US',
+  locale: 'pt-PT',
   
   // Enable modals (can be disabled via ?modals=off URL parameter)
   enableModals: enableModalsFromUrl,
