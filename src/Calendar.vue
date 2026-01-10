@@ -39,10 +39,20 @@
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :is-mobile="isMobile"
+      :enable-drag-and-drop="dragAndDropEnabled"
+      :is-dragging="isDragging"
+      :dragged-event-id="draggedEvent?.id"
+      :drag-transform="dragTransform"
+      :drop-target="dropTarget"
       :t="t"
       @hour-slot-select="handleHourSlotSelect"
       @all-day-select="onAllDaySlotClick"
       @event-select="onEventClick"
+      @event-drag-start="handleEventDragStart"
+      @event-drag-move="handleEventDragMove"
+      @event-drag-end="handleEventDragEnd"
+      @slot-drag-over="handleSlotDragOver"
+      @slot-drag-leave="handleSlotDragLeave"
     />
 
     <DayView
@@ -55,10 +65,20 @@
       :show-current-time-indicator="showCurrentTimeIndicator"
       :current-time-position="currentTimePosition"
       :is-mobile="isMobile"
+      :enable-drag-and-drop="dragAndDropEnabled"
+      :is-dragging="isDragging"
+      :dragged-event-id="draggedEvent?.id"
+      :drag-transform="dragTransform"
+      :drop-target="dropTarget"
       :t="t"
       @hour-slot-select="handleHourSlotSelect"
       @all-day-select="onAllDaySlotClick"
       @event-select="onEventClick"
+      @event-drag-start="handleEventDragStart"
+      @event-drag-move="handleEventDragMove"
+      @event-drag-end="handleEventDragEnd"
+      @slot-drag-over="handleSlotDragOver"
+      @slot-drag-leave="handleSlotDragLeave"
     />
 
     <EventModal
@@ -124,6 +144,7 @@ import {
 import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
 import { expandRecurrence } from './composables/useCalendarInterop.js';
 import { createSwipeController } from './composables/useSwipeGestures.js';
+import { useDragAndDrop } from './composables/useDragAndDrop.js';
 
 const props = defineProps({
   // Calendar app instance (required)
@@ -150,6 +171,7 @@ const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
 const modalsEnabled = computed(() => props.calendarApp.enableModals.value);
 const mobileSidebarEnabled = computed(() => props.calendarApp.enableMobileSidebar?.value ?? true);
+const dragAndDropEnabled = computed(() => props.calendarApp.enableDragAndDrop?.value ?? false);
 
 // Computed to get visible calendar IDs
 const visibleCalendarIds = computed(() => 
@@ -381,6 +403,20 @@ const { destroySwipeGestures, scheduleSwipeInitialization } = createSwipeControl
   onSwipeRight: previousPeriod
 });
 
+// Drag and drop functionality
+const {
+  isDragging,
+  draggedEvent,
+  dragTransform,
+  dropTarget,
+  startDrag,
+  updateDrag,
+  endDrag,
+  setDropTarget,
+  clearDropTarget,
+  cancelDrag
+} = useDragAndDrop();
+
 onMounted(() => {
   initializeMobileDetection();
   updateCurrentTime();
@@ -393,6 +429,12 @@ onMounted(() => {
     const mergedTheme = mergeTheme(props.theme);
     applyTheme(calendarRoot.value, mergedTheme);
   }
+  
+  // Add global mouse event listeners for drag and drop
+  if (typeof window !== 'undefined') {
+    window.addEventListener('mousemove', handleEventDragMove);
+    window.addEventListener('mouseup', handleEventDragEnd);
+  }
 });
 
 onBeforeUnmount(() => {
@@ -404,6 +446,12 @@ onBeforeUnmount(() => {
   }
 
   destroySwipeGestures();
+  
+  // Remove global mouse event listeners
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('mousemove', handleEventDragMove);
+    window.removeEventListener('mouseup', handleEventDragEnd);
+  }
 });
 
 watch(isMobile, (mobile) => {
@@ -681,6 +729,70 @@ function confirmDelete(options = {}) {
   showDeleteConfirm.value = false;
   showEventDetail.value = false;
 }
+
+// Drag and drop handlers
+function handleEventDragStart(event, mouseEvent) {
+  if (!dragAndDropEnabled.value) return;
+  mouseEvent.preventDefault();
+  startDrag(event, mouseEvent);
+}
+
+function handleEventDragMove(mouseEvent) {
+  if (!dragAndDropEnabled.value || !isDragging.value) return;
+  mouseEvent.preventDefault();
+  updateDrag(mouseEvent);
+}
+
+function handleEventDragEnd() {
+  if (!dragAndDropEnabled.value || !isDragging.value) return;
+  
+  const result = endDrag();
+  
+  if (result && result.dropTarget) {
+    const { event, dropTarget: target } = result;
+    
+    // Calculate new start and end times
+    const originalStart = Temporal.PlainDateTime.from(event.start);
+    const originalEnd = event.end ? Temporal.PlainDateTime.from(event.end) : originalStart.add({ hours: 1 });
+    const duration = originalEnd.since(originalStart);
+    
+    // Create new start time with target date and hour
+    const targetDate = Temporal.PlainDate.from(target.date);
+    const newStart = targetDate.toPlainDateTime({ hour: target.hour, minute: 0 });
+    const newEnd = newStart.add(duration);
+    
+    // Update event
+    const updatedEvent = {
+      ...event,
+      start: newStart.toString(),
+      end: newEnd.toString()
+    };
+    
+    // Update in service
+    props.calendarApp.eventsService.update(updatedEvent);
+    
+    // Call callback if provided
+    props.calendarApp.callbacks.onEventDrop?.({
+      event: updatedEvent,
+      originalEvent: event,
+      dropTarget: target
+    });
+    
+    // Trigger update callback
+    props.calendarApp.callbacks.onEventUpdate?.(updatedEvent);
+  }
+}
+
+function handleSlotDragOver(date, hour) {
+  if (!dragAndDropEnabled.value || !isDragging.value) return;
+  setDropTarget({ date, hour });
+}
+
+function handleSlotDragLeave() {
+  if (!dragAndDropEnabled.value || !isDragging.value) return;
+  clearDropTarget();
+}
+
 
 function saveEvent(eventDataFromModal) {
   const eventToSave = eventDataFromModal || newEvent.value;

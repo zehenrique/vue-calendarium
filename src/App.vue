@@ -191,10 +191,13 @@ const calendarApp = createCalendar({
   ],
   
   // Locale
-  locale: 'pt-PT',
+  locale: 'en-US',
   
   // Enable modals (can be disabled via ?modals=off URL parameter)
   enableModals: enableModalsFromUrl,
+
+  // Enable drag and drop
+  enableDragAndDrop: true,
   
   // Callbacks for when modals are disabled
   onEventCreateRequest: (eventData) => {

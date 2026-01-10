@@ -10,7 +10,14 @@
       <div class="week-days-container">
         <div class="week-day-columns">
           <div v-for="day in days" :key="day.key" class="week-day-column">
-            <div v-for="hour in 24" :key="hour" class="hour-slot" @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })"></div>
+            <div
+              v-for="hour in 24"
+              :key="hour"
+              class="hour-slot"
+              :class="{ 'drop-target': isDropTarget(day.date, hour - 1) }"
+              @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })"
+              @mouseenter="handleSlotHover(day.date, hour - 1)"
+            ></div>
             <div
               v-if="showCurrentTimeIndicator && day.isToday"
               class="current-time-indicator"
@@ -22,9 +29,18 @@
               v-for="event in day.events"
               :key="event.id"
               class="week-event"
-              :class="{ 'ghost-event': event.isGhost }"
-              :style="{ ...getEventStyle(event, pixelsPerHour, isMobile), ...getEventColorStyle(event.color, isEventPast(event)) }"
-              @click.stop="$emit('event-select', event)">
+              :class="{
+                'ghost-event': event.isGhost,
+                'is-dragging': isDraggingEvent(event.id),
+                'draggable': enableDragAndDrop && !event.isGhost
+              }"
+              :style="{
+                ...getEventStyle(event, pixelsPerHour, isMobile),
+                ...getEventColorStyle(event.color, isEventPast(event)),
+                ...(isDraggingEvent(event.id) ? { transform: dragTransform, opacity: 0.5, zIndex: 1000, pointerEvents: 'none' } : {})
+              }"
+              @mousedown.stop="handleEventMouseDown(event, $event)"
+              @click.stop="handleEventClick(event)">
               <div class="event-title">{{ event.title || '(Sem título)' }}</div>
             </div>
           </div>
@@ -63,6 +79,26 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  enableDragAndDrop: {
+    type: Boolean,
+    default: false
+  },
+  isDragging: {
+    type: Boolean,
+    default: false
+  },
+  draggedEventId: {
+    type: [String, Number],
+    default: null
+  },
+  dragTransform: {
+    type: String,
+    default: ''
+  },
+  dropTarget: {
+    type: Object,
+    default: null
+  },
   t: {
     type: Function,
     required: true
@@ -71,6 +107,91 @@ const props = defineProps({
 
 const { days, showCurrentTimeIndicator, currentTimePosition } = toRefs(props);
 const todayKey = computed(() => days.value?.find(day => day.isToday)?.key ?? '');
+
+const emit = defineEmits([
+  'hour-slot-select',
+  'event-select',
+  'event-drag-start',
+  'event-drag-move',
+  'event-drag-end',
+  'slot-drag-over',
+  'slot-drag-leave'
+]);
+
+// Drag and drop helper methods
+const isDraggingEvent = (eventId) => {
+  return props.isDragging && props.draggedEventId === eventId;
+};
+
+const isDropTarget = (date, hour) => {
+  if (!props.dropTarget) return false;
+  return props.dropTarget.date.toString() === date.toString() && props.dropTarget.hour === hour;
+};
+
+const dragTimer = ref(null);
+const dragStartPos = ref(null);
+const ignoreNextClick = ref(false);
+
+const handleEventMouseDown = (event, mouseEvent) => {
+  if (!props.enableDragAndDrop || event.isGhost) return;
+  
+  // Store start position
+  dragStartPos.value = { x: mouseEvent.clientX, y: mouseEvent.clientY };
+  ignoreNextClick.value = false;
+  
+  const cleanup = () => {
+    if (dragTimer.value) {
+      clearTimeout(dragTimer.value);
+      dragTimer.value = null;
+    }
+    dragStartPos.value = null;
+    window.removeEventListener('mouseup', onMouseUp);
+    window.removeEventListener('mousemove', onMouseMove);
+  };
+  
+  const onMouseUp = () => {
+    cleanup();
+  };
+  
+  const onMouseMove = (e) => {
+    if (!dragStartPos.value) return;
+    const dx = e.clientX - dragStartPos.value.x;
+    const dy = e.clientY - dragStartPos.value.y;
+    // If moved more than 5px, cancel hold
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
+      cleanup();
+    }
+  };
+  
+  // Start timer for long press (500ms)
+  dragTimer.value = setTimeout(() => {
+    ignoreNextClick.value = true;
+    emit('event-drag-start', event, mouseEvent);
+    cleanup();
+  }, 500);
+  
+  window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('mousemove', onMouseMove);
+};
+
+const handleEventClick = (event) => {
+  if (ignoreNextClick.value) {
+    ignoreNextClick.value = false;
+    return;
+  }
+  if (props.isDragging) return; // Don't emit click if dragging
+  emit('event-select', event);
+};
+
+const handleSlotHover = (date, hour) => {
+  if (!props.isDragging) return;
+  emit('slot-drag-over', date, hour);
+};
+
+const handleSlotLeave = () => {
+  if (!props.isDragging) return;
+  emit('slot-drag-leave');
+};
 
 const scrollContainer = ref(null);
 const hasAutoScrolled = ref(false);
@@ -186,7 +307,7 @@ watch(currentTimePosition, (newVal) => {
 
 .time-slot-label {
   height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
-  padding: 0 var(--calendar-spacing-md, 8px);
+  padding: 0 var(--calendar-spacing-md, 20px);
   font-size: var(--calendar-font-size-xsmall, 10px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
@@ -234,6 +355,11 @@ watch(currentTimePosition, (newVal) => {
   background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
 
+.hour-slot.drop-target {
+  background-color: var(--calendar-drop-target-bg, rgba(26, 115, 232, 0.1));
+  border: 2px dashed var(--calendar-primary-color, #1a73e8);
+}
+
 .week-event {
   position: absolute;
   border-radius: var(--calendar-event-border-radius, 8px);
@@ -246,6 +372,20 @@ watch(currentTimePosition, (newVal) => {
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
+}
+
+.week-event.draggable {
+  cursor: grab;
+}
+
+.week-event.draggable:active {
+  cursor: grabbing;
+}
+
+.week-event.is-dragging {
+  opacity: 0.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
 }
 
 .event-title {
@@ -315,8 +455,8 @@ watch(currentTimePosition, (newVal) => {
   
   .time-slot-label {
     font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 4px);
-    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
+    padding: 0 var(--calendar-spacing-sm, 14px);
+    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
     align-items: flex-start;
     transform: translateY(-7px);
   }
@@ -357,10 +497,6 @@ watch(currentTimePosition, (newVal) => {
 
   .time-header {
     min-height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
-  }
-
-  .time-slot-label {
-    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
 }
 </style>

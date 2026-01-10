@@ -50,13 +50,15 @@ export function createCalendar(config = {}) {
     selectedDate,
     enableModals = true,
     enableMobileSidebar = true,
+    enableDragAndDrop = false,
     onEventClick,
     onDateChange,
     onViewChange,
     onEventCreate,
     onEventUpdate,
     onEventDelete,
-    onEventCreateRequest
+    onEventCreateRequest,
+    onEventDrop
   } = config;
 
   // Validate views
@@ -73,6 +75,7 @@ export function createCalendar(config = {}) {
   const currentDate = ref(selectedDate !== undefined ? selectedDate : _getCurrentDate());
   const modalsEnabled = ref(enableModals);
   const mobileSidebarEnabled = ref(enableMobileSidebar);
+  const dragAndDropEnabled = ref(enableDragAndDrop);
   const currentLocale = ref(locale);
 
   // Available views
@@ -175,6 +178,7 @@ export function createCalendar(config = {}) {
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
     enableMobileSidebar: mobileSidebarEnabled,
+    enableDragAndDrop: computed(() => dragAndDropEnabled.value),
     views: computed(() => availableViews.value),
     visibleEvents,
     ghostEvent: computed(() => ghostEvent.value),
@@ -198,7 +202,8 @@ export function createCalendar(config = {}) {
       onEventCreate,
       onEventUpdate,
       onEventDelete,
-      onEventCreateRequest
+      onEventCreateRequest,
+      onEventDrop
     },
 
     // Internal refs (for component binding)
@@ -208,6 +213,7 @@ export function createCalendar(config = {}) {
       currentLocale,
       modalsEnabled,
       mobileSidebarEnabled,
+      dragAndDropEnabled,
       ghostEvent
     }
   };

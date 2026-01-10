@@ -635,3 +635,63 @@ const recurrences = expandRecurrence(
   '2025-11-01T00:00:00'
 );
 ```
+
+### Drag-and-Drop Functionality
+
+#### Overview
+The drag-and-drop functionality allows users to move events within the calendar by long-pressing and dragging them to a new time slot. This feature is available in both the `WeekView` and `DayView` components.
+
+#### How It Works
+1. **Long Press Activation**:
+   - A long press (500ms) on an event activates the drag-and-drop mode.
+   - The event becomes semi-transparent and follows the cursor.
+
+2. **Dragging**:
+   - The event can be dragged to any valid time slot.
+   - Hovering over a time slot highlights it as a potential drop target.
+
+3. **Dropping**:
+   - Releasing the mouse button drops the event into the highlighted time slot.
+   - The `event-drag-end` event is emitted with the updated event details.
+
+#### Props
+- `enableDragAndDrop` (Boolean): Enables or disables drag-and-drop functionality.
+- `isDragging` (Boolean): Indicates whether an event is currently being dragged.
+- `draggedEventId` (String | Number): The ID of the event being dragged.
+- `dragTransform` (String): CSS transform applied to the dragged event.
+- `dropTarget` (Object): The current drop target (date and hour).
+
+#### Events
+- `event-drag-start`: Emitted when dragging starts.
+- `event-drag-move`: Emitted while dragging.
+- `event-drag-end`: Emitted when dragging ends.
+- `slot-drag-over`: Emitted when hovering over a time slot.
+- `slot-drag-leave`: Emitted when leaving a time slot.
+
+#### Example Usage
+```vue
+<template>
+  <WeekView
+    :enableDragAndDrop="true"
+    @event-drag-start="onDragStart"
+    @event-drag-end="onDragEnd"
+  />
+</template>
+
+<script>
+export default {
+  methods: {
+    onDragStart(event) {
+      console.log('Drag started:', event);
+    },
+    onDragEnd(event) {
+      console.log('Drag ended:', event);
+    }
+  }
+};
+</script>
+```
+
+#### Notes
+- Ensure `enableDragAndDrop` is set to `true` to activate this feature.
+- The `dragTransform` prop can be used to customize the appearance of the dragged event.
