@@ -4,7 +4,7 @@
       <div class="time-column no-border">
         <div v-if="hasAllDayEvents" class="time-header"></div>
         <div v-for="hour in 24" :key="hour" class="time-slot-label">
-          <span v-if="hour > 1">{{ formatHour(hour - 1, locale) }}</span>
+          {{ hour > 1 ? formatHour(hour - 1, locale) : '' }}
         </div>
       </div>
       <div class="day-column-container">
@@ -344,8 +344,9 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-slot-label {
+  width: var(--calendar-time-column-width, 60px);
   height: calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
-  padding: 0 var(--calendar-spacing-md, 8px);
+  padding: 0 var(--calendar-spacing-md, 20px);
   font-size: var(--calendar-font-size-xsmall, 10px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
@@ -353,13 +354,7 @@ watch(currentTimePosition, (newVal) => {
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  overflow: visible;
-}
-
-.time-slot-label span {
-  display: inline-block;
-  position: relative;
-  top: -8px;
+  transform: translateY(-8px);
 }
 
 .day-column-container {
@@ -528,10 +523,12 @@ watch(currentTimePosition, (newVal) => {
   }
 
   .time-slot-label {
+    width: var(--calendar-time-column-width-mobile, 50px);
     height: calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
     font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 4px);
+    padding: 0 var(--calendar-spacing-sm, 14px);
     align-items: flex-start;
+    transform: translateY(-7px);
   }
   
   .day-column {

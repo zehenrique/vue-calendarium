@@ -306,6 +306,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-slot-label {
+  width: var(--calendar-time-column-width, 60px);
   height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
   padding: 0 var(--calendar-spacing-md, 20px);
   font-size: var(--calendar-font-size-xsmall, 10px);
@@ -454,6 +455,7 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .time-slot-label {
+    width: var(--calendar-time-column-width-mobile, 50px);
     font-size: 9px;
     padding: 0 var(--calendar-spacing-sm, 14px);
     height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
