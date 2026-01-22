@@ -308,7 +308,7 @@ watch(currentTimePosition, (newVal) => {
 .time-slot-label {
   width: var(--calendar-time-column-width, 60px);
   height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
-  padding: 0 var(--calendar-spacing-md, 20px);
+  padding: 0 var(--calendar-spacing-md, 16px);
   font-size: var(--calendar-font-size-xsmall, 10px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
@@ -479,7 +479,7 @@ watch(currentTimePosition, (newVal) => {
   .time-slot-label {
     width: var(--calendar-time-column-width-mobile, 50px);
     font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 14px);
+    padding: 0 var(--calendar-spacing-sm, 12px);
     height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
     align-items: flex-start;
     transform: translateY(-7px);
@@ -536,38 +536,45 @@ watch(currentTimePosition, (newVal) => {
   /* UNIVERSAL FIXES (All Mobile Browsers) */
   
   /* FIX 1: Force identical grid column sizing on all grid containers */
-  .calendar-board :deep(.week-day-headers),
-  .calendar-board :deep(.week-all-day-events),
-  .calendar-board :deep(.week-day-columns) {
+  .week-day-headers,
+  .week-all-day-events,
+  .week-day-columns {
     grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    display: grid !important;
   }
   
   /* FIX 2: Ensure time-column-spacer matches time-column width exactly */
-  .calendar-board :deep(.time-column-spacer) {
+  .time-column-spacer {
     width: var(--calendar-time-column-width-mobile, 50px) !important;
     flex-shrink: 0 !important;
     min-width: var(--calendar-time-column-width-mobile, 50px) !important;
     max-width: var(--calendar-time-column-width-mobile, 50px) !important;
   }
   
-  .calendar-board :deep(.time-column) {
+  .time-column {
     width: var(--calendar-time-column-width-mobile, 50px) !important;
     min-width: var(--calendar-time-column-width-mobile, 50px) !important;
     max-width: var(--calendar-time-column-width-mobile, 50px) !important;
   }
   
   /* FIX 3: Force all grid cells to use border-box sizing */
-  .calendar-board :deep(.all-day-events-column),
-  .calendar-board :deep(.week-day-column),
-  .calendar-board :deep(.week-day-header) {
+  .all-day-events-column,
+  .week-day-column,
+  .week-day-header {
     box-sizing: border-box !important;
     -webkit-box-sizing: border-box !important;
   }
   
   /* FIX 4: Prevent any horizontal overflow */
-  .calendar-board :deep(.week-all-day-container),
-  .calendar-board :deep(.week-day-headers-container) {
+  .week-all-day-container,
+  .week-day-headers-container {
     overflow-x: hidden;
+  }
+
+  /* FIX 5: Ensure week-all-day-events is a flex container for proper alignment */
+  .week-all-day-events {
+    display: flex !important;
+    flex-wrap: nowrap !important;
   }
 }
 
@@ -578,8 +585,8 @@ watch(currentTimePosition, (newVal) => {
  */
 @supports (-webkit-touch-callout: none) {
   @media (max-width: 768px) {
-    .calendar-board :deep(.week-day-headers),
-    .calendar-board :deep(.week-all-day-events) {
+    .week-day-headers,
+    .week-all-day-events {
       padding-right: 0 !important;
     }
   }
