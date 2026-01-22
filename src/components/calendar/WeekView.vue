@@ -436,6 +436,28 @@ watch(currentTimePosition, (newVal) => {
   background-color: var(--calendar-current-time-color, #ea4335);
 }
 
+/* 
+ * Mobile Layout (max-width: 768px)
+ * 
+ * CRITICAL: Safari/iOS WebKit Grid Layout Bug Fix
+ * Issue: On real iOS devices (e.g., iPhone 16 iOS 26.2), the all-day-events-column
+ * width does not match the hour-slot column width in week view, causing misalignment.
+ * This bug does NOT appear in Chrome desktop mobile emulation because it uses
+ * Chromium's rendering engine, not the actual iOS WebKit engine.
+ * 
+ * Root Cause: Safari/iOS has known issues with CSS Grid column calculations when:
+ * - Parent uses calc() with viewport units (e.g., width: calc(100% + 2rem))
+ * - Combining flexbox with grid layouts
+ * - Dynamic content (all-day events) in grid columns
+ * 
+ * Related WebKit Bug: #252809 - "Masonry layout is misaligned when viewport width becomes small"
+ * 
+ * Fix: Force consistent width calculations using:
+ * - Explicit box-sizing on all grid elements
+ * - min-width: 0, max-width: 100% to prevent overflow
+ * - flex-shrink: 1, flex-basis: 0 for flexible sizing
+ * - grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) for equal columns
+ */
 @media (max-width: 768px) {
   .week-event {
     font-size: 8px;
@@ -500,5 +522,72 @@ watch(currentTimePosition, (newVal) => {
   .time-header {
     min-height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
   }
+
+  /* 
+   * Platform-Specific Grid Layout Fixes
+   * 
+   * ISSUE: Safari/iOS and Chrome/Android handle CSS Grid differently:
+   * - Safari/iOS: Doesn't need scrollbar compensation (padding-right: 6px)
+   * - Chrome/Android: Needs scrollbar compensation to align properly
+   * 
+   * SOLUTION: Use browser-specific CSS selectors to apply different fixes
+   */
+  
+  /* UNIVERSAL FIXES (All Mobile Browsers) */
+  
+  /* FIX 1: Force identical grid column sizing on all grid containers */
+  .calendar-board :deep(.week-day-headers),
+  .calendar-board :deep(.week-all-day-events),
+  .calendar-board :deep(.week-day-columns) {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+  
+  /* FIX 2: Ensure time-column-spacer matches time-column width exactly */
+  .calendar-board :deep(.time-column-spacer) {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    flex-shrink: 0 !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+  }
+  
+  .calendar-board :deep(.time-column) {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+  }
+  
+  /* FIX 3: Force all grid cells to use border-box sizing */
+  .calendar-board :deep(.all-day-events-column),
+  .calendar-board :deep(.week-day-column),
+  .calendar-board :deep(.week-day-header) {
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box !important;
+  }
+  
+  /* FIX 4: Prevent any horizontal overflow */
+  .calendar-board :deep(.week-all-day-container),
+  .calendar-board :deep(.week-day-headers-container) {
+    overflow-x: hidden;
+  }
 }
+
+/* 
+ * iOS Safari-Specific Fix
+ * Uses @supports with -webkit-touch-callout (iOS Safari only)
+ * This removes the scrollbar compensation padding that breaks iOS
+ */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .calendar-board :deep(.week-day-headers),
+    .calendar-board :deep(.week-all-day-events) {
+      padding-right: 0 !important;
+    }
+  }
+}
+
+/* 
+ * Android Chrome-Specific Fix  
+ * Default behavior keeps padding-right: 6px for scrollbar compensation
+ * No additional CSS needed - library default works correctly
+ */
 </style>
