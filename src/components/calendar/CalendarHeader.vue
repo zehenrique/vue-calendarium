@@ -539,10 +539,6 @@ const dayInfo = computed(() => {
     font-size: 1rem;
   }
 
-  .time-column-spacer {
-    width: var(--calendar-time-column-width-mobile, 50px);
-  }
-
   .week-day-name {
     font-size: var(--calendar-week-day-font-size-mobile, 10px);
   }
@@ -580,5 +576,46 @@ const dayInfo = computed(() => {
     max-height: 16px;
     box-sizing: border-box;
   }
+
+  /* FIX: Force identical grid column sizing on all grid containers */
+  .week-day-headers,
+  .week-all-day-events {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    display: grid !important;
+  }
+
+  /* FIX: Ensure time-column-spacer matches time-column width exactly */
+  .time-column-spacer {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    flex-shrink: 0 !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+  }
+
+  /* FIX: Force all grid cells to use border-box sizing */
+  .week-day-header {
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box !important;
+  }
 }
+
+/* 
+ * iOS Safari-Specific Fix
+ * Uses @supports with -webkit-touch-callout (iOS Safari only)
+ * This removes the scrollbar compensation padding that breaks iOS
+ */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 768px) {
+    .week-day-headers,
+    .week-all-day-events {
+      padding-right: 0 !important;
+    }
+  }
+}
+
+/* 
+ * Android Chrome-Specific Fix  
+ * Default behavior keeps padding-right: 6px for scrollbar compensation
+ * No additional CSS needed - library default works correctly
+ */
 </style>
