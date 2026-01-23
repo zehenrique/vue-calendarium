@@ -308,15 +308,15 @@ watch(currentTimePosition, (newVal) => {
 .time-slot-label {
   width: var(--calendar-time-column-width, 60px);
   height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
-  padding: 0 var(--calendar-spacing-md, 16px);
-  font-size: var(--calendar-font-size-xsmall, 10px);
+  padding: 0 var(--calendar-spacing-md, 14px);
+  font-size: var(--calendar-font-size-xsmall, 12px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  transform: translateY(-8px);
+  transform: translateY(-9px);
 }
 
 .week-days-container {
@@ -478,11 +478,11 @@ watch(currentTimePosition, (newVal) => {
   
   .time-slot-label {
     width: var(--calendar-time-column-width-mobile, 50px);
-    font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 12px);
+    font-size: 11px;
+    padding: 0 var(--calendar-spacing-sm, 10px);
     height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
     align-items: flex-start;
-    transform: translateY(-7px);
+    transform: translateY(-9px);
   }
   
   .week-day-number {
