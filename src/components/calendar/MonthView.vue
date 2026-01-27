@@ -90,6 +90,14 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 767px) {
+  .calendar-body.month-view {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 46px));
+  }
 }
 
 .calendar-grid {

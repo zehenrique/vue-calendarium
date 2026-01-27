@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 const SIDEBAR_SELECTOR = '.mobile-sidebar';
 const SCRIM_SELECTOR = '.v-navigation-drawer__scrim';
@@ -43,11 +43,11 @@ test.describe('Mobile Gesture Tests', () => {
     const box = await calendarBody.boundingBox();
     if (!box) throw new Error('Calendar body not found');
 
-    await calendarBody.dragTo(calendarBody, {
-      sourcePosition: { x: box.width * 0.75, y: box.height / 2 },
-      targetPosition: { x: box.width * 0.25, y: box.height / 2 },
-      force: true,
-    });
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + box.width * 0.75, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.25, y, { steps: 14 });
+    await page.mouse.up();
 
     await expect(page.locator('.week-day-number').first()).not.toHaveText(initialFirstDay || '', { timeout: 2000 });
   });
@@ -60,11 +60,11 @@ test.describe('Mobile Gesture Tests', () => {
     const box = await calendarBody.boundingBox();
     if (!box) throw new Error('Calendar body not found');
 
-    await calendarBody.dragTo(calendarBody, {
-      sourcePosition: { x: box.width * 0.25, y: box.height / 2 },
-      targetPosition: { x: box.width * 0.75, y: box.height / 2 },
-      force: true,
-    });
+    const y = box.y + box.height / 2;
+    await page.mouse.move(box.x + box.width * 0.25, y);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width * 0.75, y, { steps: 14 });
+    await page.mouse.up();
 
     await expect(page.locator('.week-day-number').first()).not.toHaveText(initialFirstDay || '', { timeout: 2000 });
   });

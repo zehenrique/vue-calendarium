@@ -1,7 +1,7 @@
 <template>
   <v-app>
     <v-main>
-      <GoogleCalendar :calendar-app="calendarApp" />
+      <Calendar :calendar-app="calendarApp" />
     </v-main>
   </v-app>
 </template>
@@ -12,7 +12,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
 import { createCalendar } from './core/createCalendar.js';
 import { createViewDay, createViewWeek, createViewMonth } from './core/views.js';
-import GoogleCalendar from './Calendar.vue';
+import Calendar from './Calendar.vue';
 
 const { locale } = useI18n();
 
@@ -26,10 +26,13 @@ function getCurrentDate() {
   return Temporal.Now.plainDateISO();
 }
 
-// Check URL parameters for test configuration
+// Check URL parameters for TEST configuration
 const urlParams = new URLSearchParams(window.location.search);
 const modalsParam = urlParams.get('modals');
 const enableModalsFromUrl = modalsParam !== 'off';
+
+const viewSelectorParam = urlParams.get('viewSelector');
+const mobileViewSelectorPlacementFromUrl = viewSelectorParam === 'header' ? 'header' : 'sidebar';
 
 // Generate sample events
 function generateSampleEvents() {
@@ -193,8 +196,16 @@ const calendarApp = createCalendar({
   // Locale
   locale: 'en-US',
   
-  // Enable modals (can be disabled via ?modals=off URL parameter)
+  // Enable modals
   enableModals: enableModalsFromUrl,
+
+  // Mobile view selector placement (can be changed via ?viewSelector=header|sidebar URL parameter)
+  mobileViewSelectorPlacement: mobileViewSelectorPlacementFromUrl,
+
+  // Mobile interaction toggles
+  enableSwipeGestures: true,
+  enablePinchToZoom: true,
+  enableCurrentTimeIndicator: true,
 
   // Enable drag and drop
   enableDragAndDrop: true,

@@ -12,7 +12,7 @@
       {{ isDark ? '☀️ Light Mode' : '🌙 Dark Mode' }}
     </button>
     
-    <GoogleCalendar 
+    <Calendar 
       :calendar-app="calendarApp" 
       :theme="isDark ? THEME_PRESETS.dark : THEME_PRESETS.default" 
     />
@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const isDark = ref(false);
 
@@ -36,11 +36,11 @@ const calendarApp = createCalendar({
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="brandTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="brandTheme" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
 
 // Your company's brand colors
 const brandTheme = {
@@ -62,11 +62,11 @@ const calendarApp = createCalendar({
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="customTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="customTheme" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
 
 // Only change what you need - rest stays default
 const customTheme = {
@@ -87,12 +87,12 @@ const calendarApp = createCalendar({
 ```vue
 <template>
   <div class="my-app">
-    <GoogleCalendar :calendar-app="calendarApp" />
+    <Calendar :calendar-app="calendarApp" />
   </div>
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -115,12 +115,12 @@ const calendarApp = createCalendar({
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="responsiveTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="responsiveTheme" />
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const isMobile = ref(false);
 
@@ -153,11 +153,11 @@ const calendarApp = createCalendar({
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="customDarkTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="customDarkTheme" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar, THEME_PRESETS, mergeTheme } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS, mergeTheme } from '@zehenrique/vue-google-calendar';
 
 // Start with dark theme, customize specific properties
 const customDarkTheme = mergeTheme({
@@ -187,7 +187,7 @@ THEME_PRESETS.highContrast   // High contrast for accessibility
 
 ## All Customizable Properties
 
-See `docs/STYLING.md` for the complete list of 100+ CSS custom properties you can customize, including:
+See `STYLING.md` for the complete list of 60+ CSS custom properties you can customize, including:
 
 - **Colors**: Backgrounds, borders, text, accents
 - **Typography**: Fonts, sizes, weights
@@ -233,6 +233,6 @@ See `docs/STYLING.md` for the complete list of 100+ CSS custom properties you ca
 
 ## Resources
 
-- [Complete Styling Guide](./docs/STYLING.md) - Full documentation with all properties
-- [API Documentation](./docs/API.md) - Component API reference
-- [Live Demo](./theme-examples.html) - Interactive theme switcher
+- [Complete Styling Guide](./STYLING.md) - Full documentation with all properties
+- [API Documentation](./API.md) - Component API reference
+- [Live Demo](../theme-examples.html) - Interactive theme switcher

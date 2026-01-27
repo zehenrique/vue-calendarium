@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 const WEEK_VIEW_SELECTOR = '.week-view';
 const DAY_VIEW_SELECTOR = '.day-view';

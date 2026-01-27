@@ -19,7 +19,7 @@ Every visual aspect of the calendar can be customized through CSS custom propert
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="customTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="customTheme" />
 </template>
 
 <script setup>
@@ -456,11 +456,11 @@ const BRAND_THEME = {
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="myTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="myTheme" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, Calendar } from '@zehenrique/vue-google-calendar';
 
 const myTheme = {
   '--calendar-primary-color': '#your-brand-color',

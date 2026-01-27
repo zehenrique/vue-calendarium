@@ -170,7 +170,16 @@ export function formatCurrentTitle(view, currentDate, locale, isMobile = false) 
 }
 
 export function shouldDisplayCurrentTimeIndicator(view, currentDate) {
-  const today = Temporal.Now.plainDateISO();
+  const today = (() => {
+    if (typeof window !== 'undefined' && window.__CALENDAR_TEST_NOW__) {
+      try {
+        return Temporal.PlainDateTime.from(window.__CALENDAR_TEST_NOW__).toPlainDate();
+      } catch {
+        // Fall back to real current date
+      }
+    }
+    return Temporal.Now.plainDateISO();
+  })();
 
   if (view === 'day') {
     return Temporal.PlainDate.compare(currentDate, today) === 0;

@@ -388,7 +388,7 @@ export const BLUEPRINT_THEME = {
  * 
  * import { CORPORATE_THEME, DARK_THEME } from './examples/theming-examples.js';
  * 
- * <GoogleCalendar :calendar-app="app" :theme="CORPORATE_THEME" />
+ * <Calendar :calendar-app="app" :theme="CORPORATE_THEME" />
  * 
  * // Or create your own by extending
  * const myTheme = {

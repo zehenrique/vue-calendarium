@@ -10,16 +10,20 @@ test.describe('Drag and Drop (Desktop)', () => {
 
     await page.goto('/');
     
-    // Switch to Week view
     const viewToggle = page.getByTestId('view-toggle');
     await expect(viewToggle).toBeVisible();
-    await viewToggle.click();
-    
-    // Wait for dropdown to open
-    await expect(page.locator('.v-overlay__content')).toBeVisible();
-    
-    // Click Week option
-    await page.getByRole('option', { name: 'Week' }).click();
+
+    // Switch to Week view only if needed (avoids flaky overlay interactions)
+    const viewToggleText = (await viewToggle.innerText()).replace(/\s+/g, ' ').trim();
+    if (!viewToggleText.includes('Week')) {
+      await viewToggle.click();
+      
+      // Wait for dropdown to open
+      await expect(page.locator('.v-overlay__content')).toBeVisible();
+      
+      // Click Week option
+      await page.getByRole('option', { name: 'Week' }).click();
+    }
     
     await expect(page.locator('.week-view')).toBeVisible();
   });

@@ -15,6 +15,10 @@ import { Temporal } from '@js-temporal/polyfill';
  * @param {Object} config.selectedDate - Initial selected date (Temporal.PlainDate)
  * @param {Boolean} config.enableModals - Enable/disable modals (default: true)
  * @param {Boolean} config.enableMobileSidebar - Enable/disable mobile sidebar (default: true)
+ * @param {'header'|'sidebar'} config.mobileViewSelectorPlacement - Where the view selector is shown on mobile (default: 'sidebar')
+ * @param {Boolean} config.enableSwipeGestures - Enable/disable mobile swipe gestures (default: true)
+ * @param {Boolean} config.enablePinchToZoom - Enable/disable pinch-to-zoom on mobile (default: true)
+ * @param {Boolean} config.enableCurrentTimeIndicator - Enable/disable the current time indicator (default: true)
  * @param {Function} config.onEventClick - Callback when event is clicked
  * @param {Function} config.onDateChange - Callback when date changes
  * @param {Function} config.onViewChange - Callback when view changes
@@ -50,6 +54,10 @@ export function createCalendar(config = {}) {
     selectedDate,
     enableModals = true,
     enableMobileSidebar = true,
+    mobileViewSelectorPlacement = 'sidebar',
+    enableSwipeGestures = true,
+    enablePinchToZoom = true,
+    enableCurrentTimeIndicator = true,
     enableDragAndDrop = false,
     onEventClick,
     onDateChange,
@@ -75,6 +83,10 @@ export function createCalendar(config = {}) {
   const currentDate = ref(selectedDate !== undefined ? selectedDate : _getCurrentDate());
   const modalsEnabled = ref(enableModals);
   const mobileSidebarEnabled = ref(enableMobileSidebar);
+  const mobileViewSelectorPlacementRef = ref(mobileViewSelectorPlacement);
+  const swipeGesturesEnabled = ref(enableSwipeGestures);
+  const pinchToZoomEnabled = ref(enablePinchToZoom);
+  const currentTimeIndicatorEnabled = ref(enableCurrentTimeIndicator);
   const dragAndDropEnabled = ref(enableDragAndDrop);
   const currentLocale = ref(locale);
 
@@ -178,6 +190,10 @@ export function createCalendar(config = {}) {
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
     enableMobileSidebar: mobileSidebarEnabled,
+    mobileViewSelectorPlacement: mobileViewSelectorPlacementRef,
+    enableSwipeGestures: computed(() => swipeGesturesEnabled.value),
+    enablePinchToZoom: computed(() => pinchToZoomEnabled.value),
+    enableCurrentTimeIndicator: computed(() => currentTimeIndicatorEnabled.value),
     enableDragAndDrop: computed(() => dragAndDropEnabled.value),
     views: computed(() => availableViews.value),
     visibleEvents,
@@ -213,6 +229,9 @@ export function createCalendar(config = {}) {
       currentLocale,
       modalsEnabled,
       mobileSidebarEnabled,
+      swipeGesturesEnabled,
+      pinchToZoomEnabled,
+      currentTimeIndicatorEnabled,
       dragAndDropEnabled,
       ghostEvent
     }

@@ -101,7 +101,7 @@ watch(() => calendarApp.ghostEvent.value, (ghost) => {
 ```vue
 <template>
   <div>
-    <GoogleCalendar :calendar-app="calendarApp" />
+    <Calendar :calendar-app="calendarApp" />
     
     <!-- Custom Event Creation Modal -->
     <v-dialog v-model="showModal" max-width="600px">
@@ -137,7 +137,7 @@ watch(() => calendarApp.ghostEvent.value, (ghost) => {
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, createViewWeek, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewWeek, Calendar } from '@zehenrique/vue-google-calendar';
 
 const showModal = ref(false);
 const draft = ref({

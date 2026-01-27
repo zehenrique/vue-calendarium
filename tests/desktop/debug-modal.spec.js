@@ -1,9 +1,9 @@
-const { test, expect } = require('@playwright/test');
-const fs = require('fs');
+import { test, expect } from '@playwright/test';
+import fs from 'node:fs';
 
 const TEST_NOW = '2025-01-15T09:00:00';
 
-test('debug modal styling', async ({ page }) => {
+test('debug modal styling', async ({ page }, testInfo) => {
   await page.addInitScript(({ testNow }) => {
     window.__CALENDAR_TEST_NOW__ = testNow;
   }, { testNow: TEST_NOW });
@@ -55,7 +55,7 @@ test('debug modal styling', async ({ page }) => {
     };
   });
 
-  await page.screenshot({ path: 'modal-debug.png', fullPage: true });
+  await page.screenshot({ path: testInfo.outputPath('modal-debug.png'), fullPage: true });
 
   const debugInfo = {
     modalClasses,
@@ -64,7 +64,7 @@ test('debug modal styling', async ({ page }) => {
     modalHTML: modalHTML.substring(0, 2000),
   };
 
-  fs.writeFileSync('modal-debug.json', JSON.stringify(debugInfo, null, 2));
+  fs.writeFileSync(testInfo.outputPath('modal-debug.json'), JSON.stringify(debugInfo, null, 2));
 
   console.log('Modal classes:', modalClasses);
   console.log('Computed styles:', computedStyles);

@@ -30,11 +30,11 @@ All styling values are centralized in `src/config/theme.js` and can be overridde
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="customTheme" />
+  <Calendar :calendar-app="calendarApp" :theme="customTheme" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
 
 const customTheme = {
   '--calendar-primary-color': '#e91e63',  // Pink primary color
@@ -55,7 +55,7 @@ const calendarApp = createCalendar({
 ```vue
 <template>
   <div class="my-calendar-wrapper">
-    <GoogleCalendar :calendar-app="calendarApp" />
+    <Calendar :calendar-app="calendarApp" />
   </div>
 </template>
 
@@ -74,11 +74,11 @@ const calendarApp = createCalendar({
 
 ```vue
 <template>
-  <GoogleCalendar :calendar-app="calendarApp" :theme="THEME_PRESETS.dark" />
+  <Calendar :calendar-app="calendarApp" :theme="THEME_PRESETS.dark" />
 </template>
 
 <script setup>
-import { createCalendar, GoogleCalendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -189,6 +189,7 @@ const fullTheme = mergeTheme(partialTheme);
 | `--calendar-pixels-per-hour-day` | `45px` | Hour slot height in day view |
 | `--calendar-pixels-per-hour-week-mobile` | `50px` | Hour slot height in week view (mobile) |
 | `--calendar-pixels-per-hour-day-mobile` | `38px` | Hour slot height in day view (mobile) |
+| `--calendar-mobile-bottom-padding` | `46px` | Extra bottom padding for Day/Week scroll containers on mobile to keep late hours visible above browser toolbars (added to `env(safe-area-inset-bottom)`) |
 
 ### Borders & Radius
 
@@ -224,7 +225,7 @@ The component includes several built-in theme presets:
 ```javascript
 import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
 
-<GoogleCalendar :theme="THEME_PRESETS.default" />
+<Calendar :theme="THEME_PRESETS.default" />
 ```
 
 Standard Google Calendar-inspired light theme.
@@ -232,7 +233,7 @@ Standard Google Calendar-inspired light theme.
 ### Dark Theme
 
 ```javascript
-<GoogleCalendar :theme="THEME_PRESETS.dark" />
+<Calendar :theme="THEME_PRESETS.dark" />
 ```
 
 Dark mode with inverted colors for low-light environments:
@@ -243,7 +244,7 @@ Dark mode with inverted colors for low-light environments:
 ### Compact Theme
 
 ```javascript
-<GoogleCalendar :theme="THEME_PRESETS.compact" />
+<Calendar :theme="THEME_PRESETS.compact" />
 ```
 
 Reduced spacing and smaller dimensions:
@@ -254,7 +255,7 @@ Reduced spacing and smaller dimensions:
 ### High Contrast Theme
 
 ```javascript
-<GoogleCalendar :theme="THEME_PRESETS.highContrast" />
+<Calendar :theme="THEME_PRESETS.highContrast" />
 ```
 
 Enhanced accessibility with high contrast colors:
@@ -278,7 +279,7 @@ const BRAND_THEME = {
   '--calendar-font-family': '"Montserrat", sans-serif'
 };
 
-<GoogleCalendar :theme="BRAND_THEME" />
+<Calendar :theme="BRAND_THEME" />
 ```
 
 ### Dynamic Theme Switching
@@ -289,7 +290,7 @@ const BRAND_THEME = {
     <button @click="currentTheme = 'light'">Light</button>
     <button @click="currentTheme = 'dark'">Dark</button>
     
-    <GoogleCalendar 
+    <Calendar 
       :calendar-app="calendarApp" 
       :theme="themes[currentTheme]" 
     />
@@ -428,7 +429,7 @@ const eventTheme = {
 
 Make sure you're passing the theme to the component:
 ```vue
-<GoogleCalendar :calendar-app="app" :theme="myTheme" />
+<Calendar :calendar-app="app" :theme="myTheme" />
 ```
 
 ### Styles being overridden

@@ -7,6 +7,13 @@
       :views="views"
       :is-mobile="isMobile"
       :show-mobile-menu="mobileSidebarEnabled"
+      :mobile-view-selector-placement="mobileViewSelectorPlacement"
+      :swipe-enabled="swipeDeckEnabled"
+      :swipe-render-neighbors="swipeRenderNeighbors"
+      :swipe-is-animating="swipeIsAnimating"
+      :swipe-delta-x="swipeDeltaX"
+      :prev-week-days="currentView === 'week' ? prevWeekViewDays : null"
+      :next-week-days="currentView === 'week' ? nextWeekViewDays : null"
       :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
       @toggle-sidebar="toggleMobileSidebar"
@@ -20,74 +27,190 @@
       @date-change="handleDateChange"
     />
 
-    <MonthView
-      v-if="currentView === 'month'"
-      :days="monthDays"
-      :week-days="weekDays"
-      :locale="calendarLocale"
-      :is-mobile="isMobile"
-      :t="t"
-      @day-select="handleMonthDaySelect"
-      @event-select="onEventClick"
-    />
+    <div ref="swipeDeck" class="swipe-deck" :class="{ 'is-active': swipeDeckEnabled, 'is-animating': swipeIsAnimating, 'is-panning': swipeIsPanning }">
+      <div class="swipe-track" :class="{ 'is-single': !swipeRenderNeighbors }" :style="swipeTrackStyle">
+        <div v-if="swipeRenderNeighbors" class="swipe-pane is-prev">
+          <MonthView 
+            v-if="currentView === 'month'" 
+            :days="prevMonthDays" 
+            :week-days="weekDays" 
+            :locale="calendarLocale" 
+            :is-mobile="isMobile" 
+            :t="t" 
+            @day-select="handleMonthDaySelect" 
+            @event-select="onEventClick" />
+          <WeekView 
+            v-else-if="currentView === 'week'" 
+            :days="prevWeekViewDays" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="weekPixelsPerHour" 
+            :show-current-time-indicator="prevShowCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+          <DayView 
+            v-else 
+            :date="previousDate" 
+            :events="prevDayEvents" 
+            :all-day-events="prevDayAllDayEvents" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="dayPixelsPerHour" 
+            :show-current-time-indicator="prevShowCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+        </div>
 
-    <WeekView
-      v-else-if="currentView === 'week'"
-      :days="weekViewDays"
-      :locale="calendarLocale"
-      :pixels-per-hour="weekPixelsPerHour"
-      :show-current-time-indicator="showCurrentTimeIndicator"
-      :current-time-position="currentTimePosition"
-      :is-mobile="isMobile"
-      :enable-drag-and-drop="dragAndDropEnabled"
-      :is-dragging="isDragging"
-      :dragged-event-id="draggedEvent?.id"
-      :drag-transform="dragTransform"
-      :drop-target="dropTarget"
-      :t="t"
-      @hour-slot-select="handleHourSlotSelect"
-      @all-day-select="onAllDaySlotClick"
-      @event-select="onEventClick"
-      @event-drag-start="handleEventDragStart"
-      @event-drag-move="handleEventDragMove"
-      @event-drag-end="handleEventDragEnd"
-      @slot-drag-over="handleSlotDragOver"
-      @slot-drag-leave="handleSlotDragLeave"
-    />
+        <div class="swipe-pane is-current">
+          <MonthView 
+            v-if="currentView === 'month'" 
+            :days="monthDays" 
+            :week-days="weekDays" 
+            :locale="calendarLocale" 
+            :is-mobile="isMobile" 
+            :t="t" 
+            @day-select="handleMonthDaySelect" 
+            @event-select="onEventClick" />
+          <WeekView 
+            v-else-if="currentView === 'week'" 
+            :days="weekViewDays" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="weekPixelsPerHour" 
+            :show-current-time-indicator="showCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+          <DayView 
+            v-else 
+            :date="currentDate" 
+            :events="dayEvents" 
+            :all-day-events="dayAllDayEvents" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="dayPixelsPerHour" 
+            :show-current-time-indicator="showCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+        </div>
 
-    <DayView
-      v-else
-      :date="currentDate"
-      :events="dayEvents"
-      :all-day-events="dayAllDayEvents"
-      :locale="calendarLocale"
-      :pixels-per-hour="dayPixelsPerHour"
-      :show-current-time-indicator="showCurrentTimeIndicator"
-      :current-time-position="currentTimePosition"
-      :is-mobile="isMobile"
-      :enable-drag-and-drop="dragAndDropEnabled"
-      :is-dragging="isDragging"
-      :dragged-event-id="draggedEvent?.id"
-      :drag-transform="dragTransform"
-      :drop-target="dropTarget"
-      :t="t"
-      @hour-slot-select="handleHourSlotSelect"
-      @all-day-select="onAllDaySlotClick"
-      @event-select="onEventClick"
-      @event-drag-start="handleEventDragStart"
-      @event-drag-move="handleEventDragMove"
-      @event-drag-end="handleEventDragEnd"
-      @slot-drag-over="handleSlotDragOver"
-      @slot-drag-leave="handleSlotDragLeave"
-    />
+        <div v-if="swipeRenderNeighbors" class="swipe-pane is-next">
+          <MonthView 
+            v-if="currentView === 'month'" 
+            :days="nextMonthDays" 
+            :week-days="weekDays" 
+            :locale="calendarLocale" 
+            :is-mobile="isMobile" 
+            :t="t" 
+            @day-select="handleMonthDaySelect" 
+            @event-select="onEventClick" />
+          <WeekView 
+            v-else-if="currentView === 'week'" 
+            :days="nextWeekViewDays" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="weekPixelsPerHour" 
+            :show-current-time-indicator="nextShowCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+          <DayView 
+            v-else 
+            :date="nextDate" 
+            :events="nextDayEvents" 
+            :all-day-events="nextDayAllDayEvents" 
+            :locale="calendarLocale" 
+            :pixels-per-hour="dayPixelsPerHour" 
+            :show-current-time-indicator="nextShowCurrentTimeIndicator" 
+            :current-time-position="currentTimePosition" 
+            :is-mobile="isMobile" 
+            :enable-drag-and-drop="dragAndDropEnabled" 
+            :is-dragging="isDragging" 
+            :dragged-event-id="draggedEvent?.id" 
+            :drag-transform="dragTransform" 
+            :drop-target="dropTarget" 
+            :t="t" 
+            @hour-slot-select="handleHourSlotSelect" 
+            @all-day-select="onAllDaySlotClick" 
+            @event-select="onEventClick" 
+            @event-drag-start="handleEventDragStart" 
+            @event-drag-move="handleEventDragMove" 
+            @event-drag-end="handleEventDragEnd" 
+            @slot-drag-over="handleSlotDragOver" 
+            @slot-drag-leave="handleSlotDragLeave" />
+        </div>
+      </div>
+    </div>
 
     <EventModal
       v-if="modalsEnabled"
       v-model="showModal"
       :event="newEvent"
       :calendars="calendars"
-      @save="saveEvent"
-    />
+      @save="saveEvent"/>
 
     <EventDetailModal
       v-if="modalsEnabled"
@@ -96,28 +219,29 @@
       :calendars="calendars"
       :locale="calendarLocale"
       @edit="editSelectedEvent"
-      @delete="deleteSelectedEvent"
-    />
+      @delete="deleteSelectedEvent"/>
 
     <DeleteConfirmModal
       v-if="modalsEnabled"
       v-model="showDeleteConfirm"
       :event="selectedEvent"
-      @confirm="confirmDelete"
-    />
+      @confirm="confirmDelete"/>
 
     <MobileSidebar
       v-if="mobileSidebarEnabled"
       v-model="showMobileSidebar"
+      :current-view="currentView"
+      :views="views"
+      :mobile-view-selector-placement="mobileViewSelectorPlacement"
       :calendars="calendars"
       :visible-calendars="visibleCalendarIds"
       @update:visible-calendars="handleVisibleCalendarsUpdate"
-    />
+      @view-change="handleViewChange"/>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
 import { DEFAULT_COLOR } from './config/colors.js';
@@ -143,7 +267,8 @@ import {
 } from './composables/useCalendarEventHelpers.js';
 import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
 import { expandRecurrence } from './composables/useCalendarInterop.js';
-import { createSwipeController } from './composables/useSwipeGestures.js';
+import { createSwipeTransitionController } from './composables/useSwipeTransition.js';
+import { createPinchToZoomController } from './composables/usePinchToZoom.js';
 import { useDragAndDrop } from './composables/useDragAndDrop.js';
 
 const props = defineProps({
@@ -161,7 +286,7 @@ const props = defineProps({
 
 defineEmits([]);
 
-defineOptions({ name: 'GoogleCalendar' });
+defineOptions({ name: 'Calendar' });
 
 const { t, locale: i18nLocale } = useI18n();
 
@@ -169,9 +294,18 @@ const { t, locale: i18nLocale } = useI18n();
 const events = computed(() => props.calendarApp.visibleEvents.value);
 const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
-const modalsEnabled = computed(() => props.calendarApp.enableModals.value);
+const modalsEnabled = computed(() => props.calendarApp.enableModals?.value ?? true);
 const mobileSidebarEnabled = computed(() => props.calendarApp.enableMobileSidebar?.value ?? true);
 const dragAndDropEnabled = computed(() => props.calendarApp.enableDragAndDrop?.value ?? false);
+
+const mobileViewSelectorPlacement = computed(() => {
+  const placement = props.calendarApp?.mobileViewSelectorPlacement?.value;
+  return placement === 'header' ? 'header' : 'sidebar';
+});
+
+const swipeGesturesEnabled = computed(() => props.calendarApp.enableSwipeGestures?.value ?? true);
+const pinchToZoomEnabled = computed(() => props.calendarApp.enablePinchToZoom?.value ?? true);
+const currentTimeIndicatorEnabled = computed(() => props.calendarApp.enableCurrentTimeIndicator?.value ?? true);
 
 // Computed to get visible calendar IDs
 const visibleCalendarIds = computed(() => 
@@ -179,10 +313,6 @@ const visibleCalendarIds = computed(() =>
 );
 
 const views = ['day', 'week', 'month'];
-const DESKTOP_PIXELS_PER_HOUR_WEEK = 54;  // 60 * 0.90
-const MOBILE_PIXELS_PER_HOUR_WEEK = 45;   // 50 * 0.90
-const DESKTOP_PIXELS_PER_HOUR_DAY = 40.5; // 45 * 0.90
-const MOBILE_PIXELS_PER_HOUR_DAY = 34.2;  // 38 * 0.90
 
 function readTestNow() {
   if (typeof window === 'undefined') return null;
@@ -241,9 +371,20 @@ const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
 const ghostEvent = props.calendarApp._refs.ghostEvent; // Ghost event controlled by app instance
 const calendarRoot = ref(null); // Reference to root element for theme application
+const swipeDeck = ref(null);
+const swipeDeltaX = ref(0);
+const swipeIsPanning = ref(false);
+const swipeIsAnimating = ref(false);
+
+let swipeScrollTopPx = 0;
+let shouldRestoreSwipeScrollTop = false;
+const swipeBlockedByPinch = ref(false);
+let pinchSwipeBlockTimeoutId = null;
 
 let timeIntervalId = null;
 let mobileMediaQuery = null;
+let swipeAnimationTimeoutId = null;
+let swipeWidthPx = 0;
 
 const localeCodeMap = {
   'en-US': 'en',
@@ -272,6 +413,20 @@ watch(
 const weekDays = computed(() =>
   createWeekdayLabels(currentDate.value, calendarLocale.value, isMobile.value, t)
 );
+
+function shiftDateForView(date, view, direction) {
+  if (!date) return date;
+  if (view === 'month') {
+    return direction < 0 ? date.subtract({ months: 1 }) : date.add({ months: 1 });
+  }
+  if (view === 'week') {
+    return direction < 0 ? date.subtract({ weeks: 1 }) : date.add({ weeks: 1 });
+  }
+  return direction < 0 ? date.subtract({ days: 1 }) : date.add({ days: 1 });
+}
+
+const previousDate = computed(() => shiftDateForView(currentDate.value, currentView.value, -1));
+const nextDate = computed(() => shiftDateForView(currentDate.value, currentView.value, 1));
 
 // Expand RRULE-based events into occurrences for the visible range
 function getViewRange(view, date) {
@@ -302,46 +457,62 @@ function getViewRange(view, date) {
   };
 }
 
-const displayEvents = computed(() => {
-  const range = getViewRange(currentView.value, currentDate.value);
+function buildDisplayEventsFor(view, date) {
+  const range = getViewRange(view, date);
   const expanded = [];
-  
+
   // Add ghost event if it exists
   if (ghostEvent.value) {
     expanded.push(ghostEvent.value);
   }
-  
+
   for (const e of events.value) {
     if (e && e.rrule) {
-      expanded.push(
-        ...expandRecurrence(e, range.start, range.end)
-      );
+      expanded.push(...expandRecurrence(e, range.start, range.end));
     } else {
       expanded.push(e);
     }
   }
-  
+
   // Events are already filtered by visibleEvents in calendar app
   return expanded;
-});
+}
+
+const displayEvents = computed(() => buildDisplayEventsFor(currentView.value, currentDate.value));
+const prevDisplayEvents = computed(() => buildDisplayEventsFor(currentView.value, previousDate.value));
+const nextDisplayEvents = computed(() => buildDisplayEventsFor(currentView.value, nextDate.value));
 
 const monthDays = computed(() => createMonthGrid(currentDate.value, displayEvents.value));
+const prevMonthDays = computed(() => createMonthGrid(previousDate.value, prevDisplayEvents.value));
+const nextMonthDays = computed(() => createMonthGrid(nextDate.value, nextDisplayEvents.value));
 
 const weekViewDays = computed(() =>
   createWeekViewDays(currentDate.value, displayEvents.value, calendarLocale.value, t)
 );
+const prevWeekViewDays = computed(() =>
+  createWeekViewDays(previousDate.value, prevDisplayEvents.value, calendarLocale.value, t)
+);
+const nextWeekViewDays = computed(() =>
+  createWeekViewDays(nextDate.value, nextDisplayEvents.value, calendarLocale.value, t)
+);
 
 const weekPixelsPerHour = computed(() =>
-  isMobile.value ? MOBILE_PIXELS_PER_HOUR_WEEK : DESKTOP_PIXELS_PER_HOUR_WEEK
+  getPixelsPerHour('week', isMobile.value)
 );
 
 const dayPixelsPerHour = computed(() =>
-  isMobile.value ? MOBILE_PIXELS_PER_HOUR_DAY : DESKTOP_PIXELS_PER_HOUR_DAY
+  getPixelsPerHour('day', isMobile.value)
 );
 
 const dayEventSummary = computed(() => summarizeEventsForDate(currentDate.value, displayEvents.value));
+const prevDayEventSummary = computed(() => summarizeEventsForDate(previousDate.value, prevDisplayEvents.value));
+const nextDayEventSummary = computed(() => summarizeEventsForDate(nextDate.value, nextDisplayEvents.value));
 const dayEvents = computed(() => dayEventSummary.value.timedEvents);
 const dayAllDayEvents = computed(() => dayEventSummary.value.allDayEvents);
+const prevDayEvents = computed(() => prevDayEventSummary.value.timedEvents);
+const prevDayAllDayEvents = computed(() => prevDayEventSummary.value.allDayEvents);
+const nextDayEvents = computed(() => nextDayEventSummary.value.timedEvents);
+const nextDayAllDayEvents = computed(() => nextDayEventSummary.value.allDayEvents);
 
 const currentTitle = computed(() =>
   formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value)
@@ -354,7 +525,15 @@ const currentTimePosition = computed(() => {
 });
 
 const showCurrentTimeIndicator = computed(() =>
-  shouldDisplayCurrentTimeIndicator(currentView.value, currentDate.value)
+  currentTimeIndicatorEnabled.value && shouldDisplayCurrentTimeIndicator(currentView.value, currentDate.value)
+);
+
+const prevShowCurrentTimeIndicator = computed(() =>
+  currentTimeIndicatorEnabled.value && shouldDisplayCurrentTimeIndicator(currentView.value, previousDate.value)
+);
+
+const nextShowCurrentTimeIndicator = computed(() =>
+  currentTimeIndicatorEnabled.value && shouldDisplayCurrentTimeIndicator(currentView.value, nextDate.value)
 );
 
 function handleMobileQueryChange(event) {
@@ -398,9 +577,194 @@ function updateCurrentTime() {
   currentTime.value = getCurrentDateTime();
 }
 
-const { destroySwipeGestures, scheduleSwipeInitialization } = createSwipeController('.google-calendar', {
-  onSwipeLeft: nextPeriod,
-  onSwipeRight: previousPeriod
+function clearPinchSwipeBlockTimeout() {
+  if (pinchSwipeBlockTimeoutId) {
+    clearTimeout(pinchSwipeBlockTimeoutId);
+    pinchSwipeBlockTimeoutId = null;
+  }
+}
+
+function setSwipeBlockedByPinchFor(ms) {
+  clearPinchSwipeBlockTimeout();
+  swipeBlockedByPinch.value = true;
+  pinchSwipeBlockTimeoutId = setTimeout(() => {
+    pinchSwipeBlockTimeoutId = null;
+    swipeBlockedByPinch.value = false;
+  }, ms);
+}
+
+const swipeDeckEnabled = computed(() => isMobile.value && swipeGesturesEnabled.value && !showMobileSidebar.value);
+const swipeTransitionEnabled = computed(() => {
+  return swipeDeckEnabled.value && !showModal.value && !showEventDetail.value && !showDeleteConfirm.value && !swipeBlockedByPinch.value && !pinchIsZooming.value;
+});
+const swipeRenderNeighbors = computed(() => swipeDeckEnabled.value && (swipeIsPanning.value || swipeIsAnimating.value));
+
+function getSwipePaneBody(paneClass) {
+  const root = swipeDeck.value;
+  if (!root || typeof root.querySelector !== 'function') return null;
+  return root.querySelector(`.swipe-pane.${paneClass} .calendar-body`);
+}
+
+function syncSwipePaneScrollTops(scrollTop) {
+  const prevBody = getSwipePaneBody('is-prev');
+  const nextBody = getSwipePaneBody('is-next');
+  if (prevBody && Math.abs(prevBody.scrollTop - scrollTop) > 1) prevBody.scrollTop = scrollTop;
+  if (nextBody && Math.abs(nextBody.scrollTop - scrollTop) > 1) nextBody.scrollTop = scrollTop;
+}
+
+async function captureAndSyncSwipeScrollTop() {
+  await nextTick();
+  const currentBody = getSwipePaneBody('is-current');
+  if (!currentBody) return;
+  swipeScrollTopPx = currentBody.scrollTop;
+  syncSwipePaneScrollTops(swipeScrollTopPx);
+}
+
+async function restoreCurrentPaneScrollTopAfterNavigation() {
+  if (!shouldRestoreSwipeScrollTop) return;
+  shouldRestoreSwipeScrollTop = false;
+  await nextTick();
+  const currentBody = getSwipePaneBody('is-current');
+  if (!currentBody) return;
+  currentBody.scrollTop = swipeScrollTopPx;
+}
+
+function getSwipeWidth() {
+  const measured = swipeDeck.value?.getBoundingClientRect?.().width;
+  if (Number.isFinite(measured) && measured > 0) return measured;
+  return Number.isFinite(window?.innerWidth) ? window.innerWidth : 0;
+}
+
+function clearSwipeAnimationTimeout() {
+  if (swipeAnimationTimeoutId) {
+    clearTimeout(swipeAnimationTimeoutId);
+    swipeAnimationTimeoutId = null;
+  }
+}
+
+function animateSwipeTo(targetDeltaX, { onComplete } = {}) {
+  clearSwipeAnimationTimeout();
+  swipeIsAnimating.value = true;
+  swipeDeltaX.value = targetDeltaX;
+  swipeAnimationTimeoutId = setTimeout(() => {
+    swipeAnimationTimeoutId = null;
+    swipeIsAnimating.value = false;
+    onComplete?.();
+  }, 220);
+}
+
+function handleSwipePanStart() {
+  if (!swipeTransitionEnabled.value) return;
+  clearSwipeAnimationTimeout();
+  swipeIsPanning.value = true;
+  swipeIsAnimating.value = false;
+  swipeWidthPx = getSwipeWidth();
+  captureAndSyncSwipeScrollTop();
+}
+
+function handleSwipePanMove(event) {
+  if (!swipeTransitionEnabled.value) return;
+  const width = swipeWidthPx || getSwipeWidth();
+  if (!Number.isFinite(width) || width <= 0) return;
+  const rawDx = Number(event?.deltaX ?? 0);
+  const clampedDx = Math.max(-width, Math.min(width, rawDx));
+  swipeDeltaX.value = clampedDx;
+
+  const currentBody = getSwipePaneBody('is-current');
+  if (currentBody) {
+    swipeScrollTopPx = currentBody.scrollTop;
+    syncSwipePaneScrollTops(swipeScrollTopPx);
+  }
+}
+
+function handleSwipePanEnd(event) {
+  if (!swipeTransitionEnabled.value) {
+    swipeIsPanning.value = false;
+    swipeDeltaX.value = 0;
+    return;
+  }
+
+  const width = swipeWidthPx || getSwipeWidth();
+  if (!Number.isFinite(width) || width <= 0) {
+    swipeIsPanning.value = false;
+    swipeDeltaX.value = 0;
+    return;
+  }
+
+  const velocityX = Number(event?.velocityX ?? event?.overallVelocityX ?? event?.velocity ?? 0);
+  const dx = swipeDeltaX.value;
+  const shouldNavigate = Math.abs(dx) > width * 0.22 || Math.abs(velocityX) > 0.35;
+
+  if (shouldNavigate) {
+    const direction = dx < 0 ? 'next' : 'previous';
+    const target = direction === 'next' ? -width : width;
+    animateSwipeTo(target, {
+      onComplete: () => {
+        // Disable transition before resetting the deck back to center.
+        // Vue will batch state updates so we don't show an intermediate "double-next" frame.
+        if (direction === 'next') {
+          nextPeriod();
+        } else {
+          previousPeriod();
+        }
+
+        shouldRestoreSwipeScrollTop = true;
+        restoreCurrentPaneScrollTopAfterNavigation();
+        swipeIsPanning.value = false;
+        swipeDeltaX.value = 0;
+      }
+    });
+    return;
+  }
+
+  // Snap back
+  animateSwipeTo(0, {
+    onComplete: () => {
+      swipeIsPanning.value = false;
+      swipeDeltaX.value = 0;
+    }
+  });
+}
+
+const swipeTrackStyle = computed(() => {
+  const baseOffset = swipeRenderNeighbors.value ? '-33.333333%' : '0%';
+  const dx = `${swipeDeltaX.value}px`;
+  return {
+    transform: `translate3d(calc(${baseOffset} + ${dx}), 0, 0)`,
+    transition: swipeIsAnimating.value ? 'transform 220ms cubic-bezier(0.2, 0, 0, 1)' : 'none'
+  };
+});
+
+
+// Pinch-to-zoom functionality
+const {
+  destroyPinchGestures,
+  schedulePinchInitialization,
+  isZooming: pinchIsZooming,
+  getPixelsPerHour,
+  getZoomRange,
+  resetZoom
+} = createPinchToZoomController('.swipe-pane.is-current .calendar-body', {
+  onZoomChange: ({ view, isMobile, pixelsPerHour }) => {
+  }
+  ,
+  onPinchStart: () => {
+    // Immediately disable swipe while pinching.
+    clearPinchSwipeBlockTimeout();
+    swipeBlockedByPinch.value = true;
+  },
+  onPinchEnd: () => {
+    // After pinch, users often lift fingers asynchronously (2 -> 1 pointer).
+    // Keep swipe disabled briefly to avoid accidental horizontal navigation.
+    setSwipeBlockedByPinchFor(250);
+  }
+});
+
+const { destroySwipeTransitionGestures, scheduleSwipeTransitionInitialization } = createSwipeTransitionController('.google-calendar', {
+  isEnabled: () => swipeTransitionEnabled.value,
+  onPanStart: handleSwipePanStart,
+  onPanMove: handleSwipePanMove,
+  onPanEnd: handleSwipePanEnd
 });
 
 // Drag and drop functionality
@@ -417,18 +781,62 @@ const {
   cancelDrag
 } = useDragAndDrop();
 
+// Update CSS variables when pixels per hour changes
+function updateCSSVariables() {
+  if (!calendarRoot.value) return;
+  
+  const weekPx = weekPixelsPerHour.value;
+  const dayPx = dayPixelsPerHour.value;
+  
+  calendarRoot.value.style.setProperty('--calendar-pixels-per-hour-week', `${weekPx}px`);
+  calendarRoot.value.style.setProperty('--calendar-pixels-per-hour-day', `${dayPx}px`);
+  
+  // Mobile values use the same computed values
+  calendarRoot.value.style.setProperty('--calendar-pixels-per-hour-week-mobile', `${weekPx}px`);
+  calendarRoot.value.style.setProperty('--calendar-pixels-per-hour-day-mobile', `${dayPx}px`);
+
+  // Scale event text with zoom (increases more noticeably on pinch)
+  const clampNumber = (v, min, max) => Math.max(min, Math.min(max, v));
+  const powScale = (ratio) => Math.pow(ratio, 0.45);
+  const weekRange = getZoomRange('week', isMobile.value);
+  const dayRange = getZoomRange('day', isMobile.value);
+  const weekRatio = weekRange?.default ? weekPx / weekRange.default : 1;
+  const dayRatio = dayRange?.default ? dayPx / dayRange.default : 1;
+  const weekScale = clampNumber(powScale(weekRatio), 0.90, 1.35);
+  const dayScale = clampNumber(powScale(dayRatio), 0.90, 1.35);
+
+  const weekBaseFont = isMobile.value ? 10 : 12;
+  const dayBaseFont = isMobile.value ? 12 : 13;
+
+  calendarRoot.value.style.setProperty('--calendar-week-event-font-size', `${(weekBaseFont * weekScale).toFixed(1)}px`);
+  calendarRoot.value.style.setProperty('--calendar-week-event-title-font-size', `${(weekBaseFont * weekScale).toFixed(1)}px`);
+  calendarRoot.value.style.setProperty('--calendar-day-event-font-size', `${(dayBaseFont * dayScale).toFixed(1)}px`);
+  calendarRoot.value.style.setProperty('--calendar-day-event-title-font-size', `${(dayBaseFont * dayScale).toFixed(1)}px`);
+}
+
+// Watch for changes in pixelsPerHour and update CSS
+watch([weekPixelsPerHour, dayPixelsPerHour], updateCSSVariables);
+
 onMounted(() => {
   initializeMobileDetection();
   updateCurrentTime();
 
   timeIntervalId = setInterval(updateCurrentTime, 60000);
-  scheduleSwipeInitialization(isMobile.value);
+  if (swipeGesturesEnabled.value) {
+    scheduleSwipeTransitionInitialization(isMobile.value);
+  }
+  if (pinchToZoomEnabled.value) {
+    schedulePinchInitialization(isMobile.value, currentView.value);
+  }
   
   // Apply theme if provided
   if (props.theme && calendarRoot.value) {
     const mergedTheme = mergeTheme(props.theme);
     applyTheme(calendarRoot.value, mergedTheme);
   }
+  
+  // Set initial CSS variables for zoom
+  updateCSSVariables();
   
   // Add global mouse event listeners for drag and drop
   if (typeof window !== 'undefined') {
@@ -445,7 +853,10 @@ onBeforeUnmount(() => {
     timeIntervalId = null;
   }
 
-  destroySwipeGestures();
+  destroySwipeTransitionGestures();
+  destroyPinchGestures();
+  clearSwipeAnimationTimeout();
+  clearPinchSwipeBlockTimeout();
   
   // Remove global mouse event listeners
   if (typeof window !== 'undefined') {
@@ -454,16 +865,36 @@ onBeforeUnmount(() => {
   }
 });
 
-watch(isMobile, (mobile) => {
-  if (mobile) {
-    scheduleSwipeInitialization(mobile);
+watch([isMobile, swipeGesturesEnabled, pinchToZoomEnabled], ([mobile, swipeEnabled, pinchEnabled]) => {
+  if (!mobile) {
+    destroySwipeTransitionGestures();
+    destroyPinchGestures();
+    clearSwipeAnimationTimeout();
+    clearPinchSwipeBlockTimeout();
+    return;
+  }
+
+  if (swipeEnabled) {
+    scheduleSwipeTransitionInitialization(mobile);
   } else {
-    destroySwipeGestures();
+    destroySwipeTransitionGestures();
+    clearSwipeAnimationTimeout();
+  }
+
+  if (pinchEnabled) {
+    schedulePinchInitialization(mobile, currentView.value);
+  } else {
+    destroyPinchGestures();
   }
 });
 
 watch(currentView, (view) => {
   props.calendarApp.callbacks.onViewChange?.(view);
+  
+  // Re-initialize pinch gestures for the new view
+  if (isMobile.value && pinchToZoomEnabled.value) {
+    schedulePinchInitialization(isMobile.value, view);
+  }
 });
 
 // Watch for theme changes
@@ -838,13 +1269,7 @@ watch(showModal, (isOpen) => {
 
 <style scoped>
 .google-calendar {
-  /* 
-   * Centralized height scaling for all grid cells
-   * Change this single value to adjust heights across Week and Day views
-   * Examples: 1.0 = 100% (default), 0.90 = 90%, 0.80 = 80%
-   * Affects: hour slots, time labels, and ensures events stay aligned
-   */
-  --calendar-height-scale: 0.90;
+  --calendar-height-scale: 1;
   
   /* Use CSS custom properties from theme */
   font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', Arial, sans-serif);
@@ -857,6 +1282,42 @@ watch(showModal, (isOpen) => {
   touch-action: pan-x pan-y;
   user-select: none;
   width: 100%;
+  overscroll-behavior: contain;
+}
+
+.swipe-deck {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.swipe-track {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 300%;
+  height: 100%;
+  will-change: transform;
+}
+
+.swipe-track.is-single {
+  width: 100%;
+}
+
+.swipe-pane {
+  flex: 0 0 33.333333%;
+  height: 100%;
+}
+
+.swipe-track.is-single .swipe-pane {
+  flex: 0 0 100%;
+}
+
+
+.swipe-pane :deep(.calendar-body) {
+  height: 100%;
 }
 
 @media (max-width: 768px) {

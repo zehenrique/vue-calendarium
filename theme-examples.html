@@ -133,7 +133,7 @@
     import { createVuetify } from 'vuetify';
     import * as components from 'vuetify/components';
     import * as directives from 'vuetify/directives';
-    import { createCalendar, createViewDay, createViewWeek, createViewMonth, GoogleCalendar, THEME_PRESETS } from './src/index.js';
+    import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from './src/index.js';
     import { createI18n } from 'vue-i18n';
     import en from './src/locales/en.json';
     import pt from './src/locales/pt.json';
@@ -261,9 +261,9 @@
           currentTheme: null
         };
       },
-      template: `<GoogleCalendar :calendar-app="calendarApp" :theme="currentTheme" />`,
+      template: `<Calendar :calendar-app="calendarApp" :theme="currentTheme" />`,
       components: {
-        GoogleCalendar
+        Calendar
       }
     });
 

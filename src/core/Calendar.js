@@ -3,7 +3,7 @@ import { DEFAULT_COLOR } from '../config/colors.js';
 /**
  * Calendar class represents a calendar category
  */
-export class Calendar {
+export class CalendarModel {
   constructor(data = {}) {
     this.id = data.id || this._generateId();
     this.name = data.name || 'Untitled Calendar';
@@ -38,14 +38,14 @@ export class Calendar {
    * Create calendar from plain object
    */
   static from(data) {
-    return new Calendar(data);
+    return new CalendarModel(data);
   }
 
   /**
    * Clone the calendar
    */
   clone() {
-    return new Calendar(this.toObject());
+    return new CalendarModel(this.toObject());
   }
 
   /**
@@ -71,4 +71,4 @@ export class Calendar {
   }
 }
 
-export default Calendar;
+export default CalendarModel;

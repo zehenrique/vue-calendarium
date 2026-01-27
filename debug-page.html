@@ -2,7 +2,7 @@
   <script type="module" src="/@vite/client"></script>
 
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Calendar Component</title>
   <!-- Google Fonts: Product Sans / Google Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,10 +16,17 @@
       padding: 0;
       box-sizing: border-box;
     }
+
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+    }
     
     body {
       font-family: 'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
       background: #f5f5f5;
+      overscroll-behavior: none;
     }
     
     #app {
@@ -66,6 +73,12 @@
 .nav-controls .v-btn[data-v-ef2aa372] {
   margin: 0 -4px;
 }
+.date-picker-header[data-v-ef2aa372] {
+  display: flex;
+  justify-content: flex-end;
+  padding: 8px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
 .header-right[data-v-ef2aa372] {
   display: flex;
   align-items: center;
@@ -74,7 +87,9 @@
 .mobile-view-select[data-v-ef2aa372] {
   min-width: 120px;
   max-width: 120px;
-  padding-right: 8px;
+}
+[data-v-ef2aa372] .v-picker-title {
+  display: none;
 }
 .calendar-title[data-v-ef2aa372] {
   margin: 0;
@@ -148,6 +163,9 @@
   cursor: pointer;
   transition: background-color var(--calendar-transition-fast, 0.2s);
   min-height: 40px;
+  max-height: 40px;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 .all-day-events-column[data-v-ef2aa372]:last-child {
   border-right: none;
@@ -165,6 +183,8 @@
   text-overflow: ellipsis;
   cursor: pointer;
   transition: opacity var(--calendar-transition-fast, 0.2s);
+  max-height: 20px;
+  box-sizing: border-box;
 }
 .all-day-event[data-v-ef2aa372]:hover {
   opacity: var(--calendar-event-hover-opacity, 0.8);
@@ -206,7 +226,7 @@
 }
 @media (max-width: 768px) {
 .header-content[data-v-ef2aa372] {
-    padding: var(--calendar-mobile-header-padding, 2px 2px);
+    padding: var(--calendar-mobile-header-padding, 10px 10px);
     flex-wrap: nowrap;
     gap: var(--calendar-mobile-header-gap, 8px);
 }
@@ -218,11 +238,11 @@
 .header-right[data-v-ef2aa372] {
     gap: var(--calendar-spacing-sm, 4px);
 }
+[data-testid="mobile-menu-button"][data-v-ef2aa372] {
+    margin-left: -10px;
+}
 .calendar-title[data-v-ef2aa372] {
     font-size: 1rem;
-}
-.time-column-spacer[data-v-ef2aa372] {
-    width: var(--calendar-time-column-width-mobile, 50px);
 }
 .week-day-name[data-v-ef2aa372] {
     font-size: var(--calendar-week-day-font-size-mobile, 10px);
@@ -236,11 +256,13 @@
     border-right: 1px solid var(--calendar-border-color, #e0e0e0);
     padding: 1px;
     min-height: auto;
-    max-height: auto;
+    max-height: 35px;
     display: flex;
     flex-direction: column;
     align-items: stretch;
     justify-content: flex-start;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 .all-day-event[data-v-ef2aa372] {
     font-size: var(--calendar-all-day-event-font-size-mobile, 8.5px);
@@ -253,8 +275,51 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    max-height: 16px;
+    box-sizing: border-box;
+}
+
+  /* FIX: Force identical grid column sizing on all grid containers */
+.week-day-headers[data-v-ef2aa372],
+  .week-all-day-events[data-v-ef2aa372] {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    display: grid !important;
+}
+
+  /* FIX: Ensure time-column-spacer matches time-column width exactly */
+.time-column-spacer[data-v-ef2aa372] {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    flex-shrink: 0 !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+}
+
+  /* FIX: Force all grid cells to use border-box sizing */
+.week-day-header[data-v-ef2aa372] {
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box !important;
 }
 }
+
+/* 
+ * iOS Safari-Specific Fix
+ * Uses @supports with -webkit-touch-callout (iOS Safari only)
+ * This removes the scrollbar compensation padding that breaks iOS
+ */
+@supports (-webkit-touch-callout: none) {
+@media (max-width: 768px) {
+.week-day-headers[data-v-ef2aa372],
+    .week-all-day-events[data-v-ef2aa372] {
+      padding-right: 0 !important;
+}
+}
+}
+
+/* 
+ * Android Chrome-Specific Fix  
+ * Default behavior keeps padding-right: 6px for scrollbar compensation
+ * No additional CSS needed - library default works correctly
+ */
 </style><style type="text/css" data-vite-dev-id="C:/Projects/GitHub/vuejs-calendar/src/components/calendar/MonthView.vue?vue&amp;type=style&amp;index=0&amp;scoped=cb0f161d&amp;lang.css">
 .calendar-body[data-v-cb0f161d] {
   flex: 1;
@@ -272,6 +337,11 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+@media (max-width: 767px) {
+.calendar-body.month-view[data-v-cb0f161d] {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 96px));
+}
 }
 .calendar-grid[data-v-cb0f161d] {
   display: flex;
@@ -408,7 +478,13 @@
   overflow-y: auto; /* Auto show scrollbar only when needed */
   overflow-x: hidden;
   display: block;
-  touch-action: pan-y; /* Allow vertical scroll but enable horizontal swipe gestures */
+  touch-action: pan-y; /* Allow vertical scroll, disable native pinch zoom */
+}
+@media (max-width: 767px) {
+.calendar-body.week-view[data-v-54127138] {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 96px));
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 96px));
+}
 }
 
 /* Style the scrollbar to be thin and match Google Calendar */
@@ -427,7 +503,7 @@
 }
 .week-grid[data-v-54127138] {
   display: flex;
-  min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px));
+  min-height: calc(24 * var(--calendar-pixels-per-hour-week, 60px));
 }
 .time-column[data-v-54127138] {
   width: var(--calendar-time-column-width, 60px);
@@ -443,16 +519,17 @@
   justify-content: flex-start;
 }
 .time-slot-label[data-v-54127138] {
+  width: var(--calendar-time-column-width, 60px);
   height: var(--calendar-pixels-per-hour-week, 60px);
-  padding: 0 var(--calendar-spacing-md, 8px);
-  font-size: var(--calendar-font-size-xsmall, 10px);
+  padding: 0 var(--calendar-spacing-md, 14px);
+  font-size: var(--calendar-font-size-xsmall, 12px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  transform: translateY(-8px);
+  transform: translateY(-9px);
 }
 .week-days-container[data-v-54127138] {
   flex: 1;
@@ -484,11 +561,15 @@
 .hour-slot[data-v-54127138]:hover {
   background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
+.hour-slot.drop-target[data-v-54127138] {
+  background-color: var(--calendar-drop-target-bg, rgba(26, 115, 232, 0.1));
+  border: 2px dashed var(--calendar-primary-color, #1a73e8);
+}
 .week-event[data-v-54127138] {
   position: absolute;
   border-radius: var(--calendar-event-border-radius, 8px);
   padding: var(--calendar-spacing-sm, 4px);
-  font-size: var(--calendar-event-font-size, 12px);
+  font-size: var(--calendar-week-event-font-size, 12px);
   cursor: pointer;
   overflow: hidden;
   transition: opacity var(--calendar-transition-fast, 0.2s);
@@ -497,8 +578,20 @@
   display: flex;
   flex-direction: column;
 }
+.week-event.draggable[data-v-54127138] {
+  cursor: grab;
+}
+.week-event.draggable[data-v-54127138]:active {
+  cursor: grabbing;
+}
+.week-event.is-dragging[data-v-54127138] {
+  opacity: 0.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
 .event-title[data-v-54127138] {
   font-weight: var(--calendar-font-weight-medium, 500);
+  font-size: var(--calendar-week-event-title-font-size, inherit);
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
@@ -538,9 +631,32 @@
   height: 2px;
   background-color: var(--calendar-current-time-color, #ea4335);
 }
+
+/* 
+ * Mobile Layout (max-width: 768px)
+ * 
+ * CRITICAL: Safari/iOS WebKit Grid Layout Bug Fix
+ * Issue: On real iOS devices (e.g., iPhone 16 iOS 26.2), the all-day-events-column
+ * width does not match the hour-slot column width in week view, causing misalignment.
+ * This bug does NOT appear in Chrome desktop mobile emulation because it uses
+ * Chromium's rendering engine, not the actual iOS WebKit engine.
+ * 
+ * Root Cause: Safari/iOS has known issues with CSS Grid column calculations when:
+ * - Parent uses calc() with viewport units (e.g., width: calc(100% + 2rem))
+ * - Combining flexbox with grid layouts
+ * - Dynamic content (all-day events) in grid columns
+ * 
+ * Related WebKit Bug: #252809 - "Masonry layout is misaligned when viewport width becomes small"
+ * 
+ * Fix: Force consistent width calculations using:
+ * - Explicit box-sizing on all grid elements
+ * - min-width: 0, max-width: 100% to prevent overflow
+ * - flex-shrink: 1, flex-basis: 0 for flexible sizing
+ * - grid-template-columns: repeat(auto-fit, minmax(0, 1fr)) for equal columns
+ */
 @media (max-width: 768px) {
 .week-event[data-v-54127138] {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-font-size, 8px);
     padding: 1px 2px;
     border-radius: 3px;
     min-height: 0;
@@ -554,11 +670,12 @@
     width: var(--calendar-time-column-width-mobile, 50px);
 }
 .time-slot-label[data-v-54127138] {
-    font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 4px);
+    width: var(--calendar-time-column-width-mobile, 50px);
+    font-size: 11px;
+    padding: 0 var(--calendar-spacing-sm, 10px);
     height: var(--calendar-pixels-per-hour-week-mobile, 50px);
     align-items: flex-start;
-    transform: translateY(-7px);
+    transform: translateY(-9px);
 }
 .week-day-number[data-v-54127138] {
     font-size: 18px;
@@ -569,7 +686,7 @@
     height: var(--calendar-pixels-per-hour-week-mobile, 50px);
 }
 .week-event[data-v-54127138] {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-font-size, 8px);
     padding: 1px 2px;
     border-radius: 3px;
     min-height: 0;
@@ -577,7 +694,7 @@
     max-width: 100%;
 }
 .week-event .event-title[data-v-54127138] {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-title-font-size, 8px);
     line-height: 1;
     margin-bottom: 0;
     white-space: wrap;
@@ -592,10 +709,80 @@
 .time-header[data-v-54127138] {
     min-height: var(--calendar-pixels-per-hour-week-mobile, 50px);
 }
-.time-slot-label[data-v-54127138] {
-    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
+
+  /* 
+   * Platform-Specific Grid Layout Fixes
+   * 
+   * ISSUE: Safari/iOS and Chrome/Android handle CSS Grid differently:
+   * - Safari/iOS: Doesn't need scrollbar compensation (padding-right: 6px)
+   * - Chrome/Android: Needs scrollbar compensation to align properly
+   * 
+   * SOLUTION: Use browser-specific CSS selectors to apply different fixes
+   */
+  
+  /* UNIVERSAL FIXES (All Mobile Browsers) */
+  
+  /* FIX 1: Force identical grid column sizing on all grid containers */
+.week-day-headers[data-v-54127138],
+  .week-all-day-events[data-v-54127138],
+  .week-day-columns[data-v-54127138] {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+    display: grid !important;
+}
+  
+  /* FIX 2: Ensure time-column-spacer matches time-column width exactly */
+.time-column-spacer[data-v-54127138] {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    flex-shrink: 0 !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+}
+.time-column[data-v-54127138] {
+    width: var(--calendar-time-column-width-mobile, 50px) !important;
+    min-width: var(--calendar-time-column-width-mobile, 50px) !important;
+    max-width: var(--calendar-time-column-width-mobile, 50px) !important;
+}
+  
+  /* FIX 3: Force all grid cells to use border-box sizing */
+.all-day-events-column[data-v-54127138],
+  .week-day-column[data-v-54127138],
+  .week-day-header[data-v-54127138] {
+    box-sizing: border-box !important;
+    -webkit-box-sizing: border-box !important;
+}
+  
+  /* FIX 4: Prevent any horizontal overflow */
+.week-all-day-container[data-v-54127138],
+  .week-day-headers-container[data-v-54127138] {
+    overflow-x: hidden;
+}
+
+  /* FIX 5: Ensure week-all-day-events is a flex container for proper alignment */
+.week-all-day-events[data-v-54127138] {
+    display: flex !important;
+    flex-wrap: nowrap !important;
 }
 }
+
+/* 
+ * iOS Safari-Specific Fix
+ * Uses @supports with -webkit-touch-callout (iOS Safari only)
+ * This removes the scrollbar compensation padding that breaks iOS
+ */
+@supports (-webkit-touch-callout: none) {
+@media (max-width: 768px) {
+.week-day-headers[data-v-54127138],
+    .week-all-day-events[data-v-54127138] {
+      padding-right: 0 !important;
+}
+}
+}
+
+/* 
+ * Android Chrome-Specific Fix  
+ * Default behavior keeps padding-right: 6px for scrollbar compensation
+ * No additional CSS needed - library default works correctly
+ */
 </style><style type="text/css" data-vite-dev-id="C:/Projects/GitHub/vuejs-calendar/src/components/calendar/DayView.vue?vue&amp;type=style&amp;index=0&amp;scoped=0d7dbe57&amp;lang.css">
 .calendar-body[data-v-0d7dbe57] {
   flex: 1;
@@ -611,7 +798,13 @@
   overflow-y: auto; /* Auto show scrollbar only when needed */
   overflow-x: hidden;
   display: block;
-  touch-action: pan-y; /* Allow vertical scroll but enable horizontal swipe gestures */
+  touch-action: pan-y; /* Allow vertical scroll, disable native pinch zoom */
+}
+@media (max-width: 767px) {
+.calendar-body.day-view[data-v-0d7dbe57] {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 96px));
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 96px));
+}
 }
 
 /* Style the scrollbar to be thin and match Google Calendar */
@@ -648,21 +841,17 @@
   border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
 }
 .time-slot-label[data-v-0d7dbe57] {
+  width: var(--calendar-time-column-width, 60px);
   height: var(--calendar-pixels-per-hour-day, 45px);
-  padding: 0 var(--calendar-spacing-md, 8px);
-  font-size: var(--calendar-font-size-xsmall, 10px);
+  padding: 0 var(--calendar-spacing-md, 14px);
+  font-size: var(--calendar-font-size-xsmall, 12px);
   color: var(--calendar-text-secondary, #70757a);
   text-align: right;
   position: relative;
   display: flex;
   align-items: flex-start;
   padding-top: 0;
-  overflow: visible;
-}
-.time-slot-label span[data-v-0d7dbe57] {
-  display: inline-block;
-  position: relative;
-  top: -8px;
+  transform: translateY(-9px);
 }
 .day-column-container[data-v-0d7dbe57] {
   display: grid;
@@ -713,11 +902,15 @@
 .hour-slot[data-v-0d7dbe57]:hover {
   background-color: var(--calendar-day-hover-bg, #f1f3f4);
 }
+.hour-slot.drop-target[data-v-0d7dbe57] {
+  background-color: var(--calendar-drop-target-bg, rgba(26, 115, 232, 0.1));
+  border: 2px dashed var(--calendar-primary-color, #1a73e8);
+}
 .day-event[data-v-0d7dbe57] {
   position: absolute;
   border-radius: var(--calendar-event-border-radius, 8px);
   padding: 2px 4px 0px 8px;
-  font-size: 13px;
+  font-size: var(--calendar-day-event-font-size, 13px);
   cursor: pointer;
   overflow: hidden;
   transition: opacity var(--calendar-transition-fast, 0.2s);
@@ -726,12 +919,24 @@
   display: flex;
   flex-direction: column;
 }
+.day-event.draggable[data-v-0d7dbe57] {
+  cursor: grab;
+}
+.day-event.draggable[data-v-0d7dbe57]:active {
+  cursor: grabbing;
+}
+.day-event.is-dragging[data-v-0d7dbe57] {
+  opacity: 0.5;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
 .day-event[data-v-0d7dbe57]:hover {
   opacity: 0.9;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
 }
 .event-title[data-v-0d7dbe57] {
   font-weight: var(--calendar-font-weight-medium, 500);
+  font-size: var(--calendar-day-event-title-font-size, inherit);
   margin-bottom: var(--calendar-spacing-sm, 4px);
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -770,11 +975,11 @@
 }
 @media (max-width: 768px) {
 .day-event[data-v-0d7dbe57] {
-    font-size: 11px;
+    font-size: var(--calendar-day-event-font-size, 11px);
     border-radius: var(--calendar-border-radius-sm, 6px);
 }
 .event-title[data-v-0d7dbe57] {
-    font-size: 11px;
+    font-size: var(--calendar-day-event-title-font-size, 11px);
     line-height: 1.2;
     margin-bottom: var(--calendar-spacing-xs, 2px);
 }
@@ -789,10 +994,12 @@
     grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
 }
 .time-slot-label[data-v-0d7dbe57] {
+    width: var(--calendar-time-column-width-mobile, 50px);
     height: var(--calendar-pixels-per-hour-day-mobile, 38px);
-    font-size: 9px;
-    padding: 0 var(--calendar-spacing-sm, 4px);
+    font-size: 11px;
+    padding: 0 var(--calendar-spacing-sm, 10px);
     align-items: flex-start;
+    transform: translateY(-9px);
 }
 .day-column[data-v-0d7dbe57] {
     border-right: none;
@@ -1033,6 +1240,8 @@
 }
 </style><style type="text/css" data-vite-dev-id="C:/Projects/GitHub/vuejs-calendar/src/Calendar.vue?vue&amp;type=style&amp;index=0&amp;scoped=b891cfb4&amp;lang.css">
 .google-calendar[data-v-b891cfb4] {
+  --calendar-height-scale: 1;
+  
   /* Use CSS custom properties from theme */
   font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', Arial, sans-serif);
   background: var(--calendar-bg, #ffffff);
@@ -1044,6 +1253,37 @@
   touch-action: pan-x pan-y;
   user-select: none;
   width: 100%;
+}
+.swipe-deck[data-v-b891cfb4] {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+.swipe-track[data-v-b891cfb4] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  width: 300%;
+  height: 100%;
+  will-change: transform;
+}
+.swipe-track.is-single[data-v-b891cfb4] {
+  width: 100%;
+}
+.swipe-pane[data-v-b891cfb4] {
+  flex: 0 0 33.333333%;
+  height: 100%;
+}
+.swipe-track.is-single .swipe-pane[data-v-b891cfb4] {
+  flex: 0 0 100%;
+}
+.swipe-deck.is-panning .swipe-pane[data-v-b891cfb4] {
+  pointer-events: none;
+}
+.swipe-pane[data-v-b891cfb4] .calendar-body {
+  height: 100%;
 }
 @media (max-width: 768px) {
 .google-calendar[data-v-b891cfb4] {
@@ -59129,10 +59369,10 @@ textarea.v-field__input::placeholder {
     }
 </style></head>
 <body>
-  <div id="app" data-v-app=""><div class="v-application v-theme--light v-layout v-layout--full-height v-locale--is-ltr"><div class="v-application__wrap"><main class="v-main" style="--v-layout-left: 0px; --v-layout-right: 0px; --v-layout-top: 0px; --v-layout-bottom: 0px;"><div data-v-b891cfb4="" class="google-calendar"><div data-v-ef2aa372="" data-v-b891cfb4="" class="v-sheet v-theme--light elevation-0 calendar-header header-sticky month-view"><div data-v-ef2aa372="" class="header-content"><div data-v-ef2aa372="" class="header-left"><!--v-if--><!-- Day view (mobile only): Show day number and abbreviated day name --><!--v-if--><!-- Desktop: Text button for Today (placed before prev/next) --><button data-v-ef2aa372="" type="button" class="v-btn v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-outlined" aria-label="Today" data-testid="today-button" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator="">Today</span><!----><!----></button><!-- Desktop: Navigation controls with smaller gap --><div data-v-ef2aa372="" class="nav-controls"><button data-v-ef2aa372="" type="button" class="v-btn v-btn--icon v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-text" aria-label="Previous" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator=""><i data-v-ef2aa372="" class="mdi-chevron-left mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i></span><!----><!----></button><button data-v-ef2aa372="" type="button" class="v-btn v-btn--icon v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-text" aria-label="Next" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator=""><i data-v-ef2aa372="" class="mdi-chevron-right mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i></span><!----><!----></button></div><h1 data-v-ef2aa372="" class="calendar-title text-h6">January 2025</h1></div><div data-v-ef2aa372="" class="header-right"><!-- Mobile: Icon button for Today --><!--v-if--><!-- View selector: Mobile compact dropdown --><!--v-if--><!-- Desktop: compact dropdown for view selection --><div data-v-ef2aa372="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-text-field v-select v-select--single v-select--selected" data-testid="view-toggle" style="min-width: 120px;"><!----><div class="v-input__control"><div class="v-field v-field--active v-field--appended v-field--center-affix v-field--dirty v-field--no-label v-field--variant-outlined v-theme--light rounded-lg v-locale--is-ltr" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="menu-v-3" aria-owns="menu-v-3"><div class="v-field__overlay"></div><div class="v-field__loader"><div class="v-progress-linear v-theme--light v-locale--is-ltr" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height: 2px;"><!----><div class="v-progress-linear__background"></div><div class="v-progress-linear__buffer" style="width: 0%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div></div><!----></div></div><!----><div class="v-field__field" data-no-activator=""><!----><!----><!----><div class="v-field__input" data-no-activator=""><!----><!----><div class="v-select__selection"><span class="v-select__selection-text">Month<!----></span></div><input size="1" role="combobox" type="text" id="input-v-5" inputmode="none" aria-expanded="false" aria-controls="menu-v-3" aria-label="Open" title="Open" value="month"></div><!----></div><!----><div class="v-field__append-inner"><!----><i class="mdi-menu-down mdi v-icon notranslate v-theme--light v-icon--size-default v-select__menu-icon" aria-hidden="true"></i><!----></div><div class="v-field__outline"><div class="v-field__outline__start"></div><!----><div class="v-field__outline__end"></div><!----></div></div></div><!----><!----></div></div></div><!-- Week view day headers --><!--v-if--><!-- Week view all-day events section (only show if there are all-day events) --><!--v-if--></div><div data-v-cb0f161d="" data-v-b891cfb4="" class="calendar-body month-view" t="function t(...args) {
+  <div id="app" data-v-app=""><div class="v-application v-theme--light v-layout v-layout--full-height v-locale--is-ltr"><div class="v-application__wrap"><main class="v-main" style="--v-layout-left: 0px; --v-layout-right: 0px; --v-layout-top: 0px; --v-layout-bottom: 0px;"><div data-v-b891cfb4="" class="google-calendar" style="--calendar-pixels-per-hour-week: 54px; --calendar-pixels-per-hour-day: 40.5px; --calendar-pixels-per-hour-week-mobile: 54px; --calendar-pixels-per-hour-day-mobile: 40.5px; --calendar-week-event-font-size: 12.0px; --calendar-week-event-title-font-size: 12.0px; --calendar-day-event-font-size: 13.0px; --calendar-day-event-title-font-size: 13.0px;"><div data-v-ef2aa372="" data-v-b891cfb4="" class="v-sheet v-theme--light elevation-0 calendar-header header-sticky month-view"><div data-v-ef2aa372="" class="header-content"><div data-v-ef2aa372="" class="header-left"><!--v-if--><!-- Day view (mobile only): Show day number and abbreviated day name --><!--v-if--><!-- Desktop: Text button for Today (placed before prev/next) --><button data-v-ef2aa372="" type="button" class="v-btn v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-outlined" aria-label="Today" data-testid="today-button" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator="">Today</span><!----><!----></button><!-- Desktop: Navigation controls with smaller gap --><div data-v-ef2aa372="" class="nav-controls"><button data-v-ef2aa372="" type="button" class="v-btn v-btn--icon v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-text" aria-label="Previous" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator=""><i data-v-ef2aa372="" class="mdi-chevron-left mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i></span><!----><!----></button><button data-v-ef2aa372="" type="button" class="v-btn v-btn--icon v-theme--light v-btn--density-default rounded-lg v-btn--size-default v-btn--variant-text" aria-label="Next" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator=""><i data-v-ef2aa372="" class="mdi-chevron-right mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i></span><!----><!----></button></div><h1 data-v-ef2aa372="" class="calendar-title text-h6">January 2025</h1></div><div data-v-ef2aa372="" class="header-right"><!-- Mobile: Icon button for Today --><!--v-if--><!-- View selector: Mobile compact dropdown --><!--v-if--><!-- Desktop: compact dropdown for view selection --><div data-v-ef2aa372="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-text-field v-select v-select--single v-select--selected" data-testid="view-toggle" style="min-width: 120px;"><!----><div class="v-input__control"><div class="v-field v-field--active v-field--appended v-field--center-affix v-field--dirty v-field--no-label v-field--variant-outlined v-theme--light rounded-lg v-locale--is-ltr" role="combobox" aria-haspopup="listbox" aria-expanded="false" aria-controls="menu-v-3" aria-owns="menu-v-3"><div class="v-field__overlay"></div><div class="v-field__loader"><div class="v-progress-linear v-theme--light v-locale--is-ltr" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height: 2px;"><!----><div class="v-progress-linear__background"></div><div class="v-progress-linear__buffer" style="width: 0%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div></div><!----></div></div><!----><div class="v-field__field" data-no-activator=""><!----><!----><!----><div class="v-field__input" data-no-activator=""><!----><!----><div class="v-select__selection"><span class="v-select__selection-text">Month<!----></span></div><input size="1" role="combobox" type="text" id="input-v-5" inputmode="none" aria-expanded="false" aria-controls="menu-v-3" aria-label="Open" title="Open" value="month"></div><!----></div><!----><div class="v-field__append-inner"><!----><i class="mdi-menu-down mdi v-icon notranslate v-theme--light v-icon--size-default v-select__menu-icon" aria-hidden="true"></i><!----></div><div class="v-field__outline"><div class="v-field__outline__start"></div><!----><div class="v-field__outline__end"></div><!----></div></div></div><!----><!----></div><!-- Desktop: Date picker --><div data-v-ef2aa372="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-input--readonly v-text-field" data-testid="date-picker" style="min-width: 140px; max-width: 140px;"><!----><div class="v-input__control"><div class="v-field v-field--active v-field--appended v-field--center-affix v-field--dirty v-field--no-label v-field--variant-outlined v-theme--light rounded-lg v-locale--is-ltr"><div class="v-field__overlay"></div><div class="v-field__loader"><div class="v-progress-linear v-theme--light v-locale--is-ltr" role="progressbar" aria-hidden="true" aria-valuemin="0" aria-valuemax="100" style="top: 0px; height: 0px; --v-progress-linear-height: 2px;"><!----><div class="v-progress-linear__background"></div><div class="v-progress-linear__buffer" style="width: 0%;"></div><div class="v-progress-linear__indeterminate"><div class="v-progress-linear__indeterminate long"></div><div class="v-progress-linear__indeterminate short"></div></div><!----></div></div><!----><div class="v-field__field" data-no-activator=""><!----><!----><!----><input readonly="" size="1" type="text" id="input-v-10" aria-label="Select date" aria-haspopup="menu" aria-expanded="false" aria-controls="v-menu-v-8" aria-owns="v-menu-v-8" class="v-field__input" value="15/01/2025"><!----></div><!----><div class="v-field__append-inner"><i data-v-ef2aa372="" class="mdi-calendar mdi v-icon notranslate v-theme--light v-icon--size-small" aria-hidden="true"></i><!----></div><div class="v-field__outline"><div class="v-field__outline__start"></div><!----><div class="v-field__outline__end"></div><!----></div></div></div><!----><!----></div><!----></div></div><!-- Week view day headers --><!--v-if--><!-- Week view all-day events section (only show if there are all-day events) --><!--v-if--></div><div data-v-b891cfb4="" class="swipe-deck"><div data-v-b891cfb4="" class="swipe-track is-single" style="transform: translate3d(calc(0% + 0px), 0px, 0px); transition: none;"><!--v-if--><div data-v-b891cfb4="" class="swipe-pane is-current"><div data-v-cb0f161d="" data-v-b891cfb4="" class="calendar-body month-view" t="function t(...args) {
     return wrapWithDeps((context) =&gt; Reflect.apply(translate, null, [context, ...args]), () =&gt; parseTranslateArgs(...args), &quot;translate&quot;, (root) =&gt; Reflect.apply(root.t, root, [...args]), (key) =&gt; key, (val) =&gt; isString(val));
-  }"><div data-v-cb0f161d="" class="calendar-grid"><div data-v-cb0f161d="" class="day-headers"><div data-v-cb0f161d="" class="day-header">Mon</div><div data-v-cb0f161d="" class="day-header">Tue</div><div data-v-cb0f161d="" class="day-header">Wed</div><div data-v-cb0f161d="" class="day-header">Thu</div><div data-v-cb0f161d="" class="day-header">Fri</div><div data-v-cb0f161d="" class="day-header">Sat</div><div data-v-cb0f161d="" class="day-header">Sun</div></div><div data-v-cb0f161d="" class="calendar-days"><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">30</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">31</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">1</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">2</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">3</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">4</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">5</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">6</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">7</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">8</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">9</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">10</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Workshop 13:00" style="background-color: rgba(11, 128, 67, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Workshop</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">11</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">12</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">13</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Team Building 15:00" style="background-color: rgba(246, 191, 38, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Team Building</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">14</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">15</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Team Meeting 10:00" style="background-color: rgba(25, 103, 210, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Team Meeting</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Lunch Break 12:00" style="background-color: rgba(11, 128, 67, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Lunch Break</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Project Review 14:00" style="background-color: rgba(213, 0, 0, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Project Review</span></button><button data-v-cb0f161d="" type="button" class="more-events"> +3</button></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">16</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Design Discussion 11:00" style="background-color: rgba(246, 191, 38, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Design Discussion</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">17</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="All-Day Meeting All day" style="background-color: rgba(213, 0, 0, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">All-Day Meeting</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Code Review 13:00" style="background-color: rgba(25, 103, 210, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Code Review</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">18</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Sprint Planning 10:00" style="background-color: rgba(213, 0, 0, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Sprint Planning</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">19</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">20</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Client Presentation 12:00" style="background-color: rgba(11, 128, 67, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Client Presentation</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">21</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">22</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Conference All day" style="background-color: rgba(25, 103, 210, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Conference</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">23</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">24</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">25</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">26</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">27</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">28</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">29</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.4); color: rgb(0, 0, 0); opacity: 0.7;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">30</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">31</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">1</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">2</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div></div></div></div><!----><!----><!-- Mobile Bottom Sheet --><!--v-if--><!-- Custom recurrence picker - outside main dialog --><!----><!----><!----><!----><!----><!----><nav class="v-navigation-drawer v-navigation-drawer--left v-navigation-drawer--temporary v-theme--light mobile-sidebar" data-v-62c88df0="" style="left: 0px; z-index: 1004; transform: translateX(-280px); position: fixed; height: calc(100% + 0px); top: 0px; bottom: 0px; width: 280px;"><!----><!----><div class="v-navigation-drawer__content"><div data-v-62c88df0="" class="v-list v-theme--light bg-transparent v-list--density-default v-list--one-line py-2" tabindex="0" role="list"><div data-v-62c88df0="" class="v-list-item v-theme--light v-list-item--density-default v-list-item--one-line rounded-0 v-list-item--variant-text px-4 py-3" role="listitem"><!----><span class="v-list-item__underlay"></span><div class="v-list-item__prepend"><span data-v-62c88df0="" class="text-h6 font-weight-medium">Menu</span><div class="v-list-item__spacer"></div></div><div class="v-list-item__content" data-no-activator=""><!----><!----><!----></div><div class="v-list-item__append"><button data-v-62c88df0="" type="button" class="v-btn v-btn--icon v-theme--light v-btn--density-default rounded-lg v-btn--size-small v-btn--variant-text" aria-label="Close" style="text-transform: none;"><span class="v-btn__overlay"></span><span class="v-btn__underlay"></span><!----><span class="v-btn__content" data-no-activator=""><i data-v-62c88df0="" class="mdi-close mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i></span><!----><!----></button><div class="v-list-item__spacer"></div></div></div></div><hr data-v-62c88df0="" class="v-divider v-theme--light my-2" aria-orientation="horizontal" role="separator"><!-- Calendars --><div data-v-62c88df0="" class="v-list-subheader px-4 py-2 text-caption font-weight-medium"><div class="v-list-subheader__text">Calendars</div></div><div data-v-62c88df0="" class="v-list v-theme--light bg-transparent v-list--density-comfortable v-list--one-line py-0" tabindex="0" role="list"><div data-v-62c88df0="" class="v-list-item v-list-item--link v-theme--light v-list-item--density-comfortable v-list-item--one-line rounded-lg v-list-item--variant-text px-4 my-1" tabindex="-2" role="listitem"><span class="v-list-item__overlay"></span><span class="v-list-item__underlay"></span><div class="v-list-item__prepend"><div data-v-62c88df0="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-checkbox calendar-checkbox"><!----><div class="v-input__control"><div class="v-selection-control v-selection-control--dirty v-selection-control--density-compact v-checkbox-btn"><div class="v-selection-control__wrapper" style="color: rgb(25, 103, 210); caret-color: rgb(25, 103, 210);"><!----><div class="v-selection-control__input"><i class="mdi-checkbox-marked mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i><input checked="" id="checkbox-v-10" aria-disabled="false" type="checkbox" value="true"></div></div><!----></div></div><!----><!----></div><div class="v-list-item__spacer"></div></div><div class="v-list-item__content" data-no-activator=""><!----><!----><div data-v-62c88df0="" class="d-flex align-center"><div data-v-62c88df0="" class="v-avatar v-theme--light v-avatar--density-default v-avatar--variant-flat mr-3" style="background-color: rgb(25, 103, 210); color: rgb(255, 255, 255); caret-color: rgb(255, 255, 255); width: 12px; height: 12px;"><!----><!----><span class="v-avatar__underlay"></span></div><div data-v-62c88df0="" class="v-list-item-title text-body-2">Work</div></div></div><!----></div><div data-v-62c88df0="" class="v-list-item v-list-item--link v-theme--light v-list-item--density-comfortable v-list-item--one-line rounded-lg v-list-item--variant-text px-4 my-1" tabindex="-2" role="listitem"><span class="v-list-item__overlay"></span><span class="v-list-item__underlay"></span><div class="v-list-item__prepend"><div data-v-62c88df0="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-checkbox calendar-checkbox"><!----><div class="v-input__control"><div class="v-selection-control v-selection-control--dirty v-selection-control--density-compact v-checkbox-btn"><div class="v-selection-control__wrapper" style="color: rgb(11, 128, 67); caret-color: rgb(11, 128, 67);"><!----><div class="v-selection-control__input"><i class="mdi-checkbox-marked mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i><input checked="" id="checkbox-v-13" aria-disabled="false" type="checkbox" value="true"></div></div><!----></div></div><!----><!----></div><div class="v-list-item__spacer"></div></div><div class="v-list-item__content" data-no-activator=""><!----><!----><div data-v-62c88df0="" class="d-flex align-center"><div data-v-62c88df0="" class="v-avatar v-theme--light v-avatar--density-default v-avatar--variant-flat mr-3" style="background-color: rgb(11, 128, 67); color: rgb(255, 255, 255); caret-color: rgb(255, 255, 255); width: 12px; height: 12px;"><!----><!----><span class="v-avatar__underlay"></span></div><div data-v-62c88df0="" class="v-list-item-title text-body-2">Personal</div></div></div><!----></div><div data-v-62c88df0="" class="v-list-item v-list-item--link v-theme--light v-list-item--density-comfortable v-list-item--one-line rounded-lg v-list-item--variant-text px-4 my-1" tabindex="-2" role="listitem"><span class="v-list-item__overlay"></span><span class="v-list-item__underlay"></span><div class="v-list-item__prepend"><div data-v-62c88df0="" class="v-input v-input--horizontal v-input--center-affix v-input--density-compact v-theme--light v-locale--is-ltr v-input--dirty v-checkbox calendar-checkbox"><!----><div class="v-input__control"><div class="v-selection-control v-selection-control--dirty v-selection-control--density-compact v-checkbox-btn"><div class="v-selection-control__wrapper" style="color: rgb(213, 0, 0); caret-color: rgb(213, 0, 0);"><!----><div class="v-selection-control__input"><i class="mdi-checkbox-marked mdi v-icon notranslate v-theme--light v-icon--size-default" aria-hidden="true"></i><input checked="" id="checkbox-v-16" aria-disabled="false" type="checkbox" value="true"></div></div><!----></div></div><!----><!----></div><div class="v-list-item__spacer"></div></div><div class="v-list-item__content" data-no-activator=""><!----><!----><div data-v-62c88df0="" class="d-flex align-center"><div data-v-62c88df0="" class="v-avatar v-theme--light v-avatar--density-default v-avatar--variant-flat mr-3" style="background-color: rgb(213, 0, 0); color: rgb(255, 255, 255); caret-color: rgb(255, 255, 255); width: 12px; height: 12px;"><!----><!----><span class="v-avatar__underlay"></span></div><div data-v-62c88df0="" class="v-list-item-title text-body-2">Family</div></div></div><!----></div></div></div><!----></nav><!----></div></main></div></div></div>
-  <script type="module" src="/src/main.js"></script>
+  }"><div data-v-cb0f161d="" class="calendar-grid"><div data-v-cb0f161d="" class="day-headers"><div data-v-cb0f161d="" class="day-header">Mon</div><div data-v-cb0f161d="" class="day-header">Tue</div><div data-v-cb0f161d="" class="day-header">Wed</div><div data-v-cb0f161d="" class="day-header">Thu</div><div data-v-cb0f161d="" class="day-header">Fri</div><div data-v-cb0f161d="" class="day-header">Sat</div><div data-v-cb0f161d="" class="day-header">Sun</div></div><div data-v-cb0f161d="" class="calendar-days"><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">30</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">31</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">1</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">2</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">3</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">4</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">5</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">6</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">7</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">8</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">9</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">10</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Workshop 13:00" style="background-color: rgba(11, 128, 67, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Workshop</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">11</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">12</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">13</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Team Building 15:00" style="background-color: rgba(246, 191, 38, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Team Building</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">14</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">15</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Team Meeting 10:00" style="background-color: rgba(25, 103, 210, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Team Meeting</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Lunch Break 12:00" style="background-color: rgba(11, 128, 67, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Lunch Break</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Project Review 14:00" style="background-color: rgba(213, 0, 0, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Project Review</span></button><button data-v-cb0f161d="" type="button" class="more-events"> +3</button></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">16</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Design Discussion 11:00" style="background-color: rgba(246, 191, 38, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Design Discussion</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">17</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="All-Day Meeting All day" style="background-color: rgba(213, 0, 0, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">All-Day Meeting</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Code Review 13:00" style="background-color: rgba(25, 103, 210, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Code Review</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">18</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Sprint Planning 10:00" style="background-color: rgba(213, 0, 0, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Sprint Planning</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">19</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">20</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Client Presentation 12:00" style="background-color: rgba(11, 128, 67, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Client Presentation</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">21</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">22</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Conference All day" style="background-color: rgba(25, 103, 210, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Conference</span></button><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">23</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">24</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">25</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">26</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">27</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">28</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">29</div><div data-v-cb0f161d="" class="day-events"><button data-v-cb0f161d="" type="button" class="event" aria-label="Weekly Standup (Recurring) 10:00" style="background-color: rgba(230, 124, 115, 0.5); color: rgb(0, 0, 0); opacity: 0.5;"><span data-v-cb0f161d="">Weekly Standup (Recurring)</span></button><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">30</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day"><div data-v-cb0f161d="" class="day-number">31</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">1</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div><div data-v-cb0f161d="" class="calendar-day other-month"><div data-v-cb0f161d="" class="day-number">2</div><div data-v-cb0f161d="" class="day-events"><!--v-if--></div></div></div></div></div></div><!--v-if--></div></div><!----><!----><!-- Mobile Bottom Sheet --><!--v-if--><!-- Custom recurrence picker - outside main dialog --><!----><!----><!----><!----><!----><!----><nav class="v-navigation-drawer v-navigation-drawer--left v-navigation-drawer--temporary v-theme--light mobile-sidebar" data-v-62c88df0="" style="left: 0px; z-index: 1004; transform: translateX(-280px); position: fixed; height: calc(100% + 0px); top: 0px; bottom: 0px; width: 280px;"><!----><!----><div class="v-navigation-drawer__content"><!--v-if--></div><!----></nav><!----></div></main></div></div></div>
+  <script type="module" src="/src/main.js?t=1769524888426"></script>
 
 
 </body></html>

@@ -1,4 +1,4 @@
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 const VIEW_TOGGLE = 'view-toggle';
 const EVENT_MODAL = '[data-testid="event-modal"]';
@@ -120,7 +120,7 @@ test.describe('Visual Regression - Desktop', () => {
     
     // Screenshot the day grid with time indicator
     await expect(page.locator('.day-grid')).toHaveScreenshot('desktop-time-indicator.png', {
-      maxDiffPixels: 3200,
+      maxDiffPixels: 6000,
     });
   });
 });

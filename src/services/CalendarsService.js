@@ -1,12 +1,12 @@
 import { ref, computed } from 'vue';
-import { Calendar } from '../core/Calendar.js';
+import { CalendarModel } from '../core/Calendar.js';
 
 /**
  * Calendars Service - Manages calendar categories
  */
 export class CalendarsService {
   constructor(initialCalendars = []) {
-    this._calendars = ref(initialCalendars.map(c => Calendar.from(c)));
+    this._calendars = ref(initialCalendars.map(c => CalendarModel.from(c)));
   }
 
   /**
@@ -28,7 +28,7 @@ export class CalendarsService {
    * Add a new calendar
    */
   add(calendarData) {
-    const calendar = Calendar.from(calendarData);
+    const calendar = CalendarModel.from(calendarData);
     this._calendars.value.push(calendar);
     return calendar.toObject();
   }
@@ -61,7 +61,7 @@ export class CalendarsService {
    * Set all calendars (replaces existing)
    */
   set(calendars) {
-    this._calendars.value = calendars.map(c => Calendar.from(c));
+    this._calendars.value = calendars.map(c => CalendarModel.from(c));
   }
 
   /**

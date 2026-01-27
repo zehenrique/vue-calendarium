@@ -76,6 +76,7 @@ const translations = {
     calendars: 'Calendars',
     menu: 'Menu',
     view: 'view',
+    views: 'Views',
     confirmDelete: 'Are you sure you want to delete this event?',
     confirmDeleteTitle: 'Delete event',
     confirmDeleteRecurring: 'This is a recurring event',
@@ -90,7 +91,11 @@ const translations = {
     doesNotRepeat: 'Does not repeat',
     addDescription: 'Add description or attachments',
     moreOptions: 'More options',
-    email: 'Email'
+    email: 'Email',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    resetZoom: 'Reset zoom',
+    zoom: 'Zoom'
   },
   pt: {
     today: 'Hoje',
@@ -169,6 +174,7 @@ const translations = {
     calendars: 'Calendários',
     menu: 'Menu',
     view: 'vista',
+    views: 'Vistas',
     confirmDelete: 'Tem certeza de que deseja eliminar este evento?',
     confirmDeleteTitle: 'Eliminar evento',
     confirmDeleteRecurring: 'Este é um evento recorrente',
@@ -183,7 +189,11 @@ const translations = {
     doesNotRepeat: 'Não se repete',
     addDescription: 'Adicionar descrição ou um anexo do Google Drive',
     moreOptions: 'Mais opções',
-    email: 'Email'
+    email: 'Email',
+    zoomIn: 'Aumentar zoom',
+    zoomOut: 'Diminuir zoom',
+    resetZoom: 'Redefinir zoom',
+    zoom: 'Zoom'
   }
 };
 

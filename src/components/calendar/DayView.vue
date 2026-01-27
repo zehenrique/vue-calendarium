@@ -63,7 +63,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, toRefs, watch, onBeforeUnmount } from 'vue';
 import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 const props = defineProps({
@@ -227,10 +227,21 @@ const allDayCount = computed(() => allDayEvents.value?.length ?? 0);
 
 const scrollContainer = ref(null);
 const hasAutoScrolled = ref(false);
+const userHasScrolled = ref(false);
 const SCROLL_PADDING = 120;
 
+let isProgrammaticScroll = false;
+const handleScroll = () => {
+  if (isProgrammaticScroll) return;
+  userHasScrolled.value = true;
+};
+
 const scrollToCurrentTime = () => {
-  if (!scrollContainer.value || hasAutoScrolled.value) {
+  if (!scrollContainer.value || hasAutoScrolled.value || userHasScrolled.value) {
+    return;
+  }
+
+  if (!showCurrentTimeIndicator.value) {
     return;
   }
 
@@ -249,7 +260,11 @@ const scrollToCurrentTime = () => {
       }
 
       const target = Math.max(0, currentTimePosition.value - SCROLL_PADDING);
+      isProgrammaticScroll = true;
       container.scrollTop = target;
+      requestAnimationFrame(() => {
+        isProgrammaticScroll = false;
+      });
       hasAutoScrolled.value = true;
     });
   });
@@ -257,28 +272,40 @@ const scrollToCurrentTime = () => {
 
 const scheduleScroll = () => nextTick(scrollToCurrentTime);
 
-onMounted(scheduleScroll);
+onMounted(() => {
+  scheduleScroll();
+  nextTick(() => {
+    scrollContainer.value?.addEventListener('scroll', handleScroll, { passive: true });
+  });
+});
+
+onBeforeUnmount(() => {
+  scrollContainer.value?.removeEventListener('scroll', handleScroll);
+});
 
 // Reset hasAutoScrolled when the date prop changes (view change or navigation)
 watch(date, () => {
   hasAutoScrolled.value = false;
+  userHasScrolled.value = false;
 }, { deep: false });
-
-watch([showCurrentTimeIndicator, dateKey, allDayCount], scheduleScroll);
 
 watch(dateKey, () => {
   hasAutoScrolled.value = false;
+  userHasScrolled.value = false;
+  scheduleScroll();
+});
+
+watch(allDayCount, () => {
+  if (!hasAutoScrolled.value && !userHasScrolled.value) {
+    scheduleScroll();
+  }
 });
 
 watch(showCurrentTimeIndicator, value => {
   if (!value) {
     hasAutoScrolled.value = false;
-  }
-});
-
-// Also watch for currentTimePosition changes in case it updates after mount
-watch(currentTimePosition, (newVal) => {
-  if (newVal > 0 && !hasAutoScrolled.value) {
+    userHasScrolled.value = false;
+  } else if (!hasAutoScrolled.value && !userHasScrolled.value) {
     scheduleScroll();
   }
 });
@@ -299,8 +326,17 @@ watch(currentTimePosition, (newVal) => {
   padding: 0;
   overflow-y: auto; /* Auto show scrollbar only when needed */
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   display: block;
-  touch-action: pan-y; /* Allow vertical scroll but enable horizontal swipe gestures */
+  touch-action: pan-y; /* Allow vertical scroll, disable native pinch zoom */
+}
+
+@media (max-width: 767px) {
+  .calendar-body.day-view {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 46px));
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 46px));
+  }
 }
 
 /* Style the scrollbar to be thin and match Google Calendar */
@@ -324,12 +360,12 @@ watch(currentTimePosition, (newVal) => {
 .day-grid {
   display: grid;
   grid-template-columns: var(--calendar-time-column-width, 60px) 1fr;
-  min-height: calc(24 * var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
+  min-height: calc(24 * var(--calendar-pixels-per-hour-day, 45px));
 }
 
 .time-column {
   display: grid;
-  grid-template-rows: auto repeat(24, calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1)));
+  grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day, 45px));
   border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   position: relative;
 }
@@ -345,7 +381,7 @@ watch(currentTimePosition, (newVal) => {
 
 .time-slot-label {
   width: var(--calendar-time-column-width, 60px);
-  height: calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
+  height: var(--calendar-pixels-per-hour-day, 45px);
   padding: 0 var(--calendar-spacing-md, 14px);
   font-size: var(--calendar-font-size-xsmall, 12px);
   color: var(--calendar-text-secondary, #70757a);
@@ -394,11 +430,11 @@ watch(currentTimePosition, (newVal) => {
   position: relative;
   border-right: 1px solid var(--calendar-border-color-dark, #d0d0d0);
   display: grid;
-  grid-template-rows: repeat(24, calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1)));
+  grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day, 45px));
 }
 
 .hour-slot {
-  height: calc(var(--calendar-pixels-per-hour-day, 45px) * var(--calendar-height-scale, 1));
+  height: var(--calendar-pixels-per-hour-day, 45px);
   border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
@@ -425,7 +461,7 @@ watch(currentTimePosition, (newVal) => {
   position: absolute;
   border-radius: var(--calendar-event-border-radius, 8px);
   padding: 2px 4px 0px 8px;
-  font-size: 13px;
+  font-size: var(--calendar-day-event-font-size, 13px);
   cursor: pointer;
   overflow: hidden;
   transition: opacity var(--calendar-transition-fast, 0.2s);
@@ -456,6 +492,7 @@ watch(currentTimePosition, (newVal) => {
 
 .event-title {
   font-weight: var(--calendar-font-weight-medium, 500);
+  font-size: var(--calendar-day-event-title-font-size, inherit);
   margin-bottom: var(--calendar-spacing-sm, 4px);
   overflow-wrap: break-word;
   word-wrap: break-word;
@@ -499,32 +536,32 @@ watch(currentTimePosition, (newVal) => {
 
 @media (max-width: 768px) {
   .day-event {
-    font-size: 11px;
+    font-size: var(--calendar-day-event-font-size, 11px);
     border-radius: var(--calendar-border-radius-sm, 6px);
   }
   
   .event-title {
-    font-size: 11px;
+    font-size: var(--calendar-day-event-title-font-size, 11px);
     line-height: 1.2;
     margin-bottom: var(--calendar-spacing-xs, 2px);
   }
   
   .day-grid {
     grid-template-columns: var(--calendar-time-column-width-mobile, 50px) 1fr;
-    min-height: calc(24 * var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
+    min-height: calc(24 * var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
 
   .time-column {
-    grid-template-rows: auto repeat(24, calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1)));
+    grid-template-rows: auto repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
   
   .day-column {
-    grid-template-rows: repeat(24, calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1)));
+    grid-template-rows: repeat(24, var(--calendar-pixels-per-hour-day-mobile, 38px));
   }
 
   .time-slot-label {
     width: var(--calendar-time-column-width-mobile, 50px);
-    height: calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
+    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
     font-size: 11px;
     padding: 0 var(--calendar-spacing-sm, 10px);
     align-items: flex-start;
@@ -536,7 +573,7 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .hour-slot {
-    height: calc(var(--calendar-pixels-per-hour-day-mobile, 38px) * var(--calendar-height-scale, 1));
+    height: var(--calendar-pixels-per-hour-day-mobile, 38px);
   }
 }
 </style>

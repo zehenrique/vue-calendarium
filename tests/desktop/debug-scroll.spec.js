@@ -1,6 +1,7 @@
-const { test, expect } = require('@playwright/test');
+import { test, expect } from '@playwright/test';
 
 test('verify auto-scroll in week view', async ({ page }) => {
+  test.setTimeout(30000);
   const TEST_NOW = '2025-12-16T14:30:00'; // 2:30 PM
   
   // Listen to console logs

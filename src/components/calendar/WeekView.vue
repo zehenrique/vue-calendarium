@@ -51,7 +51,7 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, ref, toRefs, watch } from 'vue';
+import { computed, nextTick, onMounted, onBeforeUnmount, ref, toRefs, watch } from 'vue';
 import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
 
 const props = defineProps({
@@ -195,10 +195,21 @@ const handleSlotLeave = () => {
 
 const scrollContainer = ref(null);
 const hasAutoScrolled = ref(false);
+const userHasScrolled = ref(false);
 const SCROLL_PADDING = 120;
 
+let isProgrammaticScroll = false;
+const handleScroll = () => {
+  if (isProgrammaticScroll) return;
+  userHasScrolled.value = true;
+};
+
 const scrollToCurrentTime = () => {
-  if (!scrollContainer.value || hasAutoScrolled.value) {
+  if (!scrollContainer.value || hasAutoScrolled.value || userHasScrolled.value) {
+    return;
+  }
+
+  if (!showCurrentTimeIndicator.value) {
     return;
   }
 
@@ -219,34 +230,46 @@ const scrollToCurrentTime = () => {
       }
 
       const target = Math.max(0, currentTimePosition.value - SCROLL_PADDING);
+      isProgrammaticScroll = true;
       container.scrollTop = target;
+      requestAnimationFrame(() => {
+        isProgrammaticScroll = false;
+      });
       hasAutoScrolled.value = true;
     });
   });
-};const scheduleScroll = () => nextTick(scrollToCurrentTime);
+};
 
-onMounted(scheduleScroll);
+const scheduleScroll = () => nextTick(scrollToCurrentTime);
+
+onMounted(() => {
+  scheduleScroll();
+  nextTick(() => {
+    scrollContainer.value?.addEventListener('scroll', handleScroll, { passive: true });
+  });
+});
+
+onBeforeUnmount(() => {
+  scrollContainer.value?.removeEventListener('scroll', handleScroll);
+});
 
 // Reset hasAutoScrolled when the days change (view change or navigation)
 watch(days, () => {
   hasAutoScrolled.value = false;
+  userHasScrolled.value = false;
 }, { deep: false });
 
 watch(todayKey, () => {
   hasAutoScrolled.value = false;
+  userHasScrolled.value = false;
+  scheduleScroll();
 });
 
 watch(showCurrentTimeIndicator, value => {
   if (!value) {
     hasAutoScrolled.value = false;
-  }
-});
-
-watch([showCurrentTimeIndicator, todayKey], scheduleScroll);
-
-// Also watch for currentTimePosition changes in case it updates after mount
-watch(currentTimePosition, (newVal) => {
-  if (newVal > 0 && !hasAutoScrolled.value) {
+    userHasScrolled.value = false;
+  } else if (!hasAutoScrolled.value && !userHasScrolled.value) {
     scheduleScroll();
   }
 });
@@ -263,8 +286,17 @@ watch(currentTimePosition, (newVal) => {
   padding: 0;
   overflow-y: auto; /* Auto show scrollbar only when needed */
   overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
   display: block;
-  touch-action: pan-y; /* Allow vertical scroll but enable horizontal swipe gestures */
+  touch-action: pan-y; /* Allow vertical scroll, disable native pinch zoom */
+}
+
+@media (max-width: 767px) {
+  .calendar-body.week-view {
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 46px));
+    scroll-padding-bottom: calc(env(safe-area-inset-bottom, 0px) + var(--calendar-mobile-bottom-padding, 46px));
+  }
 }
 
 /* Style the scrollbar to be thin and match Google Calendar */
@@ -287,7 +319,7 @@ watch(currentTimePosition, (newVal) => {
 
 .week-grid {
   display: flex;
-  min-height: calc(23 * var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
+  min-height: calc(24 * var(--calendar-pixels-per-hour-week, 60px));
 }
 
 .time-column {
@@ -298,7 +330,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .time-header {
-  min-height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
+  min-height: var(--calendar-pixels-per-hour-week, 60px);
   padding-bottom: var(--calendar-spacing-md, 8px);
   display: flex;
   flex-direction: column;
@@ -307,7 +339,7 @@ watch(currentTimePosition, (newVal) => {
 
 .time-slot-label {
   width: var(--calendar-time-column-width, 60px);
-  height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
+  height: var(--calendar-pixels-per-hour-week, 60px);
   padding: 0 var(--calendar-spacing-md, 14px);
   font-size: var(--calendar-font-size-xsmall, 12px);
   color: var(--calendar-text-secondary, #70757a);
@@ -342,7 +374,7 @@ watch(currentTimePosition, (newVal) => {
 }
 
 .hour-slot {
-  height: calc(var(--calendar-pixels-per-hour-week, 60px) * var(--calendar-height-scale, 1));
+  height: var(--calendar-pixels-per-hour-week, 60px);
   border-bottom: 1px solid var(--calendar-border-color, #e0e0e0);
   cursor: pointer;
   transition: background-color 0.15s;
@@ -365,7 +397,7 @@ watch(currentTimePosition, (newVal) => {
   position: absolute;
   border-radius: var(--calendar-event-border-radius, 8px);
   padding: var(--calendar-spacing-sm, 4px);
-  font-size: var(--calendar-event-font-size, 12px);
+  font-size: var(--calendar-week-event-font-size, 12px);
   cursor: pointer;
   overflow: hidden;
   transition: opacity var(--calendar-transition-fast, 0.2s);
@@ -391,6 +423,7 @@ watch(currentTimePosition, (newVal) => {
 
 .event-title {
   font-weight: var(--calendar-font-weight-medium, 500);
+  font-size: var(--calendar-week-event-title-font-size, inherit);
   overflow-wrap: break-word;
   word-wrap: break-word;
   word-break: break-word;
@@ -460,7 +493,7 @@ watch(currentTimePosition, (newVal) => {
  */
 @media (max-width: 768px) {
   .week-event {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-font-size, 8px);
     padding: 1px 2px;
     border-radius: 3px;
     min-height: 0;
@@ -469,7 +502,7 @@ watch(currentTimePosition, (newVal) => {
   }
 
   .week-grid {
-    min-height: calc(23 * var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
+    min-height: calc(23 * var(--calendar-pixels-per-hour-week-mobile, 50px));
   }
   
   .time-column {
@@ -480,7 +513,7 @@ watch(currentTimePosition, (newVal) => {
     width: var(--calendar-time-column-width-mobile, 50px);
     font-size: 11px;
     padding: 0 var(--calendar-spacing-sm, 10px);
-    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
+    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
     align-items: flex-start;
     transform: translateY(-9px);
   }
@@ -492,11 +525,11 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .hour-slot {
-    height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
+    height: var(--calendar-pixels-per-hour-week-mobile, 50px);
   }
   
   .week-event {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-font-size, 8px);
     padding: 1px 2px;
     border-radius: 3px;
     min-height: 0;
@@ -505,7 +538,7 @@ watch(currentTimePosition, (newVal) => {
   }
   
   .week-event .event-title {
-    font-size: 8px;
+    font-size: var(--calendar-week-event-title-font-size, 8px);
     line-height: 1;
     margin-bottom: 0;
     white-space: wrap;
@@ -520,7 +553,7 @@ watch(currentTimePosition, (newVal) => {
   }
 
   .time-header {
-    min-height: calc(var(--calendar-pixels-per-hour-week-mobile, 50px) * var(--calendar-height-scale, 1));
+    min-height: var(--calendar-pixels-per-hour-week-mobile, 50px);
   }
 
   /* 

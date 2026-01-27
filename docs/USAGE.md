@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-npm install
+npm install @zehenrique/vue-google-calendar
 ```
 
 ## Quick Start
@@ -14,13 +14,13 @@ npm install
 <template>
   <v-app>
     <v-main>
-      <GoogleCalendar :calendar-app="calendarApp" />
+      <Calendar :calendar-app="calendarApp" />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, GoogleCalendar } from './calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
 
 // Create calendar instance
 const calendarApp = createCalendar({
@@ -135,6 +135,8 @@ const visible = calendarApp.calendarsService.getVisible();
 ### 5. Calendar Controls
 
 ```javascript
+import { Temporal } from '@js-temporal/polyfill';
+
 // Navigate
 calendarApp.goToNext();        // Next day/week/month
 calendarApp.goToPrevious();    // Previous day/week/month
@@ -153,7 +155,7 @@ calendarApp.setLocale('pt-PT');
 ### 6. Using Event and Calendar Classes
 
 ```javascript
-import { CalendarEvent, Calendar } from './calendar';
+import { CalendarEvent, CalendarModel } from '@zehenrique/vue-google-calendar';
 
 // Create event instance
 const event = new CalendarEvent({
@@ -175,7 +177,7 @@ event.update({ title: 'New Title' });
 const obj = event.toObject();  // Convert to plain object
 
 // Create calendar instance
-const calendar = new Calendar({
+const calendar = new CalendarModel({
   name: 'Work',
   color: '#1967d2',
   custom: {
@@ -210,7 +212,7 @@ const obj = calendar.toObject();
         <!-- Calendar Component -->
         <v-row>
           <v-col>
-            <GoogleCalendar :calendar-app="calendarApp" />
+            <Calendar :calendar-app="calendarApp" />
           </v-col>
         </v-row>
       </v-container>
@@ -225,8 +227,8 @@ import {
   createViewDay, 
   createViewWeek, 
   createViewMonth,
-  GoogleCalendar 
-} from './calendar';
+  Calendar 
+} from '@zehenrique/vue-google-calendar';
 
 // Create calendar
 const calendarApp = createCalendar({
@@ -357,7 +359,7 @@ if (calendarApp.ghostEvent.value) {
 ```vue
 <template>
   <div>
-    <GoogleCalendar :calendar-app="calendarApp" />
+    <Calendar :calendar-app="calendarApp" />
     
     <CustomEventModal
       v-model="showCustomModal"
@@ -371,7 +373,7 @@ if (calendarApp.ghostEvent.value) {
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, createViewWeek } from './calendar';
+import { createCalendar, createViewWeek, Calendar } from '@zehenrique/vue-google-calendar';
 
 const showCustomModal = ref(false);
 const eventDraft = ref(null);
@@ -410,6 +412,7 @@ function cancelEvent() {
 Creates a calendar instance.
 
 **Config Properties:**
+
 - `views` (Array): Array of view objects from `createViewDay()`, `createViewWeek()`, `createViewMonth()` - **REQUIRED**
 - `defaultView` (String): Default view name - 'day', 'week', or 'month'
 - `events` (Array): Initial events
@@ -417,8 +420,14 @@ Creates a calendar instance.
 - `locale` (String): 'en-US' or 'pt-PT'
 - `selectedDate` (Temporal.PlainDate): Initial selected date
 - `enableModals` (Boolean): Enable/disable modals
+- `enableMobileSidebar` (Boolean): Enable/disable mobile sidebar
+- `mobileViewSelectorPlacement` ('header'|'sidebar'): Where the view selector is shown on mobile
+- `enableSwipeGestures` (Boolean): Enable/disable horizontal swipe navigation on mobile
+- `enablePinchToZoom` (Boolean): Enable/disable pinch-to-zoom on mobile Day/Week views
+- `enableCurrentTimeIndicator` (Boolean): Enable/disable the red current-time indicator line in Day/Week views
 
 **Returns:** Calendar instance with:
+
 - `eventsService`: Events management service
 - `calendarsService`: Calendars management service
 - `currentView`: Current view (computed)

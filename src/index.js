@@ -17,10 +17,10 @@
 export { createCalendar } from './core/createCalendar.js';
 export { createViewDay, createViewWeek, createViewMonth } from './core/views.js';
 export { CalendarEvent } from './core/CalendarEvent.js';
-export { Calendar } from './core/Calendar.js';
+export { CalendarModel } from './core/Calendar.js';
 export { createEventsService, EventsService } from './services/EventsService.js';
 export { createCalendarsService, CalendarsService } from './services/CalendarsService.js';
-export { default as GoogleCalendar } from './Calendar.vue';
+export { default as Calendar } from './Calendar.vue';
 export { translations } from './i18n.js';
 
 // Export color configuration
@@ -49,10 +49,10 @@ import { translations } from './i18n.js';
 import { createCalendar } from './core/createCalendar.js';
 import { createViewDay, createViewWeek, createViewMonth } from './core/views.js';
 import { CalendarEvent } from './core/CalendarEvent.js';
-import { Calendar } from './core/Calendar.js';
+import { CalendarModel } from './core/Calendar.js';
 import { createEventsService, EventsService } from './services/EventsService.js';
 import { createCalendarsService, CalendarsService } from './services/CalendarsService.js';
-import GoogleCalendar from './Calendar.vue';
+import Calendar from './Calendar.vue';
 import { 
   CALENDAR_COLORS, 
   DEFAULT_COLOR, 
@@ -76,12 +76,12 @@ export default {
   createViewWeek,
   createViewMonth,
   CalendarEvent,
-  Calendar,
+  CalendarModel,
   createEventsService,
   EventsService,
   createCalendarsService,
   CalendarsService,
-  GoogleCalendar,
+  Calendar,
   CALENDAR_COLORS,
   DEFAULT_COLOR,
   isValidColor,

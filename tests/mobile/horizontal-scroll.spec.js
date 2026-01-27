@@ -6,15 +6,10 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   });
 
   test('should not have horizontal scroll in month view', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Wait for calendar to load
-    await page.waitForSelector('.google-calendar');
-    
-    // Switch to month view
-    const menuButton = page.locator('[data-testid="mobile-menu-button"]');
-    await menuButton.click();
-    await page.locator('[data-testid="sidebar-view-month"]').click();
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
     
     // Check that body width equals scroll width (no horizontal overflow)
     const calendar = page.locator('.google-calendar');
@@ -26,14 +21,16 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   });
 
   test('should not have horizontal scroll in week view', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Wait for calendar to load
-    await page.waitForSelector('.google-calendar');
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
     
     // Switch to week view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
     await menuButton.click();
+    await expect(page.locator('.mobile-sidebar')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(200);
     await page.locator('[data-testid="sidebar-view-week"]').click();
     
     // Wait for week view to render
@@ -58,14 +55,16 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   });
 
   test('should not have horizontal scroll in day view', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Wait for calendar to load
-    await page.waitForSelector('.google-calendar');
+    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
     
     // Switch to day view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
     await menuButton.click();
+    await expect(page.locator('.mobile-sidebar')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(200);
     await page.locator('[data-testid="sidebar-view-day"]').click();
     
     // Wait for day view to render
@@ -90,11 +89,13 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   });
 
   test('should fit all week day columns within viewport', async ({ page }) => {
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Switch to week view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
     await menuButton.click();
+    await expect(page.locator('.mobile-sidebar')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(200);
     await page.locator('[data-testid="sidebar-view-week"]').click();
     
     await page.waitForSelector('.week-day-columns');
@@ -113,11 +114,13 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   test('should handle narrow mobile viewport (320px)', async ({ page }) => {
     // Set very narrow viewport (iPhone 5/SE)
     await page.setViewportSize({ width: 320, height: 568 });
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Test week view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
     await menuButton.click();
+    await expect(page.locator('.mobile-sidebar')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(200);
     await page.locator('[data-testid="sidebar-view-week"]').click();
     
     await page.waitForSelector('.week-view');
@@ -133,11 +136,13 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
   test('should handle wide mobile viewport (428px)', async ({ page }) => {
     // Set wider mobile viewport (iPhone 14 Pro Max)
     await page.setViewportSize({ width: 428, height: 926 });
-    await page.goto('http://localhost:3000');
+    await page.goto('/');
     
     // Test week view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
     await menuButton.click();
+    await expect(page.locator('.mobile-sidebar')).toBeVisible({ timeout: 5000 });
+    await page.waitForTimeout(200);
     await page.locator('[data-testid="sidebar-view-week"]').click();
     
     await page.waitForSelector('.week-view');

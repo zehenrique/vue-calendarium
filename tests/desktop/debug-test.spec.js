@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
-import fs from 'fs';
+import fs from 'node:fs';
 
-test('debug app loading', async ({ page }) => {
+test('debug app loading', async ({ page }, testInfo) => {
   // Listen for errors BEFORE navigating
   const consoleMessages = [];
   const pageErrors = [];
@@ -36,13 +36,15 @@ test('debug app loading', async ({ page }) => {
   console.log('[TEST] Page HTML length:', content.length);
   console.log('[TEST] Page title:', await page.title());
   
-  // Save HTML to file
-  fs.writeFileSync('debug-page.html', content);
-  console.log('[TEST] Saved HTML to debug-page.html');
+  // Save HTML to test output
+  const debugPagePath = testInfo.outputPath('debug-page.html');
+  fs.writeFileSync(debugPagePath, content);
+  console.log('[TEST] Saved HTML to', debugPagePath);
   
   // Save console messages
-  fs.writeFileSync('debug-console.txt', consoleMessages.join('\n') + '\n\nERRORS:\n' + pageErrors.join('\n'));
-  console.log('[TEST] Saved console to debug-console.txt');
+  const debugConsolePath = testInfo.outputPath('debug-console.txt');
+  fs.writeFileSync(debugConsolePath, consoleMessages.join('\n') + '\n\nERRORS:\n' + pageErrors.join('\n'));
+  console.log('[TEST] Saved console to', debugConsolePath);
   
   // Check for .google-calendar
   const calendarElement = await page.locator('.google-calendar').count();

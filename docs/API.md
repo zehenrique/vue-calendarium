@@ -1,697 +1,169 @@
-# Calendar Component API
+# API
 
-<!-- markdownlint-disable MD022 MD031 MD032 -->
+This document describes the public API exported by the package.
 
-## Component Interface
+## Exports
+
+```js
+import {
+  Calendar,
+  createCalendar,
+  createViewDay,
+  createViewWeek,
+  createViewMonth,
+  CalendarEvent,
+  CalendarModel,
+  EventsService,
+  CalendarsService,
+  THEME_PRESETS,
+  translations
+} from '@zehenrique/vue-google-calendar';
+```
+
+## `Calendar` (Vue component)
 
 ### Props
 
-#### calendarApp
-- **Type:** `Object`
-- **Required:** Yes
-- **Description:** Calendar application instance created using `createCalendar()`
+#### `calendarApp` (required)
 
-Example:
-```javascript
+- Type: `object`
+- The calendar application instance returned by `createCalendar()`.
+
+#### `theme` (optional)
+
+- Type: `Record<string, string> | null`
+- Default: `null`
+- Theme overrides (CSS custom properties).
+
+See [STYLING.md](./STYLING.md) for the full theme reference.
+
+### Vue emits
+
+The `Calendar` component does not emit Vue events. User interactions are reported through callbacks configured on the `calendarApp` instance.
+
+## `createCalendar(config)`
+
+Creates the stateful calendar “app” object.
+
+### Minimal setup
+
+```js
+import { Temporal } from '@js-temporal/polyfill';
 import { createCalendar, createViewDay, createViewWeek, createViewMonth } from '@zehenrique/vue-google-calendar';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
-  events: [...]
+  defaultView: 'month',
+  selectedDate: Temporal.Now.plainDateISO(),
+  locale: 'en-US',
+  calendars: [{ id: 'default', name: 'Default', color: '#1a73e8', visible: true }],
+  events: []
 });
 ```
 
-#### theme
-- **Type:** `Object`
-- **Required:** No
-- **Default:** `null` (uses default theme)
-- **Description:** Custom theme object to override CSS custom properties. Only specify the properties you want to change; unspecified properties will use default values.
+### Config options
 
-Example:
-```javascript
-const customTheme = {
-  '--calendar-primary-color': '#e91e63',
-  '--calendar-today-bg': '#e91e63',
-  '--calendar-header-bg': '#fce4ec',
-  '--calendar-border-color': '#f8bbd0',
-  '--calendar-font-family': '"Inter", sans-serif'
-};
-```
+- `views` (required): array of view objects created by `createViewDay()`, `createViewWeek()`, `createViewMonth()`.
+- `defaultView`: `'day' | 'week' | 'month'`.
+- `selectedDate`: `Temporal.PlainDate` (defaults to “today”).
+- `locale`: `'en-US' | 'pt-PT'`.
+- `events`: array of event objects (wrapped internally as `CalendarEvent`).
+- `calendars`: array of calendar objects (wrapped internally as `CalendarModel`).
 
-**Available Theme Presets:**
-```javascript
-import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+Feature flags:
 
-// Use a preset
-:theme="THEME_PRESETS.dark"
-:theme="THEME_PRESETS.compact"
-:theme="THEME_PRESETS.highContrast"
-```
+- `enableModals` (default `true`)
+- `enableMobileSidebar` (default `true`)
+- `mobileViewSelectorPlacement` (default `'sidebar'`)
+- `enableSwipeGestures` (default `true`)
+- `enablePinchToZoom` (default `true`)
+- `enableCurrentTimeIndicator` (default `true`)
+- `enableDragAndDrop` (default `false`)
 
-For complete theming documentation, see [STYLING.md](./STYLING.md).
+Callbacks:
 
----
+- `onEventClick(event)`
+- `onDateChange(date)` where `date` is `Temporal.PlainDate`
+- `onViewChange(view)` where `view` is `'day' | 'week' | 'month'`
+- `onEventCreate(events)` (currently called with an array containing the newly created event)
+- `onEventUpdate(event)`
+- `onEventDelete(event)`
+- `onEventCreateRequest({ draft, context })` (used when `enableModals=false`)
+- `onEventDrop({ event, originalEvent, dropTarget })` (used when `enableDragAndDrop=true`)
 
-### Legacy Props (Deprecated)
+### Returned `calendarApp`
 
-#### events
-- **Type:** `Array`
-- **Default:** `[]`
-- **Required:** No
-- **Description:** Array of event objects to display on the calendar
+State (computed refs):
 
-Example:
-```javascript
-[
-  {
-    id: '1',
-    title: 'Team Meeting',
-    start: '2025-10-27T10:00:00',
-    end: '2025-10-27T11:00:00',
-    color: 'blue'
-  }
-]
-```
+- `currentView`, `currentDate`, `locale`
+- `visibleEvents` (events filtered by visible calendars)
+- `ghostEvent`
 
-#### locale
-- **Type:** `String`
-- **Default:** `'en-US'`
-- **Required:** No
-- **Description:** BCP 47 language tag for internationalization
-- **Supported values:** `'en-US'` (English), `'pt-PT'` (Portuguese Portugal)
-- **Note:** Language switching is reactive and updates all UI text and date formatting
+Services:
 
-#### initialView
-- **Type:** `String`
-- **Default:** `'month'`
-- **Required:** No
-- **Description:** Initial calendar view mode
-- **Allowed values:** `'day'`, `'week'`, `'month'`
-- **Validator:** Must be one of the allowed values
+- `eventsService` (`EventsService`)
+- `calendarsService` (`CalendarsService`)
 
-#### initialDate
-- **Type:** `String | Object`
-- **Default:** Current date
-- **Required:** No
-- **Description:** Initial date to display. Can be ISO string or Temporal.PlainDate object
+Navigation methods:
 
-#### enableModals
-- **Type:** `Boolean`
-- **Default:** `true`
-- **Required:** No
-- **Description:** Toggles the built-in event creation, detail, and deletion modals. Set to `false` to handle these interactions in your host application.
+- `setView(viewName)`, `setDate(date)`, `setLocale(locale)`
+- `goToToday()`, `goToNext()`, `goToPrevious()`
 
-#### enableMobileSidebar
-- **Type:** `Boolean`
-- **Default:** `true`
-- **Required:** No
-- **Description:** Toggles the mobile sidebar menu (hamburger menu). Set to `false` to hide the mobile menu button and sidebar. Useful when you want to implement custom navigation or calendar selection.
+Ghost event methods:
 
+- `showGhostEvent(eventData)`, `updateGhostEvent(eventData)`, `hideGhostEvent()`
 
-Example:
-```javascript
-// ISO string
-initialDate="2025-12-25"
+## Data models
 
-// Temporal object
-:initialDate="Temporal.PlainDate.from({ year: 2025, month: 12, day: 25 })"
+### `CalendarEvent`
 
-// Disable modals and sidebar
-:enableModals="false"
-:enableMobileSidebar="false"
-```
+Common fields:
 
-### Events
+- `id: string`
+- `title: string`
+- `start: string` (ISO date-time)
+- `end: string | null` (ISO date-time)
+- `allDay: boolean`
+- `calendarId: string`
+- `color: string`
+- `rrule: string`
+- `description: string`
+- `location: string`
+- `custom: Record<string, unknown>`
 
-#### eventClick
-- **Payload:** Event object
-- **Description:** Emitted when user clicks on an event
+### `CalendarModel`
 
-Example:
-```javascript
-handleEventClick(event) {
-  console.log('Clicked event:', event.title);
-  // Open event details modal, etc.
-}
-```
+Common fields:
 
-#### dateChange
-- **Payload:** Temporal.PlainDate object
-- **Description:** Emitted when the displayed date/period changes (navigation)
+- `id: string`
+- `name: string`
+- `color: string`
+- `visible: boolean`
+- `description: string`
+- `custom: Record<string, unknown>`
 
-Example:
-```javascript
-handleDateChange(date) {
-  console.log('New date:', date.toString());
-  // Fetch events for new date range
-}
-```
+## Services
 
-#### viewChange
-- **Payload:** String ('day', 'week', or 'month')
-- **Description:** Emitted when the calendar view changes
+### `EventsService`
 
-Example:
-```javascript
-handleViewChange(view) {
-  console.log('View changed to:', view);
-  // Update URL or preferences
-}
-```
+- `getAll()`, `get(id)`, `add(event)`, `update(event)`, `remove(id)`, `set(events)`
+- `getByCalendar(calendarId)`, `getByDateRange(start, end)`, `getRef()`
 
-#### eventCreateRequest
-- **Payload:** `{ draft, context }`
-- **Description:** Emitted when a user starts creating an event (clicks a day, time slot, or all-day area) while built-in modals are disabled. `draft` contains the pre-filled event data and `context` describes the trigger source.
+### `CalendarsService`
 
-Example:
-```javascript
-handleCreateRequest({ draft, context }) {
-  console.log('Create in custom modal:', context.source);
-  // Open your own modal with the suggested draft values
-  this.openExternalModal(draft);
-}
-```
+- `getAll()`, `get(id)`, `add(calendar)`, `update(calendar)`, `remove(id)`, `set(calendars)`
+- `getVisible()`, `toggleVisibility(id)`, `getRef()`
 
-#### eventCreate
-- **Payload:** Array of event objects
-- **Description:** Emitted when the user creates a new event through the built-in modal. Contains an array with the newly created event(s). For recurring events, the array contains a single event with an `rrule` property.
-
-Example:
-```javascript
-handleEventCreate(events) {
-  events.forEach(event => {
-    this.events.push(event);
-    // Optionally persist to backend
-    this.saveToAPI(event);
-  });
-}
-```
-
-#### eventDelete
-- **Payload:** Event object
-- **Description:** Emitted when the user deletes an event. For recurring events, this may be the original event (if deleting the entire series) or represent a single occurrence deletion.
-
-Example:
-```javascript
-handleEventDelete(event) {
-  const index = this.events.findIndex(e => e.id === event.id);
-  if (index !== -1) {
-    this.events.splice(index, 1);
-    // Optionally persist to backend
-    this.deleteFromAPI(event.id);
-  }
-}
-```
-
-#### eventUpdate
-- **Payload:** Event object
-- **Description:** Emitted when an event is updated (e.g., adding an EXDATE to exclude a single occurrence from a recurring series). The payload contains the updated event object with all modifications.
-
-Example:
-```javascript
-handleEventUpdate(updatedEvent) {
-  const index = this.events.findIndex(e => e.id === updatedEvent.id);
-  if (index !== -1) {
-    this.events[index] = updatedEvent;
-    // Optionally persist to backend
-    this.updateToAPI(updatedEvent);
-  }
-}
-```
-
-
-## Event Object Structure
-
-### Required Properties
-
-#### id
-- **Type:** `String | Number`
-- **Description:** Unique identifier for the event
-
-#### title
-- **Type:** `String`
-- **Description:** Event title/name to display
-
-#### start
-- **Type:** `String`
-- **Description:** Start date/time in ISO 8601 format
-
-Examples:
-```javascript
-// Date only
-start: '2025-10-27'
-
-// Date and time
-start: '2025-10-27T14:30:00'
-
-// With timezone
-start: '2025-10-27T14:30:00-05:00'
-```
-
-### Optional Properties
-
-#### end
-- **Type:** `String`
-- **Default:** Same as start + 1 hour
-- **Description:** End date/time in ISO 8601 format
-
-#### allDay
-- **Type:** `Boolean`
-- **Default:** `false`
-- **Description:** Whether event spans entire day(s). All-day events display in the calendar header section above time slots.
-
-#### color
-- **Type:** `String` (Hex color code)
-- **Default:** `'#1967D2'` (Cobalt - Google blue)
-- **Description:** Event color from the predefined Material Design color palette
-- **Allowed values:** Only colors from the `CALENDAR_COLORS` palette:
-  - `#D50000` (Tomato)
-  - `#E67C73` (Flamingo)
-  - `#F4511E` (Tangerine)
-  - `#F6BF26` (Banana)
-  - `#33B679` (Sage)
-  - `#0B8043` (Basil)
-  - `#039BE5` (Peacock)
-  - `#3F51B5` (Blueberry)
-  - `#7986CB` (Lavender)
-  - `#8E24AA` (Grape)
-  - `#616161` (Graphite)
-  - `#1967D2` (Cobalt - default)
-- **Note:** Use the exported `CALENDAR_COLORS` array and helper functions (`isValidColor`, `getClosestColor`) from `src/config/colors.js` to ensure colors are from the allowed palette. Component automatically generates lighter background colors for better readability.
-
-#### calendarId
-- **Type:** `String`
-- **Default:** `'default'`
-- **Description:** Calendar/category ID that event belongs to. Used for filtering events in mobile sidebar.
-- **Note:** Events with the same `calendarId` value will be shown/hidden together when toggling calendar visibility.
-
-#### rrule
-- **Type:** `String`
-- **Required:** No
-- **Description:** RFC 5545 recurrence rule string (e.g. `FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4` or `RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=4`).
-- **Usage:** All recurrence is stored and processed using RRULE internally. The UI provides a Google Calendar-like interface where users select repeat patterns (Daily, Weekly, Monthly, Yearly, or Custom), and these selections are converted to RRULE strings automatically.
-- **Display:** When viewing events, RRULE strings are converted to human-readable text (e.g., "Weekly on Monday, Friday").
-
-## Usage Examples
-
-### Programmatic Event Creation
-
-```javascript
-import { Temporal } from '@js-temporal/polyfill';
-
-export default {
-  data() {
-    return {
-      events: []
-    };
-  },
-  methods: {
-    // Add a single event
-    addEvent(title, startTime, duration = 1) {
-      const start = Temporal.PlainDateTime.from(startTime);
-      const end = start.add({ hours: duration });
-      
-      this.events.push({
-        id: Date.now().toString(),
-        title,
-        start: start.toString(),
-        end: end.toString(),
-        color: 'blue'
-      });
-    },
-    
-    // Add recurring weekly event
-    addWeeklyEvent(title, dayOfWeek, time, weeks = 4) {
-      const today = Temporal.Now.plainDateISO();
-      const startOfWeek = today.subtract({ days: today.dayOfWeek });
-      
-      for (let i = 0; i < weeks; i++) {
-        const date = startOfWeek.add({ 
-          weeks: i, 
-          days: dayOfWeek 
-        });
-        const start = Temporal.PlainDateTime.from({
-          year: date.year,
-          month: date.month,
-          day: date.day,
-          ...time
-        });
-        
-        this.events.push({
-          id: `weekly-${i}-${Date.now()}`,
-          title,
-          start: start.toString(),
-          end: start.add({ hours: 1 }).toString(),
-          color: 'green'
-        });
-      }
-    },
-    
-    // Add multi-day event
-    addMultiDayEvent(title, startDate, days) {
-      const start = Temporal.PlainDate.from(startDate);
-      
-      this.events.push({
-        id: Date.now().toString(),
-        title,
-        start: start.toString(),
-        end: start.add({ days }).toString(),
-        allDay: true,
-        color: 'yellow'
-      });
-    },
-    
-    // Remove event by id
-    removeEvent(eventId) {
-      const index = this.events.findIndex(e => e.id === eventId);
-      if (index !== -1) {
-        this.events.splice(index, 1);
-      }
-    },
-    
-    // Update event
-    updateEvent(eventId, updates) {
-      const event = this.events.find(e => e.id === eventId);
-      if (event) {
-        Object.assign(event, updates);
-      }
-    }
-  }
-};
-```
-
-### Integration Example
-
-```vue
-<template>
-  <div class="app">
-    <GoogleCalendar
-      ref="calendar"
-      :events="events"
-      :locale="currentLocale"
-      initial-view="month"
-      @event-click="showEventDetails"
-      @date-change="loadEventsForDate"
-      @view-change="saveViewPreference"
-    />
-  </div>
-</template>
-
-<script>
-import { Temporal } from '@js-temporal/polyfill';
-import { GoogleCalendar } from '@zehenrique/vue-google-calendar';
-
-export default {
-  components: { GoogleCalendar },
-  
-  data() {
-    return {
-      events: [],
-      currentLocale: 'en-US'
-    };
-  },
-  
-  async mounted() {
-    await this.loadEvents();
-  },
-  
-  methods: {
-    async loadEvents() {
-      // Load from API
-      const response = await fetch('/api/events');
-      const data = await response.json();
-      this.events = data;
-    },
-    
-    showEventDetails(event) {
-      // Show event details modal
-      this.$modal.show({
-        component: EventDetails,
-        props: { event }
-      });
-    },
-    
-    loadEventsForDate(date) {
-      // Lazy load events for new date range
-      const start = date.subtract({ days: 7 });
-      const end = date.add({ days: 7 });
-      this.fetchEventsInRange(start, end);
-    },
-    
-    saveViewPreference(view) {
-      localStorage.setItem('calendarView', view);
-    }
-  }
-};
-</script>
-```
-
-## Temporal API Integration
-
-### Date Operations
-
-```javascript
-import { Temporal } from '@js-temporal/polyfill';
-
-// Get current date
-const today = Temporal.Now.plainDateISO();
-
-// Add/subtract time
-const tomorrow = today.add({ days: 1 });
-const lastWeek = today.subtract({ weeks: 1 });
-const nextMonth = today.add({ months: 1 });
-
-// Compare dates
-const isPast = Temporal.PlainDate.compare(date, today) < 0;
-const isSame = Temporal.PlainDate.compare(date1, date2) === 0;
-const isFuture = Temporal.PlainDate.compare(date, today) > 0;
-
-// Format dates
-const formatted = today.toLocaleString('en-US', {
-  weekday: 'long',
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric'
-});
-```
-
-### DateTime Operations
-
-```javascript
-// Create specific date/time
-const meeting = Temporal.PlainDateTime.from({
-  year: 2025,
-  month: 10,
-  day: 27,
-  hour: 14,
-  minute: 30
-});
-
-// Get date/time components
-console.log(meeting.year);    // 2025
-console.log(meeting.month);   // 10
-console.log(meeting.day);     // 27
-console.log(meeting.hour);    // 14
-console.log(meeting.minute);  // 30
-
-// Duration calculations
-const duration = end.since(start);
-console.log(duration.hours);  // Hours between dates
-```
-
-## Advanced Features
-
-### Custom Event Filtering
-
-```javascript
-methods: {
-  filterEvents(events, criteria) {
-    return events.filter(event => {
-      // Filter by date range
-      const start = Temporal.PlainDate.from(event.start);
-      if (criteria.startDate && Temporal.PlainDate.compare(start, criteria.startDate) < 0) {
-        return false;
-      }
-      
-      // Filter by color
-      if (criteria.colors && !criteria.colors.includes(event.color)) {
-        return false;
-      }
-      
-      // Filter by title search
-      if (criteria.search && !event.title.toLowerCase().includes(criteria.search.toLowerCase())) {
-        return false;
-      }
-      
-      return true;
-    });
-  }
-}
-```
-
-### Event Validation
-
-```javascript
-function validateEvent(event) {
-  if (!event.id) {
-    throw new Error('Event must have an id');
-  }
-  
-  if (!event.title) {
-    throw new Error('Event must have a title');
-  }
-  
-  if (!event.start) {
-    throw new Error('Event must have a start date/time');
-  }
-  
-  // Validate date format
-  try {
-    Temporal.PlainDateTime.from(event.start);
-  } catch (e) {
-    throw new Error('Invalid start date format');
-  }
-  
-  // Validate end is after start
-  if (event.end) {
-    const start = Temporal.PlainDateTime.from(event.start);
-    const end = Temporal.PlainDateTime.from(event.end);
-    if (Temporal.PlainDateTime.compare(end, start) < 0) {
-      throw new Error('End time must be after start time');
-    }
-  }
-  
-  return true;
-}
-```
-
-## iCalendar (RFC 5545) and RRULE Interop
-
-### User-Facing Recurrence Interface
-
-The calendar provides a Google Calendar-like interface for recurrence. Users **never see or edit RRULE strings directly**. Instead:
-
-1. **Simple Repeat Options**: Users can select:
-   - Does not repeat
-   - Daily
-   - Weekly
-   - Monthly
-   - Yearly
-   - Custom...
-
-2. **Custom Recurrence Modal**: When "Custom..." is selected, a detailed modal opens allowing users to configure:
-   - Frequency (Daily/Weekly/Monthly/Yearly)
-   - Interval (every N days/weeks/months/years)
-   - Days of the week (for weekly recurrence)
-   - Monthly pattern (by day of month or by weekday position)
-   - End condition (never, until date, or after N occurrences)
-
-3. **Human-Readable Display**: Event details show recurrence in plain language:
-   - "Weekly" → displays as "Weekly"
-   - "FREQ=WEEKLY;BYDAY=MO,FR" → displays as "Weekly on M, F"
-   - "FREQ=MONTHLY;INTERVAL=2;COUNT=6" → displays as "Every 2 months, 6 times"
-
-4. **Deleting Recurring Events**: When deleting a recurring event, users are prompted to choose:
-   - **Delete this event**: Removes only the selected occurrence by adding an EXDATE to the RRULE. The event is updated via `eventUpdate` emission.
-   - **Delete all events in the series**: Removes the entire recurring series. The event is deleted via `eventDelete` emission.
-
-### Programmatic RRULE Usage
-
-For developers, a composable `useCalendarInterop` is provided for importing/exporting iCalendar data and handling RRULE recurrence.
-
-- parseICal(icsString) -> Array&lt;Event&gt;: Parses ICS text into the component's event objects.
-- serializeICal(events, opts?) -> string: Generates ICS text from event objects. Optional opts: { prodId, tzid }.
-- parseRRule(rruleString) -> { rule, options }: Parses an RRULE (with or without DTSTART) into an RRule instance.
-- serializeRRule(optionsOrRule) -> string: Serializes RRule options or an RRule instance to RFC string.
-- expandRecurrence(event, rangeStart, rangeEnd) -> Array&lt;Event&gt;: Expands an event with event.rrule into occurrences within range.
-
-Example:
+## Views
 
 ```js
-import useCalendarInterop from '@zehenrique/vue-google-calendar/composables/useCalendarInterop.js';
+import { createViewDay, createViewWeek, createViewMonth } from '@zehenrique/vue-google-calendar';
 
-const { parseICal, serializeICal, parseRRule, serializeRRule, expandRecurrence } = useCalendarInterop();
-
-// Parse ICS
-const events = parseICal(icsText);
-
-// Export ICS
-const ics = serializeICal(events, { prodId: '-//My App//EN' });
-
-// RRULE round-trip
-const { options } = parseRRule('RRULE:FREQ=WEEKLY;BYDAY=MO,FR;COUNT=3');
-const rruleText = serializeRRule(options);
-
-// Expand occurrences
-const recurrences = expandRecurrence(
-  {
-    id: 'evt1',
-    title: 'Standup',
-    start: '2025-10-06T09:00:00',
-    end: '2025-10-06T09:15:00',
-    rrule: 'RRULE:FREQ=WEEKLY;COUNT=3;BYDAY=MO'
-  },
-  '2025-10-01T00:00:00',
-  '2025-11-01T00:00:00'
-);
+const views = [createViewDay(), createViewWeek(), createViewMonth()];
 ```
 
-### Drag-and-Drop Functionality
+## i18n
 
-#### Overview
-The drag-and-drop functionality allows users to move events within the calendar by long-pressing and dragging them to a new time slot. This feature is available in both the `WeekView` and `DayView` components.
+The component uses `vue-i18n` internally. Register the exported `translations` in your app.
 
-#### How It Works
-1. **Long Press Activation**:
-   - A long press (500ms) on an event activates the drag-and-drop mode.
-   - The event becomes semi-transparent and follows the cursor.
-
-2. **Dragging**:
-   - The event can be dragged to any valid time slot.
-   - Hovering over a time slot highlights it as a potential drop target.
-
-3. **Dropping**:
-   - Releasing the mouse button drops the event into the highlighted time slot.
-   - The `event-drag-end` event is emitted with the updated event details.
-
-#### Props
-- `enableDragAndDrop` (Boolean): Enables or disables drag-and-drop functionality.
-- `isDragging` (Boolean): Indicates whether an event is currently being dragged.
-- `draggedEventId` (String | Number): The ID of the event being dragged.
-- `dragTransform` (String): CSS transform applied to the dragged event.
-- `dropTarget` (Object): The current drop target (date and hour).
-
-#### Events
-- `event-drag-start`: Emitted when dragging starts.
-- `event-drag-move`: Emitted while dragging.
-- `event-drag-end`: Emitted when dragging ends.
-- `slot-drag-over`: Emitted when hovering over a time slot.
-- `slot-drag-leave`: Emitted when leaving a time slot.
-
-#### Example Usage
-```vue
-<template>
-  <WeekView
-    :enableDragAndDrop="true"
-    @event-drag-start="onDragStart"
-    @event-drag-end="onDragEnd"
-  />
-</template>
-
-<script>
-export default {
-  methods: {
-    onDragStart(event) {
-      console.log('Drag started:', event);
-    },
-    onDragEnd(event) {
-      console.log('Drag ended:', event);
-    }
-  }
-};
-</script>
-```
-
-#### Notes
-- Ensure `enableDragAndDrop` is set to `true` to activate this feature.
-- The `dragTransform` prop can be used to customize the appearance of the dragged event.
+See [USAGE.md](./USAGE.md) for a complete integration example.

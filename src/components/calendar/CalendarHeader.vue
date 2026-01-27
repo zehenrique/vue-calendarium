@@ -8,6 +8,7 @@
       <div class="header-left">
         <v-btn
           v-if="isMobile && showMobileMenu"
+          style="margin-left: -10px;"
           icon
           variant="text"
           :aria-label="t('menu')"
@@ -73,7 +74,7 @@
         
         <!-- View selector: Mobile compact dropdown -->
         <v-select
-          v-if="isMobile"
+          v-if="isMobile && mobileViewSelectorPlacement === 'header'"
           :items="viewItems"
           item-title="title"
           item-value="value"
@@ -135,36 +136,26 @@
     </div>
 
     <!-- Week view day headers -->
-    <div v-if="currentView === 'week' && weekDays" class="week-day-headers-container">
-      <div class="time-column-spacer"></div>
-      <div class="week-day-headers">
-        <div v-for="day in weekDays" :key="`header-${day.key}`" class="week-day-header">
-          <span class="week-day-name">{{ day.dayName }}</span>
-          <span 
-            class="week-day-number" 
-            :class="{ today: day.isToday }"
-            @click="$emit('day-number-click', day.date)"
-          >
-            {{ day.day }}
-          </span>
-        </div>
-      </div>
-    </div>
+    <div v-if="currentView === 'week' && weekDays" class="week-strip">
+      <div class="week-strip-track" :class="{ 'is-single': !swipeRenderNeighbors }" :style="weekStripTrackStyle">
+        <div v-for="pane in weekStripPanes" :key="pane.key" class="week-strip-pane" :class="pane.className">
+          <div class="week-day-headers-container">
+            <div class="time-column-spacer"></div>
+            <div class="week-day-headers">
+              <div v-for="day in pane.days" :key="`header-${pane.key}-${day.key}`" class="week-day-header">
+                <span class="week-day-name">{{ day.dayName }}</span>
+                <span class="week-day-number" :class="{ today: day.isToday }" @click="$emit('day-number-click', day.date)">{{ day.day }}</span>
+              </div>
+            </div>
+          </div>
 
-    <!-- Week view all-day events section (only show if there are all-day events) -->
-    <div v-if="currentView === 'week' && weekDays && hasAllDayEvents" class="week-all-day-container">
-      <div class="time-column-spacer"></div>
-      <div class="week-all-day-events">
-        <div v-for="day in weekDays" :key="`allday-${day.key}`" class="all-day-events-column" @click="$emit('all-day-select', day.date)">
-          <div
-            v-for="event in day.allDayEvents"
-            :key="event.id"
-            class="all-day-event"
-            :style="getEventColorStyle(event.color, isEventPast(event))"
-            @click.stop="$emit('event-select', event)"
-            :title="event.title"
-          >
-            {{ isMobile ? abbreviateTitle(event.title) : event.title }}
+          <div v-if="pane.hasAllDayEvents" class="week-all-day-container">
+            <div class="time-column-spacer"></div>
+            <div class="week-all-day-events">
+              <div v-for="day in pane.days" :key="`allday-${pane.key}-${day.key}`" class="all-day-events-column" @click="$emit('all-day-select', day.date)">
+                <div v-for="event in day.allDayEvents" :key="event.id" class="all-day-event" :style="getEventColorStyle(event.color, isEventPast(event))" @click.stop="$emit('event-select', event)" :title="event.title">{{ isMobile ? abbreviateTitle(event.title) : event.title }}</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -206,6 +197,34 @@ const props = defineProps({
   showMobileMenu: {
     type: Boolean,
     default: true
+  },
+  mobileViewSelectorPlacement: {
+    type: String,
+    default: 'sidebar'
+  },
+  swipeEnabled: {
+    type: Boolean,
+    default: false
+  },
+  swipeRenderNeighbors: {
+    type: Boolean,
+    default: false
+  },
+  swipeIsAnimating: {
+    type: Boolean,
+    default: false
+  },
+  swipeDeltaX: {
+    type: Number,
+    default: 0
+  },
+  prevWeekDays: {
+    type: Array,
+    default: null
+  },
+  nextWeekDays: {
+    type: Array,
+    default: null
   },
   t: {
     type: Function,
@@ -273,9 +292,49 @@ const goToTodayFromPicker = () => {
   }
 };
 
-const hasAllDayEvents = computed(() => {
-  if (!props.weekDays) return false;
-  return props.weekDays.some(day => day.allDayEvents && day.allDayEvents.length > 0);
+function hasAllDayEventsFor(days) {
+  if (!Array.isArray(days)) return false;
+  return days.some(day => Array.isArray(day?.allDayEvents) && day.allDayEvents.length > 0);
+}
+
+const weekStripPanes = computed(() => {
+  const panes = [];
+
+  if (props.swipeEnabled && props.swipeRenderNeighbors && Array.isArray(props.prevWeekDays)) {
+    panes.push({
+      key: 'prev',
+      className: 'is-prev',
+      days: props.prevWeekDays,
+      hasAllDayEvents: hasAllDayEventsFor(props.prevWeekDays)
+    });
+  }
+
+  panes.push({
+    key: 'current',
+    className: 'is-current',
+    days: props.weekDays,
+    hasAllDayEvents: hasAllDayEventsFor(props.weekDays)
+  });
+
+  if (props.swipeEnabled && props.swipeRenderNeighbors && Array.isArray(props.nextWeekDays)) {
+    panes.push({
+      key: 'next',
+      className: 'is-next',
+      days: props.nextWeekDays,
+      hasAllDayEvents: hasAllDayEventsFor(props.nextWeekDays)
+    });
+  }
+
+  return panes;
+});
+
+const weekStripTrackStyle = computed(() => {
+  const baseOffset = props.swipeEnabled && props.swipeRenderNeighbors ? '-33.333333%' : '0%';
+  const dx = props.swipeEnabled ? `${props.swipeDeltaX}px` : '0px';
+  return {
+    transform: `translate3d(calc(${baseOffset} + ${dx}), 0, 0)`,
+    transition: props.swipeIsAnimating ? 'transform 220ms cubic-bezier(0.2, 0, 0, 1)' : 'none'
+  };
 });
 
 const dayInfo = computed(() => {
@@ -518,6 +577,28 @@ const dayInfo = computed(() => {
   background-color: var(--calendar-primary-hover, #1557b0);
 }
 
+.week-strip {
+  overflow: hidden;
+}
+
+.week-strip-track {
+  display: flex;
+  width: 300%;
+  will-change: transform;
+}
+
+.week-strip-track.is-single {
+  width: 100%;
+}
+
+.week-strip-pane {
+  width: 33.333333%;
+}
+
+.week-strip-track.is-single .week-strip-pane {
+  width: 100%;
+}
+
 @media (max-width: 768px) {
   .header-content {
     padding: var(--calendar-mobile-header-padding, 10px 10px);
@@ -534,7 +615,7 @@ const dayInfo = computed(() => {
   .header-right {
     gap: var(--calendar-spacing-sm, 4px);
   }
-  
+
   .calendar-title {
     font-size: 1rem;
   }
