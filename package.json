@@ -4,6 +4,11 @@
   "description": "A Google Calendar-like component for Vue.js with Temporal API support",
   "type": "module",
   "main": "src/index.js",
+  "exports": {
+    ".": {
+      "import": "./src/index.js"
+    }
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
