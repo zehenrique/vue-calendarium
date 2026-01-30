@@ -173,22 +173,19 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
    */
   function initializePinchGestures(isMobile, currentView) {
     // Only enable on mobile
-    if (typeof window === 'undefined' || !window.Hammer || !isMobile) {
-      console.debug('[PinchZoom] Not initializing:', { hasWindow: typeof window !== 'undefined', hasHammer: !!window.Hammer, isMobile });
+    if (typeof window === 'undefined' || !window.Hammer || !isMobile) {;
       destroyPinchGestures();
       return false;
     }
 
     // Only enable for day and week views
     if (currentView !== 'day' && currentView !== 'week') {
-      console.debug('[PinchZoom] Not initializing - view not supported:', currentView);
       destroyPinchGestures();
       return false;
     }
 
     const target = document.querySelector(targetSelector);
     if (!target) {
-      console.debug('[PinchZoom] Target element not found:', targetSelector);
       return false;
     }
 
@@ -205,8 +202,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
           [window.Hammer.Pinch, { enable: true, threshold: 0 }]
         ]
       });
-      
-      console.debug('[PinchZoom] Initialized successfully for', currentView, 'view on', targetSelector);
       
       let lastScale = 1;
       let gridTopInScrollContent = 0;
@@ -373,7 +368,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
       
       // Handle pinch end
       hammer.on('pinchend', () => {
-        console.debug('[PinchZoom] Pinch ended');
         isZooming.value = false;
         onPinchEnd?.();
         baseScale.value = 1;
