@@ -434,6 +434,10 @@ const dayInfo = computed(() => {
   text-overflow: ellipsis;
 }
 
+.calendar-title::first-letter {
+    text-transform: uppercase;
+}
+
 .day-view-date {
   display: flex;
   flex-direction: column;
