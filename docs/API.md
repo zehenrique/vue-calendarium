@@ -67,6 +67,7 @@ const calendarApp = createCalendar({
 - `defaultView`: `'day' | 'week' | 'month'`.
 - `selectedDate`: `Temporal.PlainDate` (defaults to “today”).
 - `locale`: `'en-US' | 'pt-PT'`.
+- `locale` also syncs to Vuetify's locale so `VDatePicker` matches the app language.
 - `events`: array of event objects (wrapped internally as `CalendarEvent`).
 - `calendars`: array of calendar objects (wrapped internally as `CalendarModel`).
 

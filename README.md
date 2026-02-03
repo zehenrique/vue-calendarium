@@ -46,6 +46,8 @@ export const i18n = createI18n({
 });
 ```
 
+The calendar syncs Vuetify's locale (used by `VDatePicker`) with the calendar locale, so the date picker matches the app language. Ensure your Vuetify setup includes `en` and `pt` locale messages.
+
 Create a calendar instance and render the component:
 
 ```vue

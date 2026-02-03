@@ -52,6 +52,8 @@ const calendarApp = createCalendar({
 </script>
 ```
 
+Note: The calendar syncs Vuetify's locale (used by `VDatePicker`) with the calendar locale so the date picker matches the app language.
+
 ### 2. Event Structure
 
 Events must follow this structure:

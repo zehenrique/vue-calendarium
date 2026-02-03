@@ -244,6 +244,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
+import { useLocale } from 'vuetify';
 import { DEFAULT_COLOR } from './config/colors.js';
 import { mergeTheme, applyTheme } from './config/theme.js';
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
@@ -289,6 +290,7 @@ defineEmits([]);
 defineOptions({ name: 'Calendar' });
 
 const { t, locale: i18nLocale } = useI18n();
+const { current: vuetifyLocale } = useLocale();
 
 // Reactive data sources from calendar app
 const events = computed(() => props.calendarApp.visibleEvents.value);
@@ -396,7 +398,9 @@ const newEvent = ref(createDefaultEventDraft(calendars.value));
 watch(
   () => calendarLocale.value,
   (newLocale) => {
-    i18nLocale.value = localeCodeMap[newLocale] || 'en';
+    const mappedLocale = localeCodeMap[newLocale] || 'en';
+    i18nLocale.value = mappedLocale;
+    vuetifyLocale.value = mappedLocale;
   },
   { immediate: true }
 );
