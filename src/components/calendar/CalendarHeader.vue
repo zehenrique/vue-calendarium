@@ -423,6 +423,10 @@ const dayInfo = computed(() => {
   display: none;
 }
 
+:deep(.v-btn) {
+  text-transform: capitalize !important;
+}
+
 .calendar-title {
   margin: 0;
   font-weight: var(--calendar-font-weight-normal, 400);

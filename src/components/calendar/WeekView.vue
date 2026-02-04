@@ -41,7 +41,7 @@
               }"
               @mousedown.stop="handleEventMouseDown(event, $event)"
               @click.stop="handleEventClick(event)">
-              <div class="event-title">{{ event.title || '(Sem título)' }}</div>
+              <div class="event-title">{{ event.title || t('untitled') }}</div>
             </div>
           </div>
         </div>

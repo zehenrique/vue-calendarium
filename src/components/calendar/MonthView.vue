@@ -27,8 +27,8 @@
               :class="{ 'ghost-event': event.isGhost }"
               :style="getEventColorStyle(event.color, isEventPast(event))"
               @click.stop="$emit('event-select', event)"
-              :aria-label="`${event.title || '(Sem título)'} ${formatEventTime(event, locale)}`">
-              <span>{{ event.title || '(Sem título)' }}</span>
+              :aria-label="`${event.title || t('untitled')} ${formatEventTime(event, locale)}`">
+              <span>{{ event.title || t('untitled') }}</span>
             </button>
             <button
               v-if="day.events.length > maxVisibleEvents"
@@ -65,6 +65,10 @@ const props = defineProps({
   isMobile: {
     type: Boolean,
     default: false
+  },
+  t: {
+    type: Function,
+    required: true
   }
 });
 

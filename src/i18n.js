@@ -95,7 +95,8 @@ const translations = {
     zoomIn: 'Zoom in',
     zoomOut: 'Zoom out',
     resetZoom: 'Reset zoom',
-    zoom: 'Zoom'
+    zoom: 'Zoom',
+    untitled: '(No title)'
   },
   pt: {
     today: 'Hoje',
@@ -193,7 +194,8 @@ const translations = {
     zoomIn: 'Aumentar zoom',
     zoomOut: 'Diminuir zoom',
     resetZoom: 'Redefinir zoom',
-    zoom: 'Zoom'
+    zoom: 'Zoom',
+    untitled: '(Sem título)'
   }
 };
 
