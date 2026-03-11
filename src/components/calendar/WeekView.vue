@@ -452,6 +452,7 @@ watch(showCurrentTimeIndicator, value => {
   pointer-events: none;
   display: flex;
   align-items: center;
+  transform: translateY(-50%);
 }
 
 .time-indicator-circle {
