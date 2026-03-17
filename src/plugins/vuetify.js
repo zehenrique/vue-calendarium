@@ -4,6 +4,7 @@ import { createVuetify } from 'vuetify'
 import { en, pt } from 'vuetify/locale'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import { CALENDAR_FONT_FAMILY } from '../config/theme.js'
 
 // Create Vuetify instance with Material Design 3 theme
 export default createVuetify({
@@ -35,7 +36,7 @@ export default createVuetify({
   defaults: {
     global: {
       font: {
-        family: "'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif",
+        family: CALENDAR_FONT_FAMILY,
       },
     },
     VBtn: {

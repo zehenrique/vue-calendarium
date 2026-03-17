@@ -260,7 +260,7 @@ console.log('Initial events:', calendarApp.eventsService.getAll());
 <style>
 /* Global font family for Google Calendar look */
 * {
-  font-family: 'Roboto', 'Google Sans', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif !important;
+  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif) !important;
 }
 
 /* Ensure Vuetify main container fills height */

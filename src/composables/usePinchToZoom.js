@@ -5,7 +5,7 @@ import { ref, computed } from 'vue';
  */
 const ZOOM_RANGES = {
   week: {
-    mobile: { min: 30, default: 45, max: 90 },
+    mobile: { min: 30, default: 45, max: 150 },
     desktop: { min: 40, default: 54, max: 108 }
   },
   day: {

@@ -1276,7 +1276,7 @@ watch(showModal, (isOpen) => {
   --calendar-height-scale: 1;
   
   /* Use CSS custom properties from theme */
-  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', Arial, sans-serif);
+  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
   background: var(--calendar-bg, #ffffff);
   color: var(--calendar-text-primary, #3c4043);
   display: flex;
@@ -1287,6 +1287,13 @@ watch(showModal, (isOpen) => {
   user-select: none;
   width: 100%;
   overscroll-behavior: contain;
+}
+
+.google-calendar,
+.google-calendar :deep(*),
+:deep(.calendar-font-scope),
+:deep(.calendar-font-scope *) {
+  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
 }
 
 .swipe-deck {

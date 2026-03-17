@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
+  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
     <v-card class="pa-0" rounded="xl">
       <v-card-title class="d-flex align-center pa-6 pb-4">
         <span class="text-h6 font-weight-medium">{{ t('customRecurrence') }}</span>

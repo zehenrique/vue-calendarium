@@ -1,5 +1,5 @@
 <template>
-  <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480" scrim="rgba(0, 0, 0, 0.5)" content-class="event-modal-positioning" data-testid="event-modal">
+  <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480" scrim="rgba(0, 0, 0, 0.5)" content-class="calendar-font-scope event-modal-positioning" data-testid="event-modal">
     <v-card class="pa-0 event-modal-card" rounded="xl">
       <!-- Header with tabs and close button -->
       <div class="modal-header">
@@ -17,7 +17,7 @@
             <!-- Date and time row -->
             <div class="d-flex align-center mb-2">
               <v-icon class="mr-4 flex-shrink-0" size="20">mdi-clock-outline</v-icon>
-              <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+              <v-menu v-model="showDatePicker" content-class="calendar-font-scope" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" hide-details density="compact" class="date-input mr-3" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>
@@ -90,7 +90,7 @@
   </v-dialog>
 
   <!-- Mobile Bottom Sheet -->
-  <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-modal-mobile">
+  <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" content-class="calendar-font-scope" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-modal-mobile">
     <v-card class="mobile-bottom-sheet" rounded="t-xl">
       <!-- Action buttons at top -->
       <v-card-actions class="pa-4 pb-2">
@@ -115,7 +115,7 @@
             <div class="d-flex align-center mb-2">
               <v-icon size="20" class="mr-3 flex-shrink-0 text-medium-emphasis">mdi-clock-outline</v-icon>
               <!-- Date picker -->
-              <v-menu v-model="showDatePicker" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
+              <v-menu v-model="showDatePicker" content-class="calendar-font-scope" :close-on-content-click="false" transition="scale-transition" offset-y min-width="auto">
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" density="compact" hide-details class="flex-grow-1" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>

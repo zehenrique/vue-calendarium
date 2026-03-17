@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :model-value="modelValue && !!event" @update:model-value="handleClose" max-width="520" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal">
+  <v-dialog :model-value="modelValue && !!event" @update:model-value="handleClose" max-width="520" content-class="calendar-font-scope" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal">
     <v-card v-if="event" class="pa-0 event-detail-card" rounded="xl">
       <!-- Header with action buttons -->
       <v-card-title class="d-flex align-center px-4 py-3 border-b">

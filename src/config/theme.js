@@ -5,6 +5,8 @@
  * CSS variables in their parent component's styles.
  */
 
+export const CALENDAR_FONT_FAMILY = "'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+
 export const DEFAULT_THEME = {
   // ============================================
   // COLORS
@@ -46,7 +48,7 @@ export const DEFAULT_THEME = {
   // TYPOGRAPHY
   // ============================================
   
-  '--calendar-font-family': "'Google Sans', 'Roboto', Arial, sans-serif",
+  '--calendar-font-family': CALENDAR_FONT_FAMILY,
   '--calendar-font-size-base': '14px',
   '--calendar-font-size-small': '12px',
   '--calendar-font-size-xsmall': '11px',

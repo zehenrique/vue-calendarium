@@ -28,6 +28,7 @@
         <!-- Desktop: Text button for Today (placed before prev/next) -->
         <v-btn
           v-if="!isMobile"
+          class="header-outlined-control today-button"
           variant="outlined"
           :aria-label="t('today')"
           data-testid="today-button"
@@ -90,6 +91,7 @@
         <!-- Desktop: compact dropdown for view selection -->
         <v-select
           v-if="!isMobile"
+          class="header-outlined-control"
           :items="viewItems"
           item-title="title"
           item-value="value"
@@ -103,9 +105,10 @@
         ></v-select>
         
         <!-- Desktop: Date picker -->
-        <v-menu v-if="!isMobile" :close-on-content-click="false" ref="datePickerMenu">
+        <v-menu v-if="!isMobile" content-class="calendar-font-scope" :close-on-content-click="false" ref="datePickerMenu">
           <template v-slot:activator="{ props: menuProps }">
             <v-text-field
+              class="header-outlined-control"
               :model-value="formattedDate"
               variant="outlined"
               density="compact"
@@ -417,6 +420,41 @@ const dayInfo = computed(() => {
 .mobile-view-select {
   min-width: 120px;
   max-width: 120px;
+}
+
+.header-outlined-control {
+  color: var(--calendar-text-primary, #3c4043);
+}
+
+.today-button {
+  min-height: 40px;
+  padding-inline: 16px;
+  border-color: var(--calendar-border-color, #e0e0e0) !important;
+  border-radius: var(--calendar-border-radius-lg, 12px);
+  font-size: var(--calendar-font-size-base, 14px);
+  font-weight: var(--calendar-font-weight-normal, 400);
+  letter-spacing: normal;
+}
+
+.today-button:hover {
+  background-color: var(--calendar-day-hover-bg, #f8f9fa);
+}
+
+:deep(.header-outlined-control .v-field) {
+  border-radius: var(--calendar-border-radius-lg, 12px);
+}
+
+:deep(.header-outlined-control .v-field__input),
+:deep(.header-outlined-control .v-select__selection),
+:deep(.header-outlined-control .v-field input) {
+  color: var(--calendar-text-primary, #3c4043);
+  font-size: var(--calendar-font-size-base, 14px);
+  font-weight: var(--calendar-font-weight-normal, 400);
+}
+
+:deep(.header-outlined-control .v-field__outline) {
+  --v-field-border-opacity: 1;
+  color: var(--calendar-border-color, #e0e0e0);
 }
 
 :deep(.v-picker-title) {

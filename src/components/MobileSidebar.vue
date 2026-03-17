@@ -1,5 +1,5 @@
 <template>
-  <v-navigation-drawer :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" location="left" temporary touchless width="280" class="mobile-sidebar">
+  <v-navigation-drawer :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" location="left" temporary touchless width="280" class="calendar-font-scope mobile-sidebar">
     <template v-if="modelValue">
       <v-list class="py-2">
         <v-list-item class="px-4 py-3">

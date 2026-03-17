@@ -155,7 +155,7 @@ const fullTheme = mergeTheme(partialTheme);
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `--calendar-font-family` | `'Google Sans', 'Roboto', Arial, sans-serif` | Font family |
+| `--calendar-font-family` | `'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif` | Font family |
 | `--calendar-font-size-base` | `14px` | Base font size |
 | `--calendar-font-size-small` | `12px` | Small font size |
 | `--calendar-font-size-xsmall` | `11px` | Extra small font size |
@@ -163,6 +163,8 @@ const fullTheme = mergeTheme(partialTheme);
 | `--calendar-font-size-title` | `1.25rem` | Title font size |
 | `--calendar-font-weight-normal` | `400` | Normal font weight |
 | `--calendar-font-weight-medium` | `500` | Medium font weight |
+
+The `--calendar-font-family` variable is applied to the calendar surface and to teleported Vuetify overlays used by the header menus, dialogs, and bottom sheets, so one override keeps font rendering consistent across all component text.
 
 ### Spacing
 
@@ -219,6 +221,17 @@ const fullTheme = mergeTheme(partialTheme);
 ## Theme Presets
 
 The component includes several built-in theme presets:
+
+### Header Outlined Controls
+
+The desktop header keeps the `Today` button, view selector, and date picker visually aligned by reusing the same outlined-control styling. These controls inherit the existing theme variables below, so overriding them keeps the header consistent without component-specific CSS overrides:
+
+- `--calendar-border-color`
+- `--calendar-text-primary`
+- `--calendar-font-size-base`
+- `--calendar-font-weight-normal`
+- `--calendar-border-radius-lg`
+- `--calendar-day-hover-bg`
 
 ### Default Theme
 

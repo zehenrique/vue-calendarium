@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="handleCancel" max-width="520" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="delete-confirm-modal">
+  <v-dialog :model-value="modelValue" @update:model-value="handleCancel" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="delete-confirm-modal">
     <v-card class="pa-0" rounded="xl">
       <v-card-title class="px-6 pt-6 pb-4">
         <v-icon color="error" size="24" class="mr-3">mdi-alert-circle-outline</v-icon>
