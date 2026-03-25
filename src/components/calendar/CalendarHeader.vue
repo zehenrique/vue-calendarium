@@ -400,10 +400,6 @@ const dayInfo = computed(() => {
   margin: 0 10px;
 }
 
-.nav-controls .v-btn {
-  margin: 0 -4px;
-}
-
 .date-picker-header {
   display: flex;
   justify-content: flex-end;
