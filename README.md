@@ -2,6 +2,8 @@
 
 Google Calendar-like calendar UI for Vue 3 (Composition API), built with Vuetify. Includes Month/Week/Day views, event CRUD, recurring events (RRULE), mobile gestures, and Temporal-based date handling (24-hour time display).
 
+Mobile gesture handlers are safely reinitialized across SPA route changes so pinch-to-zoom and horizontal swipe remain stable after unmounting and remounting the calendar.
+
 ## Installation
 
 This package is published to GitHub Packages.

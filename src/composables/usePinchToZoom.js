@@ -31,6 +31,7 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
   const rafId = ref(null);
   const isInertiaActive = ref(false);
   const detachTouchBlockers = ref(null);
+  const scheduledInitializationTimeoutIds = ref([]);
   
   // Store zoom levels for different views
   const zoomLevels = ref({
@@ -127,9 +128,20 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
   };
 
   /**
+   * Clear pending delayed initialization attempts.
+   */
+  function clearScheduledInitializations() {
+    scheduledInitializationTimeoutIds.value.forEach((timeoutId) => {
+      clearTimeout(timeoutId);
+    });
+    scheduledInitializationTimeoutIds.value = [];
+  }
+
+  /**
    * Destroy pinch gesture handler
    */
   function destroyPinchGestures() {
+    clearScheduledInitializations();
     if (rafId.value) {
       cancelAnimationFrame(rafId.value);
       rafId.value = null;
@@ -421,11 +433,16 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
    * @param {string} currentView - Current calendar view
    */
   function schedulePinchInitialization(isMobile, currentView) {
+    clearScheduledInitializations();
     const attempts = [0, 100, 500, 1000];
     attempts.forEach((delay) => {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        scheduledInitializationTimeoutIds.value = scheduledInitializationTimeoutIds.value.filter(
+          (id) => id !== timeoutId,
+        );
         initializePinchGestures(isMobile, currentView);
       }, delay);
+      scheduledInitializationTimeoutIds.value.push(timeoutId);
     });
   }
 

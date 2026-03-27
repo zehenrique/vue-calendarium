@@ -2,9 +2,18 @@ import { ref } from 'vue';
 
 export function createSwipeTransitionController(targetSelector, { isEnabled, onPanStart, onPanMove, onPanEnd } = {}) {
   const hammerInstance = ref(null);
+  const scheduledInitializationTimeoutIds = ref([]);
   let isActiveHorizontalPan = false;
 
+  function clearScheduledInitializations() {
+    scheduledInitializationTimeoutIds.value.forEach((timeoutId) => {
+      clearTimeout(timeoutId);
+    });
+    scheduledInitializationTimeoutIds.value = [];
+  }
+
   function destroySwipeTransitionGestures() {
+    clearScheduledInitializations();
     if (hammerInstance.value) {
       hammerInstance.value.destroy();
       hammerInstance.value = null;
@@ -88,11 +97,16 @@ export function createSwipeTransitionController(targetSelector, { isEnabled, onP
   }
 
   function scheduleSwipeTransitionInitialization(isMobile) {
+    clearScheduledInitializations();
     const attempts = [0, 100, 500, 1000];
     attempts.forEach((delay) => {
-      setTimeout(() => {
+      const timeoutId = setTimeout(() => {
+        scheduledInitializationTimeoutIds.value = scheduledInitializationTimeoutIds.value.filter(
+          (id) => id !== timeoutId,
+        );
         initializeSwipeTransitionGestures(isMobile);
       }, delay);
+      scheduledInitializationTimeoutIds.value.push(timeoutId);
     });
   }
 

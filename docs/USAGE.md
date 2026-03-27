@@ -54,6 +54,10 @@ const calendarApp = createCalendar({
 
 Note: The calendar syncs Vuetify's locale (used by `VDatePicker`) with the calendar locale so the date picker matches the app language.
 
+## Mobile Gestures in SPA Navigation
+
+The calendar cleans up and reschedules mobile gesture handlers when it is unmounted and mounted again inside a single-page application. This keeps pinch-to-zoom anchored correctly and prevents duplicated swipe or pinch listeners after navigating away from the calendar and back.
+
 ### 2. Event Structure
 
 Events must follow this structure:
