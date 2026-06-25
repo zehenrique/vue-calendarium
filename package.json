@@ -40,13 +40,13 @@
   ],
   "author": "zehenrique <10810709+zehenrique@users.noreply.github.com>",
   "license": "MIT",
-  "homepage": "https://github.com/zehenrique/vuejs-calendar#readme",
+  "homepage": "https://github.com/zehenrique/vue-calendarium#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zehenrique/vuejs-calendar.git"
+    "url": "git+https://github.com/zehenrique/vue-calendarium.git"
   },
   "bugs": {
-    "url": "https://github.com/zehenrique/vuejs-calendar/issues"
+    "url": "https://github.com/zehenrique/vue-calendarium/issues"
   },
   "publishConfig": {
     "access": "public"

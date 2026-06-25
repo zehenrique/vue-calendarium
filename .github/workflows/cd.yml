@@ -34,19 +34,16 @@ jobs:
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           if npm view vue-calendarium@$VERSION version 2>/dev/null | grep -q "$VERSION"; then
-            echo "already_published=true" >> $GITHUB_OUTPUT
-          else
-            echo "already_published=false" >> $GITHUB_OUTPUT
+            echo "❌ Version $VERSION is already published on npm. Bump the version in package.json before merging."
+            exit 1
           fi
 
       - name: Publish to npm
-        if: steps.version_check.outputs.already_published == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Create GitHub release
-        if: steps.version_check.outputs.already_published == 'false'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version_check.outputs.version }}

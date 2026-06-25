@@ -9,13 +9,13 @@ This project adheres to a [Code of Conduct](./CODE_OF_CONDUCT.md). By participat
 ## Getting started
 
 ```bash
-git clone https://github.com/zehenrique/vuejs-calendar.git
-cd vuejs-calendar
+git clone https://github.com/zehenrique/vue-calendarium.git
+cd vue-calendarium
 npm install
 make dev      # or: npm run dev
 ```
 
-The app runs on http://localhost:3000.
+The app runs on <http://localhost:3000>.
 
 ## Tech stack & conventions
 
