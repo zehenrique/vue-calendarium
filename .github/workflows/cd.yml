@@ -1,16 +1,20 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
     branches: [main]
   workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # For workflow_run: only proceed if CI passed. workflow_dispatch has no conclusion so allow that too.
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
     permissions:
       contents: write  # needed to create GitHub releases
-      id-token: write  # needed for npm provenance
+      id-token: write  # needed for npm provenance (requires public repo)
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -35,13 +39,9 @@ jobs:
             echo "already_published=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Run tests
-        if: steps.version_check.outputs.already_published == 'false'
-        run: npm run test --if-present
-
       - name: Publish to npm
         if: steps.version_check.outputs.already_published == 'false'
-        run: npm publish --access public --provenance
+        run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
