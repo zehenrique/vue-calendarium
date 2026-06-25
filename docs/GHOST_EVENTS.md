@@ -137,7 +137,7 @@ watch(() => calendarApp.ghostEvent.value, (ghost) => {
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, createViewWeek, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewWeek, Calendar } from 'vue-calendarium';
 
 const showModal = ref(false);
 const draft = ref({
@@ -225,7 +225,7 @@ Ghost events automatically have:
 - **Dashed border** (2px dashed vs solid)
 - **isGhost flag** set to `true`
 
-These styles are applied automatically and match Google Calendar's preview event styling.
+These styles are applied automatically and match the calendar's preview event styling.
 
 ## Best Practices
 

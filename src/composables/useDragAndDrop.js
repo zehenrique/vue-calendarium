@@ -1,5 +1,4 @@
 import { ref, computed } from 'vue';
-import { Temporal } from '@js-temporal/polyfill';
 
 /**
  * Composable for drag and drop functionality in calendar views
@@ -9,7 +8,6 @@ export function useDragAndDrop() {
   const draggedEvent = ref(null);
   const dragStartPosition = ref({ x: 0, y: 0 });
   const currentMousePosition = ref({ x: 0, y: 0 });
-  const dragOffset = ref({ x: 0, y: 0 });
   const dropTarget = ref(null); // { date, hour }
 
   const dragTransform = computed(() => {

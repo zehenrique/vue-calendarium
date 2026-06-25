@@ -1,7 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
 /**
- * Playwright configuration for Google Calendar Component
+ * Playwright configuration for vue-calendarium
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({

@@ -188,7 +188,7 @@ const translations = {
     appointmentSlots: 'Agendamento de marcações',
     timezone: 'Fuso horário',
     doesNotRepeat: 'Não se repete',
-    addDescription: 'Adicionar descrição ou um anexo do Google Drive',
+    addDescription: 'Adicionar descrição ou anexos',
     moreOptions: 'Mais opções',
     email: 'Email',
     zoomIn: 'Aumentar zoom',

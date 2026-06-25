@@ -1,11 +1,11 @@
 /**
- * Default theme configuration for the Google Calendar component.
+ * Default theme configuration for the vue-calendarium component.
  * All CSS custom properties (variables) are defined here.
  * Users can override these by passing a custom theme object or by defining
  * CSS variables in their parent component's styles.
  */
 
-export const CALENDAR_FONT_FAMILY = "'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
+export const CALENDAR_FONT_FAMILY = "'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif";
 
 export const DEFAULT_THEME = {
   // ============================================
@@ -197,7 +197,7 @@ export function generateThemeCSS(theme = DEFAULT_THEME) {
     .map(([property, value]) => `  ${property}: ${value};`)
     .join('\n');
   
-  return `.google-calendar {\n${properties}\n}`;
+  return `.vue-calendarium {\n${properties}\n}`;
 }
 
 /**

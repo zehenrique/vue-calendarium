@@ -29,6 +29,7 @@
             :class="{ 'drop-target': isDropTarget(date, hour - 1) }"
             @click="$emit('hour-slot-select', { date, hour: hour - 1 })"
             @mouseenter="handleSlotHover(date, hour - 1)"
+            @mouseleave="handleSlotLeave"
           >
           </div>
           <div
@@ -339,7 +340,7 @@ watch(showCurrentTimeIndicator, value => {
   }
 }
 
-/* Style the scrollbar to be thin and match Google Calendar */
+/* Style the scrollbar to be thin */
 .calendar-body.day-view::-webkit-scrollbar {
   width: 6px;
 }

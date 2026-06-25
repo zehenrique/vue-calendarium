@@ -1,5 +1,5 @@
 <template>
-  <div ref="calendarRoot" class="google-calendar" :class="{ 'is-mobile': isMobile }">
+  <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile }">
     <CalendarHeader
       :current-title="currentTitle"
       :current-view="currentView"
@@ -746,10 +746,9 @@ const {
   schedulePinchInitialization,
   isZooming: pinchIsZooming,
   getPixelsPerHour,
-  getZoomRange,
-  resetZoom
+  getZoomRange
 } = createPinchToZoomController('.swipe-pane.is-current .calendar-body', {
-  onZoomChange: ({ view, isMobile, pixelsPerHour }) => {
+  onZoomChange: () => {
   }
   ,
   onPinchStart: () => {
@@ -764,7 +763,7 @@ const {
   }
 });
 
-const { destroySwipeTransitionGestures, scheduleSwipeTransitionInitialization } = createSwipeTransitionController('.google-calendar', {
+const { destroySwipeTransitionGestures, scheduleSwipeTransitionInitialization } = createSwipeTransitionController('.vue-calendarium', {
   isEnabled: () => swipeTransitionEnabled.value,
   onPanStart: handleSwipePanStart,
   onPanMove: handleSwipePanMove,
@@ -781,8 +780,7 @@ const {
   updateDrag,
   endDrag,
   setDropTarget,
-  clearDropTarget,
-  cancelDrag
+  clearDropTarget
 } = useDragAndDrop();
 
 // Update CSS variables when pixels per hour changes
@@ -1272,11 +1270,11 @@ watch(showModal, (isOpen) => {
 </script>
 
 <style scoped>
-.google-calendar {
+.vue-calendarium {
   --calendar-height-scale: 1;
-  
+
   /* Use CSS custom properties from theme */
-  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
+  font-family: var(--calendar-font-family, 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
   background: var(--calendar-bg, #ffffff);
   color: var(--calendar-text-primary, #3c4043);
   display: flex;
@@ -1289,11 +1287,11 @@ watch(showModal, (isOpen) => {
   overscroll-behavior: contain;
 }
 
-.google-calendar,
-.google-calendar :deep(*),
+.vue-calendarium,
+.vue-calendarium :deep(*),
 :deep(.calendar-font-scope),
 :deep(.calendar-font-scope *) {
-  font-family: var(--calendar-font-family, 'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
+  font-family: var(--calendar-font-family, 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif);
 }
 
 .swipe-deck {
@@ -1332,7 +1330,7 @@ watch(showModal, (isOpen) => {
 }
 
 @media (max-width: 768px) {
-  .google-calendar {
+  .vue-calendarium {
     height: 100%;
   }
 }

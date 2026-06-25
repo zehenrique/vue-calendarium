@@ -32,7 +32,7 @@ test.describe('Mobile Gesture Tests', () => {
       window.__CALENDAR_TEST_NOW__ = '2025-01-15T09:00:00';
     });
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
   });
 
   test('should swipe left to navigate to next period in week view', async ({ page }) => {
@@ -84,6 +84,6 @@ test.describe('Mobile Gesture Tests', () => {
     await page.mouse.move(180, viewport.height / 2, { steps: 12 });
     await page.mouse.up();
 
-    await expect(page.locator('.google-calendar')).toBeVisible();
+    await expect(page.locator('.vue-calendarium')).toBeVisible();
   });
 });

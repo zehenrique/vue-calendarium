@@ -1,11 +1,11 @@
-# Google Calendar Component - Agent Instructions
+# vue-calendarium - Agent Instructions
 
 ## Core Principles
 
-1. **Design Philosophy**: Always try to mimic Google Calendar design and flows
-   - Study Google Calendar's UI patterns, spacing, colors, and interactions
-   - Maintain consistency with Google's Material Design principles
-   - Use similar visual hierarchies and information architecture
+1. **Design Philosophy**: Aim for a clean, modern calendar UX
+   - Follow established calendar UI patterns for spacing, colors, and interactions
+   - Maintain consistency with Material Design principles
+   - Use clear visual hierarchies and information architecture
 
 2. **Technology Stack**:
    - **Framework**: Vue.js (Vue 3 with Composition API)
@@ -101,7 +101,7 @@
 ## Testing Checklist
 
 Before completing any change, verify:
-- [ ] Matches Google Calendar design (using Material Design)
+- [ ] Follows a clean Material Design calendar layout
 - [ ] Works in mobile view
 - [ ] Times show in 24-hour format
 - [ ] Works in both en-US and pt-PT

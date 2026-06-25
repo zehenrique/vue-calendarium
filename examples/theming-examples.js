@@ -1,5 +1,5 @@
 /**
- * Comprehensive Theming Examples for Vue Google Calendar
+ * Comprehensive Theming Examples for vue-calendarium
  * 
  * This file contains various theme examples demonstrating
  * the full customization capabilities of the calendar component.

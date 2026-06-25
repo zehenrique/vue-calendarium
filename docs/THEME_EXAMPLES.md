@@ -21,7 +21,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from 'vue-calendarium';
 
 const isDark = ref(false);
 
@@ -40,7 +40,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 // Your company's brand colors
 const brandTheme = {
@@ -66,7 +66,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 // Only change what you need - rest stays default
 const customTheme = {
@@ -92,7 +92,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -102,7 +102,7 @@ const calendarApp = createCalendar({
 
 <style>
 /* Override styles via CSS */
-.my-app .google-calendar {
+.my-app .vue-calendarium {
   --calendar-primary-color: #00bcd4;
   --calendar-today-bg: #00bcd4;
   --calendar-border-radius: 12px;
@@ -120,7 +120,7 @@ const calendarApp = createCalendar({
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from 'vue-calendarium';
 
 const isMobile = ref(false);
 
@@ -157,7 +157,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS, mergeTheme } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS, mergeTheme } from 'vue-calendarium';
 
 // Start with dark theme, customize specific properties
 const customDarkTheme = mergeTheme({
@@ -176,7 +176,7 @@ const calendarApp = createCalendar({
 ## Available Theme Presets
 
 ```javascript
-import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { THEME_PRESETS } from 'vue-calendarium';
 
 // Available presets:
 THEME_PRESETS.default        // Standard light theme
@@ -219,7 +219,7 @@ See `STYLING.md` for the complete list of 60+ CSS custom properties you can cust
   '--calendar-border-color': '#e0e0e0',
   
   // Typography
-  '--calendar-font-family': '"Google Sans", "Roboto", Arial, sans-serif',
+  '--calendar-font-family': '"Roboto", Arial, sans-serif',
   '--calendar-font-size-base': '14px',
   
   // Spacing

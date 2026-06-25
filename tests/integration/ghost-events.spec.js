@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Ghost Events API', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
-    await page.waitForSelector('.google-calendar');
+    await page.waitForSelector('.vue-calendarium');
   });
 
   test('should expose ghost event methods on calendar app', async ({ page }) => {

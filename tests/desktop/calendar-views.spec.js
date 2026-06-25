@@ -12,7 +12,7 @@ test.describe('Calendar Views (Desktop)', () => {
     }, { testNow: TEST_NOW });
 
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
     await expect(getHeaderTitle(page)).toHaveText(CURRENT_MONTH_TEXT, { timeout: 3000 });
   });
 

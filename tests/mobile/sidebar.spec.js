@@ -25,7 +25,7 @@ test.describe('Mobile Sidebar Navigation', () => {
       window.__CALENDAR_TEST_NOW__ = '2025-01-15T09:00:00';
     });
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
   });
 
   test('should open mobile sidebar when clicking menu button', async ({ page }) => {

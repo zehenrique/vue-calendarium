@@ -1,4 +1,4 @@
-# Google Calendar Component - Makefile
+# vue-calendarium - Makefile
 
 # Phony targets
 .PHONY: all install dev build preview test test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration lint format clean update open setup help

@@ -1,6 +1,6 @@
 # Complete Theme Customization Reference
 
-This document provides a comprehensive reference of all customizable CSS custom properties in the Vue Google Calendar component.
+This document provides a comprehensive reference of all customizable CSS custom properties in the vue-calendarium component.
 
 ## Overview
 
@@ -127,7 +127,7 @@ const customTheme = {
 
 | Property | Default | Description | Usage |
 |----------|---------|-------------|-------|
-| `--calendar-font-family` | `'Google Sans', 'Roboto', Arial, sans-serif` | Font family | All text in calendar |
+| `--calendar-font-family` | `'Roboto', Arial, sans-serif` | Font family | All text in calendar |
 | `--calendar-font-size-base` | `14px` | Base font size | Standard text size |
 | `--calendar-font-size-small` | `12px` | Small font size | Labels, captions |
 | `--calendar-font-size-xsmall` | `11px` | Extra small font size | Very small text, timestamps |
@@ -460,7 +460,7 @@ const BRAND_THEME = {
 </template>
 
 <script setup>
-import { createCalendar, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, Calendar } from 'vue-calendarium';
 
 const myTheme = {
   '--calendar-primary-color': '#your-brand-color',

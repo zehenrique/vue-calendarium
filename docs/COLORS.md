@@ -2,11 +2,11 @@
 
 <!-- markdownlint-disable MD022 MD031 MD032 -->
 
-The Vue Google Calendar component uses a predefined color palette inspired by Google Calendar's Material Design colors. This ensures visual consistency and a professional appearance.
+The vue-calendarium component uses a predefined color palette inspired by Material Design colors. This ensures visual consistency and a professional appearance.
 
 ## Available Colors
 
-The calendar supports exactly **12 colors**, matching Google Calendar's palette:
+The calendar supports exactly **12 colors**, matching a Material Design palette:
 
 | Color Name | Hex Code | Preview | Usage |
 |------------|----------|---------|-------|
@@ -35,7 +35,7 @@ import {
   getColorIdByHex,
   isValidColor,
   getClosestColor
-} from '@zehenrique/vue-google-calendar';
+} from 'vue-calendarium';
 ```
 
 ### Using Colors in Calendars
@@ -128,7 +128,7 @@ const fallback = getClosestColor('#FFFFFF');
 ### Accessing the Full Palette
 
 ```javascript
-import { CALENDAR_COLORS } from '@zehenrique/vue-google-calendar';
+import { CALENDAR_COLORS } from 'vue-calendarium';
 
 // Display all colors in a UI picker
 CALENDAR_COLORS.forEach(color => {
@@ -190,7 +190,7 @@ When creating or updating events/calendars:
 The predefined palette ensures:
 - **Consistency**: All calendars look professional and cohesive
 - **Accessibility**: Colors chosen for sufficient contrast and visibility
-- **Familiarity**: Matches Google Calendar's trusted design language
+- **Familiarity**: Built on a familiar, trusted design language
 - **Simplicity**: Limited choices prevent decision fatigue
 
 ## Migration from Custom Colors
@@ -209,7 +209,7 @@ const event = {
 };
 
 // Or use helper
-import { getClosestColor } from '@zehenrique/vue-google-calendar';
+import { getClosestColor } from 'vue-calendarium';
 
 const event = {
   color: getClosestColor('#FF5733') // Falls back to DEFAULT_COLOR
@@ -239,7 +239,7 @@ const event = {
 ### Complete Calendar Setup
 
 ```javascript
-import { createCalendar, CALENDAR_COLORS, DEFAULT_COLOR } from '@zehenrique/vue-google-calendar';
+import { createCalendar, CALENDAR_COLORS, DEFAULT_COLOR } from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   calendars: [
@@ -287,7 +287,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { CALENDAR_COLORS } from '@zehenrique/vue-google-calendar';
+import { CALENDAR_COLORS } from 'vue-calendarium';
 import { useI18n } from 'vue-i18n';
 
 const { t } = useI18n();

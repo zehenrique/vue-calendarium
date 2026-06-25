@@ -1,7 +1,7 @@
 /**
  * Predefined color palette for the calendar.
  * These are the only colors available for calendars and events.
- * Based on Google Calendar's Material Design color palette.
+ * Based on a Material Design color palette.
  */
 
 export const CALENDAR_COLORS = [

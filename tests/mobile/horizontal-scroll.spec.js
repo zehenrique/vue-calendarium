@@ -9,10 +9,10 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     await page.goto('/');
     
     // Wait for calendar to load
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Check that body width equals scroll width (no horizontal overflow)
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     const hasHorizontalScroll = await calendar.evaluate((el) => {
       return el.scrollWidth > el.clientWidth;
     });
@@ -24,7 +24,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     await page.goto('/');
     
     // Wait for calendar to load
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Switch to week view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
@@ -38,7 +38,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     
     // Check multiple elements for horizontal overflow
     const elements = [
-      '.google-calendar',
+      '.vue-calendarium',
       '.week-view',
       '.week-grid',
       '.calendar-header'
@@ -58,7 +58,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     await page.goto('/');
     
     // Wait for calendar to load
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Switch to day view
     const menuButton = page.locator('[data-testid="mobile-menu-button"]');
@@ -72,7 +72,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     
     // Check multiple elements for horizontal overflow
     const elements = [
-      '.google-calendar',
+      '.vue-calendarium',
       '.day-view',
       '.day-grid',
       '.calendar-header'
@@ -125,7 +125,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     
     await page.waitForSelector('.week-view');
     
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     const hasHorizontalScroll = await calendar.evaluate((el) => {
       return el.scrollWidth > el.clientWidth;
     });
@@ -147,7 +147,7 @@ test.describe('Mobile Horizontal Scroll Prevention', () => {
     
     await page.waitForSelector('.week-view');
     
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     const hasHorizontalScroll = await calendar.evaluate((el) => {
       return el.scrollWidth > el.clientWidth;
     });

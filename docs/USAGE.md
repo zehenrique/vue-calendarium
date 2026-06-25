@@ -3,7 +3,7 @@
 ## Installation
 
 ```bash
-npm install @zehenrique/vue-google-calendar
+npm install vue-calendarium
 ```
 
 ## Quick Start
@@ -20,7 +20,7 @@ npm install @zehenrique/vue-google-calendar
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 // Create calendar instance
 const calendarApp = createCalendar({
@@ -161,7 +161,7 @@ calendarApp.setLocale('pt-PT');
 ### 6. Using Event and Calendar Classes
 
 ```javascript
-import { CalendarEvent, CalendarModel } from '@zehenrique/vue-google-calendar';
+import { CalendarEvent, CalendarModel } from 'vue-calendarium';
 
 // Create event instance
 const event = new CalendarEvent({
@@ -234,7 +234,7 @@ import {
   createViewWeek, 
   createViewMonth,
   Calendar 
-} from '@zehenrique/vue-google-calendar';
+} from 'vue-calendarium';
 
 // Create calendar
 const calendarApp = createCalendar({
@@ -379,7 +379,7 @@ if (calendarApp.ghostEvent.value) {
 
 <script setup>
 import { ref } from 'vue';
-import { createCalendar, createViewWeek, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewWeek, Calendar } from 'vue-calendarium';
 
 const showCustomModal = ref(false);
 const eventDraft = ref(null);

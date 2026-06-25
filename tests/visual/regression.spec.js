@@ -8,7 +8,7 @@ const SCRIM_SELECTOR = '.v-navigation-drawer__scrim';
 const TEST_NOW_ISO = '2025-01-15T09:00:00';
 
 async function ensureCalendarReady(page) {
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
 }
 
 async function applyTestNow(page) {
@@ -64,7 +64,7 @@ test.describe('Visual Regression - Desktop', () => {
     await page.waitForSelector('.calendar-days', { timeout: 2000 });
     
     // Take screenshot of full calendar
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('desktop-month-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('desktop-month-view.png', {
       maxDiffPixels: 100, // Allow small differences
     });
   });
@@ -73,7 +73,7 @@ test.describe('Visual Regression - Desktop', () => {
     // Switch to week view
     await switchDesktopView(page, 'week');
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('desktop-week-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('desktop-week-view.png', {
       maxDiffPixels: 600,
     });
   });
@@ -82,7 +82,7 @@ test.describe('Visual Regression - Desktop', () => {
     // Switch to day view
     await switchDesktopView(page, 'day');
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('desktop-day-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('desktop-day-view.png', {
       maxDiffPixels: 3200,
     });
   });
@@ -140,7 +140,7 @@ test.describe('Visual Regression - Mobile', () => {
   test('should match mobile month view snapshot', async ({ page }) => {
     await page.waitForSelector('.calendar-days', { timeout: 2000 });
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('mobile-month-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('mobile-month-view.png', {
       maxDiffPixels: 100,
     });
   });
@@ -160,7 +160,7 @@ test.describe('Visual Regression - Mobile', () => {
     // Open sidebar and switch to week
     await switchMobileView(page, 'week');
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('mobile-week-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('mobile-week-view.png', {
       maxDiffPixels: 100,
     });
   });
@@ -178,7 +178,7 @@ test.describe('Visual Regression - Mobile', () => {
     // Open sidebar and switch to day
     await switchMobileView(page, 'day');
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('mobile-day-view.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('mobile-day-view.png', {
       maxDiffPixels: 100,
     });
   });
@@ -198,7 +198,7 @@ test.describe('Visual Regression - Responsive Breakpoints', () => {
     await page.goto('/');
     await ensureCalendarReady(page);
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('tablet-landscape.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('tablet-landscape.png', {
       maxDiffPixels: 150,
     });
   });
@@ -209,7 +209,7 @@ test.describe('Visual Regression - Responsive Breakpoints', () => {
     await page.goto('/');
     await ensureCalendarReady(page);
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('tablet-portrait.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('tablet-portrait.png', {
       maxDiffPixels: 150,
     });
   });
@@ -220,7 +220,7 @@ test.describe('Visual Regression - Responsive Breakpoints', () => {
     await page.goto('/');
     await ensureCalendarReady(page);
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('mobile-small.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('mobile-small.png', {
       maxDiffPixels: 100,
     });
   });
@@ -231,7 +231,7 @@ test.describe('Visual Regression - Responsive Breakpoints', () => {
     await page.goto('/');
     await ensureCalendarReady(page);
     
-    await expect(page.locator('.google-calendar')).toHaveScreenshot('desktop-large.png', {
+    await expect(page.locator('.vue-calendarium')).toHaveScreenshot('desktop-large.png', {
       maxDiffPixels: 200,
     });
   });

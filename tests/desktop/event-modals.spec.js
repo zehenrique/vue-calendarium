@@ -40,7 +40,7 @@ test.describe('Event Modals (Desktop)', () => {
     }, { testNow: TEST_NOW });
 
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
   });
 
   test('should open event creation modal when clicking on a date', async ({ page }) => {
@@ -122,7 +122,7 @@ test.describe('Event Modals (Desktop)', () => {
     });
 
     await page.goto('/?modals=off');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
 
     await page.locator('.calendar-day').first().click();
     await expect(page.locator('[data-testid="event-modal"]')).toHaveCount(0);

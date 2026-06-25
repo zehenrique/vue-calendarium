@@ -10,12 +10,12 @@ test.describe('Mobile Pinch-to-Zoom Tests', () => {
       window.__CALENDAR_TEST_NOW__ = '2025-01-15T09:00:00';
     });
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
   });
 
   test('should load calendar successfully on mobile', async ({ page }) => {
     // Basic smoke test to verify calendar loads
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     await expect(calendar).toBeVisible();
     await expect(calendar).toHaveClass(/is-mobile/);
   });
@@ -57,11 +57,11 @@ test.describe('Desktop - No Pinch-to-Zoom', () => {
       window.__CALENDAR_TEST_NOW__ = '2025-01-15T09:00:00';
     });
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
   });
 
   test('should load calendar successfully on desktop', async ({ page }) => {
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     await expect(calendar).toBeVisible();
     await expect(calendar).not.toHaveClass(/is-mobile/);
   });

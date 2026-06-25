@@ -793,7 +793,7 @@ export default {
   }
 }
 
-/* Desktop modal positioning - align more naturally like Google Calendar */
+/* Desktop modal positioning - align more naturally next to the event */
 @media (min-width: 768px) {
   .event-modal-positioning {
     align-items: flex-start !important;

@@ -17,7 +17,7 @@ import {
   CalendarsService,
   THEME_PRESETS,
   translations
-} from '@zehenrique/vue-google-calendar';
+} from 'vue-calendarium';
 ```
 
 ## `Calendar` (Vue component)
@@ -49,7 +49,7 @@ Creates the stateful calendar “app” object.
 
 ```js
 import { Temporal } from '@js-temporal/polyfill';
-import { createCalendar, createViewDay, createViewWeek, createViewMonth } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth } from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -158,7 +158,7 @@ Common fields:
 ## Views
 
 ```js
-import { createViewDay, createViewWeek, createViewMonth } from '@zehenrique/vue-google-calendar';
+import { createViewDay, createViewWeek, createViewMonth } from 'vue-calendarium';
 
 const views = [createViewDay(), createViewWeek(), createViewMonth()];
 ```

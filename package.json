@@ -1,7 +1,7 @@
 {
-  "name": "@zehenrique/vue-google-calendar",
-  "version": "0.1.0",
-  "description": "A Google Calendar-like component for Vue.js with Temporal API support",
+  "name": "vue-calendarium",
+  "version": "1.0.0",
+  "description": "A polished, full-featured scheduling and calendar component for Vue 3 and Vuetify, with Temporal API date handling, recurring events (RRULE), i18n and mobile gestures",
   "type": "module",
   "main": "src/index.js",
   "exports": {
@@ -9,6 +9,13 @@
       "import": "./src/index.js"
     }
   },
+  "files": [
+    "src",
+    "docs",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -22,29 +29,42 @@
   },
   "keywords": [
     "vue",
+    "vue3",
+    "vuetify",
     "calendar",
-    "google-calendar",
+    "scheduler",
+    "events",
+    "rrule",
     "temporal",
     "i18n"
   ],
-  "author": "",
+  "author": "zehenrique <10810709+zehenrique@users.noreply.github.com>",
   "license": "MIT",
+  "homepage": "https://github.com/zehenrique/vuejs-calendar#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zehenrique/vuejs-calendar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zehenrique/vuejs-calendar/issues"
+  },
   "publishConfig": {
-    "registry": "https://npm.pkg.github.com",
-    "access": "restricted"
+    "access": "public"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "peerDependencies": {
-    "vue": "^3.3.0"
+    "vue": "^3.3.0",
+    "vue-i18n": "^9.0.0",
+    "vuetify": "^3.3.0"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.4.4",
     "@mdi/font": "^7.4.47",
     "hammerjs": "^2.0.8",
     "ical.js": "^2.1.0",
-    "rrule": "^2.8.1",
-    "vue": "^3.3.0",
-    "vue-i18n": "^9.14.3",
-    "vuetify": "^3.10.8"
+    "rrule": "^2.8.1"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.1",
@@ -53,6 +73,9 @@
     "eslint-plugin-vue": "^9.21.1",
     "playwright": "^1.56.1",
     "vite": "^7.3.0",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.16",
+    "vue": "^3.3.0",
+    "vue-i18n": "^9.14.3",
+    "vuetify": "^3.10.8"
   }
 }

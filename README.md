@@ -1,27 +1,20 @@
-# Vue Google Calendar Component
+# vue-calendarium
 
-Google Calendar-like calendar UI for Vue 3 (Composition API), built with Vuetify. Includes Month/Week/Day views, event CRUD, recurring events (RRULE), mobile gestures, and Temporal-based date handling (24-hour time display).
+[![npm version](https://img.shields.io/npm/v/vue-calendarium.svg)](https://www.npmjs.com/package/vue-calendarium)
+[![license](https://img.shields.io/npm/l/vue-calendarium.svg)](./LICENSE)
+[![Vue 3](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/)
+
+A polished, full-featured scheduling and calendar component for Vue 3 (Composition API), built with Vuetify. Includes Month/Week/Day views, event CRUD, recurring events (RRULE), mobile gestures, and Temporal-based date handling (24-hour time display).
+
+> Note: `vue-calendarium` is an independent open-source project. It is inspired by familiar calendar UX patterns but is not affiliated with or endorsed by any third-party calendar product.
 
 Mobile gesture handlers are safely reinitialized across SPA route changes so pinch-to-zoom and horizontal swipe remain stable after unmounting and remounting the calendar.
 
 ## Installation
 
-This package is published to GitHub Packages.
-
-1. Add a project-level `.npmrc`:
-
-```ini
-@zehenrique:registry=https://npm.pkg.github.com
-//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
-```
-
-2. Install:
-
 ```bash
-npm install @zehenrique/vue-google-calendar
+npm install vue-calendarium
 ```
-
-`GITHUB_TOKEN` must have `read:packages`.
 
 ## Requirements
 
@@ -35,7 +28,7 @@ Register translations with vue-i18n:
 
 ```js
 import { createI18n } from 'vue-i18n';
-import { translations } from '@zehenrique/vue-google-calendar';
+import { translations } from 'vue-calendarium';
 
 export const i18n = createI18n({
   legacy: false,
@@ -62,7 +55,7 @@ Create a calendar instance and render the component:
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -108,3 +101,11 @@ Run tests:
 make test
 make test-ui
 ```
+
+## Contributing
+
+Contributions are welcome! Please read the [contributing guide](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md) before opening an issue or pull request.
+
+## License
+
+[MIT](./LICENSE) © zehenrique

@@ -8,7 +8,7 @@ async function loadCalendar(page) {
   }, { testNow: TEST_NOW });
 
   await page.goto('/');
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
 }
 
 test.describe('Basic Smoke Tests', () => {
@@ -38,7 +38,7 @@ test.describe('Basic Smoke Tests', () => {
   await loadCalendar(page);
 
     // More lenient wait - just check if anything loaded
-    const calendar = page.locator('.google-calendar');
+    const calendar = page.locator('.vue-calendarium');
     const isVisible = await calendar.isVisible().catch(() => false);
     
     if (!isVisible) {

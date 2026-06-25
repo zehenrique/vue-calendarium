@@ -88,7 +88,7 @@ async function loadCalendar(page) {
   }, { testNow: TEST_NOW });
 
   await page.goto('/');
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
 }
 
 /**
@@ -115,7 +115,7 @@ test.describe('Event Persistence - CRUD Operations', () => {
 
     // Reload page
     await page.reload();
-  await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
     await switchToWeekView(page);
 
     // Verify event persists (currently in-memory, so won't persist)

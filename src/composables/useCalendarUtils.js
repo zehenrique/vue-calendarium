@@ -117,7 +117,6 @@ export function getEventStyle(event, pixelsPerHour = 60, isMobile = false) {
   if (event._column !== undefined && event._totalColumns !== undefined && event._columnSpan !== undefined) {
     const columnWidth = 100 / event._totalColumns;
     const leftOffset = event._column * columnWidth;
-    const widthPercent = event._columnSpan * columnWidth;
 
     style.left = `${leftOffset}%`;
     // Single event: responsive padding. Multiple events: resize all to leave 2px gap on right
@@ -138,7 +137,7 @@ export function getEventStyle(event, pixelsPerHour = 60, isMobile = false) {
 }
 
 /**
- * Calculate overlap columns for events (Google Calendar style)
+ * Calculate overlap columns for events (column-based overlap layout)
  */
 export function calculateEventColumns(events) {
   if (events.length === 0) return [];
@@ -225,7 +224,7 @@ export function calculateEventColumns(events) {
       event._totalColumns = totalColumns;
     }
     
-    // Calculate column span for each event (Google Calendar style)
+    // Calculate column span for each event
     // Events should expand to fill available space to their right
     for (const event of group.events) {
       let maxSpan = totalColumns - event._column;

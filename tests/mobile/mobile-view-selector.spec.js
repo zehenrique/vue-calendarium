@@ -9,7 +9,7 @@ test.describe('Mobile View Selector', () => {
     await page.goto('/?viewSelector=header');
     
     // Wait for calendar to load
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Check that the view selector is visible in the header
     const viewSelector = page.locator('.header-right [data-testid="view-toggle"]');
@@ -19,7 +19,7 @@ test.describe('Mobile View Selector', () => {
   test('should switch views using the header combobox on mobile', async ({ page }) => {
     await page.goto('/?viewSelector=header');
     
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Click the view selector to open dropdown
     const viewSelector = page.locator('.header-right [data-testid="view-toggle"]');
@@ -48,7 +48,7 @@ test.describe('Mobile View Selector', () => {
   test('should have both Today button and view selector visible on mobile', async ({ page }) => {
     await page.goto('/?viewSelector=header');
     
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Check that both Today button and view selector are in header-right
     const todayButton = page.locator('.header-right [data-testid="today-button"]');
@@ -62,7 +62,7 @@ test.describe('Mobile View Selector', () => {
     // Test on narrow viewport (iPhone 5/SE)
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/?viewSelector=header');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     let viewSelector = page.locator('.header-right [data-testid="view-toggle"]');
     await expect(viewSelector).toBeVisible();
@@ -70,7 +70,7 @@ test.describe('Mobile View Selector', () => {
     // Test on wider viewport (iPhone 14 Pro Max)
     await page.setViewportSize({ width: 428, height: 926 });
     await page.goto('/?viewSelector=header');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     viewSelector = page.locator('.header-right [data-testid="view-toggle"]');
     await expect(viewSelector).toBeVisible();
@@ -78,7 +78,7 @@ test.describe('Mobile View Selector', () => {
 
   test('should show correct view in selector after switching', async ({ page }) => {
     await page.goto('/?viewSelector=header');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 10000 });
     
     // Get initial view value
     const viewSelector = page.locator('.header-right [data-testid="view-toggle"]');

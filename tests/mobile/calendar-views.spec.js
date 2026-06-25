@@ -21,7 +21,7 @@ test.describe('Calendar Views (Mobile)', () => {
     }, { testNow: TEST_NOW });
 
     await page.goto('/');
-    await expect(page.locator('.google-calendar')).toBeVisible({ timeout: 5000 });
+    await expect(page.locator('.vue-calendarium')).toBeVisible({ timeout: 5000 });
     await expect(page.locator('.calendar-title')).toHaveText('January 2025', { timeout: 5000 });
   });
 

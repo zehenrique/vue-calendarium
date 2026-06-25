@@ -2,7 +2,7 @@
 
 <!-- markdownlint-disable MD022 MD031 MD032 -->
 
-Complete guide to customizing the appearance of the Vue Google Calendar component.
+Complete guide to customizing the appearance of the vue-calendarium component.
 
 ## Table of Contents
 
@@ -34,7 +34,7 @@ All styling values are centralized in `src/config/theme.js` and can be overridde
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
 
 const customTheme = {
   '--calendar-primary-color': '#e91e63',  // Pink primary color
@@ -60,7 +60,7 @@ const calendarApp = createCalendar({
 </template>
 
 <style>
-.my-calendar-wrapper .google-calendar {
+.my-calendar-wrapper .vue-calendarium {
   --calendar-primary-color: #673ab7;  /* Purple theme */
   --calendar-today-bg: #673ab7;
   --calendar-header-bg: #ede7f6;
@@ -78,7 +78,7 @@ const calendarApp = createCalendar({
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar, THEME_PRESETS } from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
@@ -115,7 +115,7 @@ const myTheme = {
 You only need to specify the properties you want to change. The component automatically merges your theme with the default theme:
 
 ```javascript
-import { mergeTheme, DEFAULT_THEME } from '@zehenrique/vue-google-calendar';
+import { mergeTheme, DEFAULT_THEME } from 'vue-calendarium';
 
 const partialTheme = {
   '--calendar-primary-color': '#00bcd4'
@@ -155,7 +155,7 @@ const fullTheme = mergeTheme(partialTheme);
 
 | Property | Default | Description |
 |----------|---------|-------------|
-| `--calendar-font-family` | `'Google Sans', 'Roboto', 'Product Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif` | Font family |
+| `--calendar-font-family` | `'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif` | Font family |
 | `--calendar-font-size-base` | `14px` | Base font size |
 | `--calendar-font-size-small` | `12px` | Small font size |
 | `--calendar-font-size-xsmall` | `11px` | Extra small font size |
@@ -236,12 +236,12 @@ The desktop header keeps the `Today` button, view selector, and date picker visu
 ### Default Theme
 
 ```javascript
-import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { THEME_PRESETS } from 'vue-calendarium';
 
 <Calendar :theme="THEME_PRESETS.default" />
 ```
 
-Standard Google Calendar-inspired light theme.
+Standard light theme.
 
 ### Dark Theme
 
@@ -281,7 +281,7 @@ Enhanced accessibility with high contrast colors:
 ### Creating Custom Presets
 
 ```javascript
-import { DEFAULT_THEME } from '@zehenrique/vue-google-calendar';
+import { DEFAULT_THEME } from 'vue-calendarium';
 
 const BRAND_THEME = {
   ...DEFAULT_THEME,
@@ -312,7 +312,7 @@ const BRAND_THEME = {
 
 <script setup>
 import { ref } from 'vue';
-import { THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { THEME_PRESETS } from 'vue-calendarium';
 
 const currentTheme = ref('light');
 
@@ -326,14 +326,14 @@ const themes = {
 ### Generating CSS from Theme
 
 ```javascript
-import { generateThemeCSS, THEME_PRESETS } from '@zehenrique/vue-google-calendar';
+import { generateThemeCSS, THEME_PRESETS } from 'vue-calendarium';
 
 // Generate CSS string
 const cssString = generateThemeCSS(THEME_PRESETS.dark);
 
 console.log(cssString);
 // Output:
-// .google-calendar {
+// .vue-calendarium {
 //   --calendar-bg: #202124;
 //   --calendar-header-bg: #292a2d;
 //   ...
@@ -343,9 +343,9 @@ console.log(cssString);
 ### Programmatic Theme Application
 
 ```javascript
-import { applyTheme } from '@zehenrique/vue-google-calendar';
+import { applyTheme } from 'vue-calendarium';
 
-const calendarElement = document.querySelector('.google-calendar');
+const calendarElement = document.querySelector('.vue-calendarium');
 const myTheme = {
   '--calendar-primary-color': '#9c27b0'
 };
@@ -451,12 +451,12 @@ CSS custom properties follow standard CSS specificity rules. Make sure your over
 
 ```css
 /* Won't work - too generic */
-.google-calendar {
+.vue-calendarium {
   --calendar-primary-color: red;
 }
 
 /* Better - more specific */
-.my-app .google-calendar {
+.my-app .vue-calendarium {
   --calendar-primary-color: red;
 }
 ```

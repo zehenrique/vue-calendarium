@@ -14,6 +14,10 @@ dist
 modal-debug.json
 modal-debug.png
 
+# Local debug/scratch artifacts
+debug-page.html
+*.debug.html
+
 # Visual regression test snapshots (update baselines intentionally)
 # Uncomment to track baselines in git:
 # !/tests/**/*-snapshots/

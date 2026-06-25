@@ -215,7 +215,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
         ]
       });
       
-      let lastScale = 1;
       let gridTopInScrollContent = 0;
       let pendingTargetPixels = null;
       let pendingCenterY = null;
@@ -341,7 +340,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
         onPinchStart?.();
         isInertiaActive.value = false;
         baseScale.value = currentScale.value;
-        lastScale = 1;
         pinchStartPixels = getPixelsPerHour(currentView, isMobile);
         lastFrameMs = 0;
         gridTopInScrollContent = getGridTopInScrollContent(target, currentView);
@@ -365,7 +363,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
         const range = getZoomRange(currentView, isMobile);
         const startPixels = pinchStartPixels ?? getPixelsPerHour(currentView, isMobile);
         const scale = Number.isFinite(event.scale) && event.scale > 0 ? event.scale : 1;
-        lastScale = scale;
         pendingTargetPixels = clamp(startPixels * scale, range.min, range.max);
         pendingCenterY = event.center?.y ?? pendingCenterY;
 
@@ -384,7 +381,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
         onPinchEnd?.();
         baseScale.value = 1;
         currentScale.value = 1;
-        lastScale = 1;
         pinchStartPixels = null;
 
         // Restore scrolling behavior (unless there are still 2 touches somehow)
@@ -410,7 +406,6 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
         isInertiaActive.value = false;
         baseScale.value = 1;
         currentScale.value = 1;
-        lastScale = 1;
         pinchStartPixels = null;
         if (!isTwoFingerDown) {
           restoreTouchAction();
