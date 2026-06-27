@@ -1,6 +1,6 @@
 {
   "name": "vue-calendarium",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A polished, full-featured scheduling and calendar component for Vue 3 and Vuetify, with Temporal API date handling, recurring events (RRULE), i18n and mobile gestures",
   "type": "module",
   "main": "src/index.js",
