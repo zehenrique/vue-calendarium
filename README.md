@@ -3,12 +3,39 @@
 [![npm version](https://img.shields.io/npm/v/vue-calendarium.svg)](https://www.npmjs.com/package/vue-calendarium)
 [![license](https://img.shields.io/npm/l/vue-calendarium.svg)](./LICENSE)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/)
+[![Vuetify 3](https://img.shields.io/badge/Vuetify-3-1867C0.svg)](https://vuetifyjs.com/)
 
-A polished, full-featured scheduling and calendar component for Vue 3 (Composition API), built with Vuetify. Includes Month/Week/Day views, event CRUD, recurring events (RRULE), mobile gestures, and Temporal-based date handling (24-hour time display).
+A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 3**. Supports Month, Week, and Day views, recurring events (RRULE), drag-and-drop, mobile gestures, theming via CSS variables, and Temporal-based date handling.
 
-> Note: `vue-calendarium` is an independent open-source project. It is inspired by familiar calendar UX patterns but is not affiliated with or endorsed by any third-party calendar product.
+---
 
-Mobile gesture handlers are safely reinitialized across SPA route changes so pinch-to-zoom and horizontal swipe remain stable after unmounting and remounting the calendar.
+## Features
+
+- **Three views** — Month, Week, and Day, switchable at runtime
+- **Event CRUD** — create, edit, and delete events through built-in modals or your own UI
+- **Recurring events** — full RRULE support (daily, weekly, monthly, yearly, custom) powered by the `rrule` library
+- **Multiple calendars** — group events into color-coded calendars with per-calendar visibility toggle
+- **Drag and drop** — move events across time slots and days (opt-in)
+- **Mobile-first gestures** — horizontal swipe to navigate between days/weeks/months, pinch-to-zoom on Day/Week views (HammerJS)
+- **Ghost events** — semi-transparent preview events shown while the user is filling in a creation form
+- **Custom modals** — disable the built-in modals and wire your own UI via callbacks
+- **Theming** — override any visual property through CSS custom properties or built-in presets (default, dark, compact, high-contrast)
+- **12-color palette** — Material Design-inspired palette with helper utilities
+- **i18n** — English and Portuguese built-in; full `vue-i18n` integration
+- **Temporal API** — date handling built on `@js-temporal/polyfill` for correctness and timezone safety
+- **Current-time indicator** — red line showing the current time in Day/Week views (opt-in)
+
+---
+
+## Requirements
+
+| Peer dependency | Version |
+| --- | --- |
+| Vue | `^3.3` |
+| Vuetify | `^3.3` (your app must be wrapped in `<v-app>`) |
+| vue-i18n | `^9.0` |
+
+---
 
 ## Installation
 
@@ -16,15 +43,11 @@ Mobile gesture handlers are safely reinitialized across SPA route changes so pin
 npm install vue-calendarium
 ```
 
-## Requirements
+---
 
-- Vue 3
-- Vuetify 3 (your app should be wrapped in `v-app`)
-- vue-i18n 9 (the component uses `t()` internally)
+## Quick Start
 
-## Quick start
-
-Register translations with vue-i18n:
+### 1. Register translations
 
 ```js
 import { createI18n } from 'vue-i18n';
@@ -41,9 +64,7 @@ export const i18n = createI18n({
 });
 ```
 
-The calendar syncs Vuetify's locale (used by `VDatePicker`) with the calendar locale, so the date picker matches the app language. Ensure your Vuetify setup includes `en` and `pt` locale messages.
-
-Create a calendar instance and render the component:
+### 2. Render the calendar
 
 ```vue
 <template>
@@ -55,14 +76,20 @@ Create a calendar instance and render the component:
 </template>
 
 <script setup>
-import { createCalendar, createViewDay, createViewWeek, createViewMonth, Calendar } from 'vue-calendarium';
+import {
+  createCalendar,
+  createViewDay,
+  createViewWeek,
+  createViewMonth,
+  Calendar
+} from 'vue-calendarium';
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
   defaultView: 'month',
   locale: 'en-US',
   calendars: [
-    { id: 'work', name: 'Work', color: '#1967D2' },
+    { id: 'work',     name: 'Work',     color: '#1967D2' },
     { id: 'personal', name: 'Personal', color: '#0B8043' }
   ],
   events: []
@@ -71,40 +98,187 @@ const calendarApp = createCalendar({
 calendarApp.eventsService.add({
   title: 'Team Meeting',
   start: '2026-01-27T10:00:00',
-  end: '2026-01-27T10:30:00',
+  end:   '2026-01-27T10:30:00',
   calendarId: 'work'
 });
 </script>
 ```
 
+---
+
+## Core Concepts
+
+### Event structure
+
+```js
+{
+  id:          string | number,   // auto-generated if omitted
+  title:       string,            // required
+  start:       string,            // ISO date-time, required
+  end:         string,            // ISO date-time, required
+  allDay:      boolean,
+  calendarId:  string,
+  color:       string,            // hex color
+  rrule:       string,            // RRULE string for recurring events
+  description: string,
+  location:    string,
+  custom:      Record<string, unknown>
+}
+```
+
+### Managing events
+
+```js
+calendarApp.eventsService.add({ title: 'Sprint Review', start: '...', end: '...' });
+calendarApp.eventsService.update({ id: '1', title: 'Updated title' });
+calendarApp.eventsService.remove('1');
+calendarApp.eventsService.getAll();
+calendarApp.eventsService.getByCalendar('work');
+calendarApp.eventsService.getByDateRange(start, end);
+calendarApp.eventsService.set([...events]); // replace all
+```
+
+### Navigation and view control
+
+```js
+calendarApp.goToNext();           // next day / week / month
+calendarApp.goToPrevious();       // previous day / week / month
+calendarApp.goToToday();
+calendarApp.setView('week');      // 'day' | 'week' | 'month'
+calendarApp.setDate(Temporal.Now.plainDateISO());
+calendarApp.setLocale('pt-PT');
+```
+
+### Callbacks
+
+```js
+const calendarApp = createCalendar({
+  views: [...],
+  onEventClick:   (event) => { /* open detail panel */ },
+  onEventCreate:  (events) => { /* persist to backend */ },
+  onEventUpdate:  (event) => { /* sync changes */ },
+  onEventDelete:  (event) => { /* remove from backend */ },
+  onDateChange:   (date) => { /* Temporal.PlainDate */ },
+  onViewChange:   (view) => { /* 'day' | 'week' | 'month' */ }
+});
+```
+
+---
+
+## Recurring Events
+
+Pass any valid RRULE string in the `rrule` field:
+
+```js
+calendarApp.eventsService.add({
+  title: 'Weekly Standup',
+  start: '2026-01-05T09:00:00',
+  end:   '2026-01-05T09:15:00',
+  rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'
+});
+```
+
+The built-in recurrence picker modal covers daily, weekly, monthly, and yearly rules with custom interval and end options.
+
+---
+
+## Custom Modals
+
+Disable the built-in modals and handle creation/editing in your own UI:
+
+```js
+const calendarApp = createCalendar({
+  views: [...],
+  enableModals: false,
+  onEventCreateRequest: ({ draft, context }) => {
+    // draft.start, draft.end, context.source ('time-slot' | 'day-cell' | ...)
+    calendarApp.showGhostEvent(draft);   // show preview on the grid
+    openMyModal(draft);
+  },
+  onEventClick: (event) => openMyEditModal(event)
+});
+
+// When the user confirms in your modal:
+calendarApp.eventsService.add(finalEvent);
+calendarApp.hideGhostEvent();
+
+// To update the preview while the user types:
+calendarApp.updateGhostEvent({ title: '...', start: '...', end: '...' });
+```
+
+---
+
+## Theming
+
+Pass a theme object as a prop to override any CSS custom property:
+
+```vue
+<Calendar :calendar-app="calendarApp" :theme="myTheme" />
+```
+
+```js
+const myTheme = {
+  '--calendar-primary-color': '#e91e63',
+  '--calendar-today-bg':      '#e91e63',
+  '--calendar-header-bg':     '#fce4ec',
+  '--calendar-border-color':  '#f8bbd0'
+};
+```
+
+Built-in presets are available via `THEME_PRESETS`:
+
+```js
+import { THEME_PRESETS } from 'vue-calendarium';
+// THEME_PRESETS.default | .dark | .compact | .highContrast
+```
+
+See [docs/STYLING.md](./docs/STYLING.md) and [docs/THEME_REFERENCE.md](./docs/THEME_REFERENCE.md) for the full list of variables.
+
+---
+
+## Feature Flags
+
+| Flag | Default | Description |
+| --- | --- | --- |
+| `enableModals` | `true` | Built-in create/edit/delete modals |
+| `enableMobileSidebar` | `true` | Slide-out sidebar on mobile |
+| `mobileViewSelectorPlacement` | `'sidebar'` | `'header'` or `'sidebar'` |
+| `enableSwipeGestures` | `true` | Horizontal swipe navigation |
+| `enablePinchToZoom` | `true` | Pinch-to-zoom on Day/Week views |
+| `enableCurrentTimeIndicator` | `true` | Red current-time line |
+| `enableDragAndDrop` | `false` | Drag events across the grid |
+
+---
+
 ## Documentation
 
-Start here, then jump to the specific guides:
+| Guide | Description |
+| --- | --- |
+| [docs/USAGE.md](./docs/USAGE.md) | Usage guide with practical examples |
+| [docs/API.md](./docs/API.md) | Full API reference — props, callbacks, services |
+| [docs/STYLING.md](./docs/STYLING.md) | Theming and styling guide |
+| [docs/THEME_REFERENCE.md](./docs/THEME_REFERENCE.md) | Complete CSS variables reference |
+| [docs/THEME_EXAMPLES.md](./docs/THEME_EXAMPLES.md) | Ready-to-use theme examples |
+| [docs/COLORS.md](./docs/COLORS.md) | 12-color Material palette and helpers |
+| [docs/GHOST_EVENTS.md](./docs/GHOST_EVENTS.md) | Ghost events for custom modal workflows |
 
-- [docs/USAGE.md](./docs/USAGE.md) - usage guide + practical examples
-- [docs/API.md](./docs/API.md) - full API reference (props, callbacks, services)
-- [docs/STYLING.md](./docs/STYLING.md) - theming/styling guide
-- [docs/THEME_REFERENCE.md](./docs/THEME_REFERENCE.md) - complete CSS variables reference
-- [docs/THEME_EXAMPLES.md](./docs/THEME_EXAMPLES.md) - quick theme examples
-- [docs/COLORS.md](./docs/COLORS.md) - predefined 12-color palette + helpers
-- [docs/GHOST_EVENTS.md](./docs/GHOST_EVENTS.md) - ghost events for custom modals
+---
 
 ## Development
 
 ```bash
-make dev
+make dev        # start the dev server
+make test       # unit tests (Vitest)
+make test-ui    # end-to-end tests (Playwright)
 ```
 
-Run tests:
-
-```bash
-make test
-make test-ui
-```
+---
 
 ## Contributing
 
-Contributions are welcome! Please read the [contributing guide](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md) before opening an issue or pull request.
+Contributions are welcome. Please read the [contributing guide](./CONTRIBUTING.md) and the [code of conduct](./CODE_OF_CONDUCT.md) before opening an issue or pull request.
+
+---
 
 ## License
 

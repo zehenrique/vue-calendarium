@@ -81,10 +81,12 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
     zoomLevels.value[view][deviceType] = clampedValue;
     
     // Store in localStorage for persistence
-    try {
-      localStorage.setItem(`calendar-zoom-${view}-${deviceType}`, clampedValue.toString());
-    } catch (e) {
-      console.warn('Failed to persist zoom level:', e);
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(`calendar-zoom-${view}-${deviceType}`, clampedValue.toString());
+      } catch (e) {
+        console.warn('Failed to persist zoom level:', e);
+      }
     }
     
     // Notify of zoom change
@@ -95,6 +97,7 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
    * Load saved zoom levels from localStorage
    */
   const loadSavedZoomLevels = () => {
+    if (typeof window === 'undefined') return;
     ['week', 'day'].forEach(view => {
       ['mobile', 'desktop'].forEach(deviceType => {
         try {

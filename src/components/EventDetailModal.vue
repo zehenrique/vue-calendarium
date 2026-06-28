@@ -1,5 +1,6 @@
 <template>
-  <v-dialog :model-value="modelValue && !!event" @update:model-value="handleClose" max-width="520" content-class="calendar-font-scope" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal">
+  <!-- Desktop Dialog -->
+  <v-dialog v-if="!mobile" :model-value="modelValue && !!event" @update:model-value="handleClose" max-width="520" content-class="calendar-font-scope" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal">
     <v-card v-if="event" class="pa-0 event-detail-card" rounded="xl">
       <!-- Header with action buttons -->
       <v-card-title class="d-flex align-center px-4 py-3 border-b">
@@ -41,11 +42,58 @@
       </v-card-text>
     </v-card>
   </v-dialog>
+
+  <!-- Mobile Bottom Sheet -->
+  <v-bottom-sheet v-if="mobile" :model-value="modelValue && !!event" @update:model-value="handleClose" content-class="calendar-font-scope" scrim="rgba(0, 0, 0, 0.5)" data-testid="event-detail-modal-mobile">
+    <v-card v-if="event" class="mobile-detail-sheet" rounded="t-xl">
+      <!-- Action buttons at top -->
+      <v-card-actions class="pa-4 pb-2">
+        <v-btn icon variant="text" size="small" @click="handleEdit" :aria-label="t('edit')">
+          <v-icon>mdi-pencil</v-icon>
+        </v-btn>
+        <v-btn icon variant="text" size="small" @click="handleDelete" :aria-label="t('delete')">
+          <v-icon>mdi-delete</v-icon>
+        </v-btn>
+        <v-spacer></v-spacer>
+        <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')">
+          <v-icon>mdi-close</v-icon>
+        </v-btn>
+      </v-card-actions>
+
+      <v-divider></v-divider>
+
+      <v-card-text class="px-4 pt-4 pb-6">
+        <!-- Title with color indicator -->
+        <div class="d-flex align-start mb-4">
+          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color }"></div>
+          <h2 class="text-h6 font-weight-regular">{{ event?.title }}</h2>
+        </div>
+
+        <!-- Date and time -->
+        <div class="d-flex align-start mb-2">
+          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+          <div>
+            <div class="text-body-1">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+              {{ formatRRule(event.rrule) }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Calendar name -->
+        <div v-if="calendarName" class="d-flex align-start">
+          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
+          <div class="text-body-1">{{ calendarName }}</div>
+        </div>
+      </v-card-text>
+    </v-card>
+  </v-bottom-sheet>
 </template>
 
 <script>
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import { useRRuleFormatter } from '../composables/useRRuleFormatter.js';
 
@@ -72,6 +120,7 @@ export default {
   emits: ['update:modelValue', 'edit', 'delete'],
   setup(props, { emit }) {
     const { t } = useI18n();
+    const { mobile } = useDisplay();
     const { formatRRule } = useRRuleFormatter();
 
     const dateTimeDisplay = computed(() => {
@@ -124,6 +173,7 @@ export default {
 
     return {
       t,
+      mobile,
       formatRRule,
       dateTimeDisplay,
       calendarName,
@@ -149,5 +199,9 @@ export default {
   height: 20px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.mobile-detail-sheet {
+  max-height: 80vh;
 }
 </style>

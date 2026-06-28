@@ -1,5 +1,6 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
+  <!-- Desktop Dialog -->
+  <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
     <v-card class="pa-0" rounded="xl">
       <v-card-title class="d-flex align-center pa-6 pb-4">
         <span class="text-h6 font-weight-medium">{{ t('customRecurrence') }}</span>
@@ -12,83 +13,43 @@
       <v-card-text class="px-6 pb-6">
         <v-container fluid class="pa-0">
           <v-form>
-            <!-- Frequency -->
             <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4"></v-select>
-
-            <!-- Interval -->
             <v-row class="mb-4">
               <v-col cols="12">
                 <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999"></v-text-field>
               </v-col>
             </v-row>
-
-            <!-- Weekly: Days of week -->
             <div v-if="frequency === 'WEEKLY'" class="mb-4">
               <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>
-              <v-chip-group
-                v-model="selectedWeekdays"
-                multiple
-                column
-              >
-                <v-chip
-                  v-for="day in weekdayOptions"
-                  :key="day.value"
-                  :value="day.value"
-                  filter
-                  variant="outlined"
-                >
+              <v-chip-group v-model="selectedWeekdays" multiple column>
+                <v-chip v-for="day in weekdayOptions" :key="day.value" :value="day.value" filter variant="outlined">
                   {{ day.text }}
                 </v-chip>
               </v-chip-group>
             </div>
-
-            <!-- Monthly: Day of month or day of week -->
             <div v-if="frequency === 'MONTHLY'" class="mb-4">
               <v-radio-group v-model="monthlyType">
                 <v-radio :label="t('repeatMonthlyByDay')" value="bymonthday"></v-radio>
                 <v-radio :label="t('repeatMonthlyByWeekday')" value="byweekday"></v-radio>
               </v-radio-group>
             </div>
-
-            <!-- End condition -->
             <v-divider class="my-4"></v-divider>
             <div class="text-body-2 text-medium-emphasis mb-3">{{ t('ends') }}</div>
-            
             <v-radio-group v-model="endType" class="mb-2">
               <v-radio :label="t('never')" value="never"></v-radio>
-              
               <v-radio value="until">
                 <template v-slot:label>
                   <div class="d-flex align-center">
                     <span class="mr-2">{{ t('on') }}</span>
-                    <v-text-field
-                      v-model="untilDate"
-                      type="date"
-                      density="compact"
-                      hide-details
-                      :disabled="endType !== 'until'"
-                      style="max-width: 180px;"
-                      @click.stop
-                    ></v-text-field>
+                    <v-text-field v-model="untilDate" type="date" density="compact" hide-details :disabled="endType !== 'until'" style="max-width: 180px;" @click.stop></v-text-field>
                   </div>
                 </template>
               </v-radio>
-              
               <v-radio value="count">
                 <template v-slot:label>
                   <div class="d-flex align-center">
                     <span class="mr-2">{{ t('after') }}</span>
-                    <v-text-field
-                      v-model.number="count"
-                      type="number"
-                      min="1"
-                      max="999"
-                      density="compact"
-                      hide-details
-                      :disabled="endType !== 'count'"
-                      style="max-width: 80px;"
-                      @click.stop
-                    ></v-text-field>
+                    <v-text-field v-model.number="count" type="number" min="1" max="999" density="compact" hide-details :disabled="endType !== 'count'" style="max-width: 80px;" @click.stop></v-text-field>
                     <span class="ml-2">{{ t('occurrences') }}</span>
                   </div>
                 </template>
@@ -100,28 +61,76 @@
 
       <v-card-actions class="px-6 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn
-          variant="text"
-          @click="handleCancel"
-          class="mr-2"
-        >
-          {{ t('cancel') }}
-        </v-btn>
-        <v-btn
-          color="primary"
-          variant="flat"
-          @click="handleDone"
-        >
-          {{ t('done') }}
-        </v-btn>
+        <v-btn variant="text" @click="handleCancel" class="mr-2">{{ t('cancel') }}</v-btn>
+        <v-btn color="primary" variant="flat" @click="handleDone">{{ t('done') }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
+
+  <!-- Mobile Bottom Sheet -->
+  <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal-mobile">
+    <v-card class="mobile-recurrence-sheet" rounded="t-xl">
+      <!-- Action buttons at top -->
+      <v-card-actions class="pa-4 pb-2">
+        <v-btn variant="text" @click="handleCancel">{{ t('cancel') }}</v-btn>
+        <v-spacer></v-spacer>
+        <span class="text-subtitle-1 font-weight-medium">{{ t('customRecurrence') }}</span>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" variant="text" @click="handleDone">{{ t('done') }}</v-btn>
+      </v-card-actions>
+
+      <v-divider></v-divider>
+
+      <v-card-text class="px-4 pt-3 pb-4 mobile-recurrence-content">
+        <v-form>
+          <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4"></v-select>
+          <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999" class="mb-4"></v-text-field>
+          <div v-if="frequency === 'WEEKLY'" class="mb-4">
+            <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>
+            <v-chip-group v-model="selectedWeekdays" multiple column>
+              <v-chip v-for="day in weekdayOptions" :key="day.value" :value="day.value" filter variant="outlined">
+                {{ day.text }}
+              </v-chip>
+            </v-chip-group>
+          </div>
+          <div v-if="frequency === 'MONTHLY'" class="mb-4">
+            <v-radio-group v-model="monthlyType">
+              <v-radio :label="t('repeatMonthlyByDay')" value="bymonthday"></v-radio>
+              <v-radio :label="t('repeatMonthlyByWeekday')" value="byweekday"></v-radio>
+            </v-radio-group>
+          </div>
+          <v-divider class="my-4"></v-divider>
+          <div class="text-body-2 text-medium-emphasis mb-3">{{ t('ends') }}</div>
+          <v-radio-group v-model="endType" class="mb-2">
+            <v-radio :label="t('never')" value="never"></v-radio>
+            <v-radio value="until">
+              <template v-slot:label>
+                <div class="d-flex align-center">
+                  <span class="mr-2">{{ t('on') }}</span>
+                  <v-text-field v-model="untilDate" type="date" density="compact" hide-details :disabled="endType !== 'until'" style="max-width: 180px;" @click.stop></v-text-field>
+                </div>
+              </template>
+            </v-radio>
+            <v-radio value="count">
+              <template v-slot:label>
+                <div class="d-flex align-center">
+                  <span class="mr-2">{{ t('after') }}</span>
+                  <v-text-field v-model.number="count" type="number" min="1" max="999" density="compact" hide-details :disabled="endType !== 'count'" style="max-width: 80px;" @click.stop></v-text-field>
+                  <span class="ml-2">{{ t('occurrences') }}</span>
+                </div>
+              </template>
+            </v-radio>
+          </v-radio-group>
+        </v-form>
+      </v-card-text>
+    </v-card>
+  </v-bottom-sheet>
 </template>
 
 <script>
 import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 
 export default {
@@ -143,7 +152,8 @@ export default {
   emits: ['update:modelValue', 'save'],
   setup(props, { emit }) {
     const { t } = useI18n();
-    
+    const { mobile } = useDisplay();
+
     const frequency = ref('WEEKLY');
     const interval = ref(1);
     const selectedWeekdays = ref([]);
@@ -296,6 +306,7 @@ export default {
 
     return {
       t,
+      mobile,
       frequency,
       interval,
       selectedWeekdays,
@@ -312,3 +323,14 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.mobile-recurrence-sheet {
+  max-height: 90vh;
+}
+
+.mobile-recurrence-content {
+  max-height: calc(90vh - 64px);
+  overflow-y: auto;
+}
+</style>

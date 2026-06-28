@@ -411,7 +411,7 @@ watch(
     if (!cals || !cals.length) return;
     newEvent.value = ensureDraftCalendar(newEvent.value, cals);
   },
-  { immediate: true, deep: true }
+  { immediate: true }
 );
 
 const weekDays = computed(() =>

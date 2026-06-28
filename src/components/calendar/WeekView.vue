@@ -132,14 +132,14 @@ const isDropTarget = (date, hour) => {
 const dragTimer = ref(null);
 const dragStartPos = ref(null);
 const ignoreNextClick = ref(false);
+const activeDragCleanup = ref(null);
 
 const handleEventMouseDown = (event, mouseEvent) => {
   if (!props.enableDragAndDrop || event.isGhost) return;
-  
-  // Store start position
+
   dragStartPos.value = { x: mouseEvent.clientX, y: mouseEvent.clientY };
   ignoreNextClick.value = false;
-  
+
   const cleanup = () => {
     if (dragTimer.value) {
       clearTimeout(dragTimer.value);
@@ -148,31 +148,31 @@ const handleEventMouseDown = (event, mouseEvent) => {
     dragStartPos.value = null;
     window.removeEventListener('mouseup', onMouseUp);
     window.removeEventListener('mousemove', onMouseMove);
+    activeDragCleanup.value = null;
   };
-  
+
   const onMouseUp = () => {
     cleanup();
   };
-  
+
   const onMouseMove = (e) => {
     if (!dragStartPos.value) return;
     const dx = e.clientX - dragStartPos.value.x;
     const dy = e.clientY - dragStartPos.value.y;
-    // If moved more than 5px, cancel hold
     if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
       cleanup();
     }
   };
-  
-  // Start timer for long press (500ms)
+
   dragTimer.value = setTimeout(() => {
     ignoreNextClick.value = true;
     emit('event-drag-start', event, mouseEvent);
     cleanup();
   }, 500);
-  
+
   window.addEventListener('mouseup', onMouseUp);
   window.addEventListener('mousemove', onMouseMove);
+  activeDragCleanup.value = cleanup;
 };
 
 const handleEventClick = (event) => {
@@ -252,6 +252,7 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   scrollContainer.value?.removeEventListener('scroll', handleScroll);
+  activeDragCleanup.value?.();
 });
 
 // Reset hasAutoScrolled when the days change (view change or navigation)

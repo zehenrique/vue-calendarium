@@ -26,7 +26,8 @@ export class CalendarEvent {
    * Generate a unique ID for the event
    */
   _generateId() {
-    return `event-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+    return `event-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
 
   /**
