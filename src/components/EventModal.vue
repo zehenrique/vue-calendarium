@@ -290,7 +290,7 @@ export default {
           const durationMinutes = endMinutes - startMinutes;
           
           // Generate duration label for all options
-          let durationLabel = '';
+          let durationLabel;
           const hours = Math.floor(durationMinutes / 60);
           const minutes = durationMinutes % 60;
           

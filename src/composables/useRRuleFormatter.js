@@ -32,7 +32,7 @@ export function useRRuleFormatter() {
     const until = parts.UNTIL;
     const byday = parts.BYDAY;
 
-    let description = '';
+    let description;
 
     // Base frequency
     if (interval === 1) {
