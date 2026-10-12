@@ -201,6 +201,8 @@ test.describe('Event Persistence - Calendar State Management', () => {
   });
 
   test('should handle rapid event operations', async ({ page }) => {
+    // Five full create-event flows: allow more than the default 15s when the suite runs in parallel
+    test.slow();
     await switchToWeekView(page);
 
     for (let i = 0; i < 5; i++) {

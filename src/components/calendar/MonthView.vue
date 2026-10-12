@@ -193,6 +193,7 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 }
 
 .event {
+  border: none;
   font-size: var(--calendar-event-font-size, 11px);
   padding: var(--calendar-event-padding, 2px 6px);
   border-radius: var(--calendar-event-border-radius, 6px);

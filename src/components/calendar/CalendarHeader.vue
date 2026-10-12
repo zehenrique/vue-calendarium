@@ -57,7 +57,7 @@
           </v-btn>
         </div>
         
-        <h1 class="calendar-title text-h6">{{ currentTitle }}</h1>
+        <h1 class="calendar-title">{{ currentTitle }}</h1>
       </div>
       <div class="header-right">
         <!-- Mobile: Icon button for Today -->
@@ -74,35 +74,10 @@
         </v-btn>
         
         <!-- View selector: Mobile compact dropdown -->
-        <v-select
-          v-if="isMobile && mobileViewSelectorPlacement === 'header'"
-          :items="viewItems"
-          item-title="title"
-          item-value="value"
-          :model-value="currentView"
-          variant="outlined"
-          density="compact"
-          hide-details
-          data-testid="view-toggle"
-          class="mobile-view-select"
-          @update:model-value="$emit('view-change', $event)"
-        ></v-select>
+        <v-select v-if="isMobile && mobileViewSelectorPlacement === 'header'" :items="viewItems" item-title="title" item-value="value" :model-value="currentView" variant="outlined" density="compact" hide-details data-testid="view-toggle" class="mobile-view-select" @update:model-value="$emit('view-change', $event)" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
         
         <!-- Desktop: compact dropdown for view selection -->
-        <v-select
-          v-if="!isMobile"
-          class="header-outlined-control"
-          :items="viewItems"
-          item-title="title"
-          item-value="value"
-          :model-value="currentView"
-          variant="outlined"
-          density="compact"
-          hide-details
-          data-testid="view-toggle"
-          style="min-width: 120px"
-          @update:model-value="$emit('view-change', $event)"
-        ></v-select>
+        <v-select v-if="!isMobile" class="header-outlined-control" :items="viewItems" item-title="title" item-value="value" :model-value="currentView" variant="outlined" density="compact" hide-details data-testid="view-toggle" style="min-width: 120px" @update:model-value="$emit('view-change', $event)" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
         
         <!-- Desktop: Date picker -->
         <v-menu v-if="!isMobile" content-class="calendar-font-scope" :close-on-content-click="false" ref="datePickerMenu">
@@ -123,9 +98,7 @@
               </template>
             </v-text-field>
           </template>
-          <v-date-picker
-            :model-value="datePickerValue"
-            @update:model-value="handleDatePickerChange">
+          <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal">
             <template v-slot:header>
               <div class="date-picker-header">
                 <v-btn variant="text" size="small" @click="goToTodayFromPicker">
@@ -463,7 +436,10 @@ const dayInfo = computed(() => {
 
 .calendar-title {
   margin: 0;
+  font-size: var(--calendar-font-size-title, 1.25rem);
   font-weight: var(--calendar-font-weight-normal, 400);
+  line-height: 2rem;
+  letter-spacing: 0.0125em;
   color: var(--calendar-text-primary, #3c4043);
   flex-shrink: 1;
   min-width: 0;
@@ -656,10 +632,6 @@ const dayInfo = computed(() => {
   
   .header-right {
     gap: var(--calendar-spacing-sm, 4px);
-  }
-
-  .calendar-title {
-    font-size: 1rem;
   }
 
   .week-day-name {

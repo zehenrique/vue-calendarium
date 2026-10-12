@@ -13,6 +13,7 @@ Complete guide to customizing the appearance of the vue-calendarium component.
 - [Theme Presets](#theme-presets)
 - [Advanced Customization](#advanced-customization)
 - [Examples](#examples)
+- [Vuetify 4](#vuetify-4)
 
 ## Overview
 
@@ -471,6 +472,18 @@ Mobile-specific variables use separate properties. Make sure to override both:
   '--calendar-time-column-width-mobile': '60px'  // Mobile
 }
 ```
+
+## Vuetify 4
+
+The calendar's dialogs, menus, buttons and text use Vuetify 4's Material Design 3 styling, with a few calendar-specific choices:
+
+- **Header title.** The month title in the header is sized by `--calendar-font-size-title` (20px by default) on desktop and mobile, instead of a Vuetify typography class.
+- **Dialog corners.** Dialogs use `rounded="xl"` and bottom sheets `rounded="t-xl"` (24px).
+- **Icon and text rows.** In the event details, each icon (or colour dot) sits in a box one text line tall (`height: 1lh`), so it stays centred on the first line of its text at any font size.
+- **Date picker in the event dialog.** The day rows are 40px tall without Vuetify's extra row padding, so the picker opens below the event title. All date pickers use `control-variant="modal"` (month and year button plus previous/next arrows).
+- **Time dropdowns.** Vuetify 4 centres the selected option when a select menu opens. The time selects use `no-auto-scroll` and [`scrollSelectedOptionToTop`](../src/composables/useSelectMenuScroll.js) to show it at the top of the list.
+
+Vuetify 4 ships all of its CSS in cascade layers, so unlayered CSS in your app overrides Vuetify's utility classes. See *Requirements* in the [README](../README.md#requirements) for the app-level notes on breakpoints and CSS resets.
 
 ## Resources
 

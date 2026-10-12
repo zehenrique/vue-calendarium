@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue';
+import { loadHammer } from '../core/hammer.js';
 
 /**
  * Zoom level ranges for different views (in pixels per hour)
@@ -184,11 +185,12 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
    * Initialize pinch gesture handler
    * @param {boolean} isMobile - Whether in mobile mode
    * @param {string} currentView - Current calendar view ('day' or 'week')
-   * @returns {boolean} Success status
+   * @returns {Promise<boolean>} Success status
    */
-  function initializePinchGestures(isMobile, currentView) {
+  async function initializePinchGestures(isMobile, currentView) {
     // Only enable on mobile
-    if (typeof window === 'undefined' || !window.Hammer || !isMobile) {;
+    const Hammer = isMobile ? await loadHammer() : null;
+    if (!Hammer) {
       destroyPinchGestures();
       return false;
     }
@@ -211,10 +213,10 @@ export function createPinchToZoomController(targetSelector, { onZoomChange, onPi
       // - If Hammer computes touchAction for a pinch recognizer it often ends up as 'none',
       //   which disables native scrolling on the element.
       // - We explicitly keep 'pan-y' so one-finger vertical scrolling works.
-      const hammer = new window.Hammer.Manager(target, {
+      const hammer = new Hammer.Manager(target, {
         touchAction: 'pan-y',
         recognizers: [
-          [window.Hammer.Pinch, { enable: true, threshold: 0 }]
+          [Hammer.Pinch, { enable: true, threshold: 0 }]
         ]
       });
       

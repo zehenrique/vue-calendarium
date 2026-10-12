@@ -18,14 +18,18 @@
 
       <v-card-text class="px-6 py-4">
         <!-- Title with color indicator -->
-        <div class="d-flex align-start mb-4">
-          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
+        <div class="detail-row mb-4">
+          <div class="detail-row__icon text-h5">
+            <div class="color-dot" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
+          </div>
           <h2 class="text-h5 font-weight-regular">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
-        <div class="d-flex align-start mb-2">
-          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+        <div class="detail-row mb-2">
+          <div class="detail-row__icon text-body-1">
+            <v-icon size="20">mdi-clock-outline</v-icon>
+          </div>
           <div>
             <div class="text-body-1">{{ dateTimeDisplay }}</div>
             <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
@@ -35,8 +39,10 @@
         </div>
 
         <!-- Calendar name -->
-        <div v-if="calendarName" class="d-flex align-start">
-          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
+        <div v-if="calendarName" class="detail-row">
+          <div class="detail-row__icon text-body-1">
+            <v-icon size="20">mdi-calendar-blank</v-icon>
+          </div>
           <div class="text-body-1">{{ calendarName }}</div>
         </div>
       </v-card-text>
@@ -64,14 +70,18 @@
 
       <v-card-text class="px-4 pt-4 pb-6">
         <!-- Title with color indicator -->
-        <div class="d-flex align-start mb-4">
-          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color }"></div>
+        <div class="detail-row mb-4">
+          <div class="detail-row__icon text-h6">
+            <div class="color-dot" :style="{ backgroundColor: event?.color }"></div>
+          </div>
           <h2 class="text-h6 font-weight-regular">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
-        <div class="d-flex align-start mb-2">
-          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+        <div class="detail-row mb-2">
+          <div class="detail-row__icon text-body-1">
+            <v-icon size="20">mdi-clock-outline</v-icon>
+          </div>
           <div>
             <div class="text-body-1">{{ dateTimeDisplay }}</div>
             <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
@@ -81,8 +91,10 @@
         </div>
 
         <!-- Calendar name -->
-        <div v-if="calendarName" class="d-flex align-start">
-          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
+        <div v-if="calendarName" class="detail-row">
+          <div class="detail-row__icon text-body-1">
+            <v-icon size="20">mdi-calendar-blank</v-icon>
+          </div>
           <div class="text-body-1">{{ calendarName }}</div>
         </div>
       </v-card-text>
@@ -186,12 +198,23 @@ export default {
 </script>
 
 <style scoped>
-.event-detail-card {
-  border-radius: 8px;
-}
-
 .border-b {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Icon + text rows: the icon box is one text line tall (1lh, using the text's
+   typography class), so the icon stays centred on the first line of text */
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detail-row__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 1lh;
 }
 
 .color-dot {

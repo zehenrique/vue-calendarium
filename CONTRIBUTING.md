@@ -20,7 +20,7 @@ The app runs on <http://localhost:3000>.
 ## Tech stack & conventions
 
 - **Vue 3** with the Composition API (`<script setup>`). Avoid the Options API.
-- **Vuetify 3** for components and Material Design styling.
+- **Vuetify 4** for components and Material Design styling; see [docs/STYLING.md](docs/STYLING.md#vuetify-4) for the calendar-specific choices.
 - **Temporal API** for all date/time work — do not use the legacy `Date` object.
 - **vue-i18n** for all user-facing strings (`en` and `pt`). Never hard-code copy.
 - Times are always displayed in **24-hour** format.
@@ -35,13 +35,15 @@ make test         # unit tests (Vitest)
 make test-ui      # end-to-end / UI tests (Playwright)
 ```
 
+The UI tests start the dev server on port 3000, or reuse a server already running there. If another app is using that port, pick a free one: `TEST_PORT=3100 make test-ui`.
+
 All tests must pass before a PR is merged. Add or update tests for any behavior you change, and run the Playwright suite for UI changes.
 
 ## Pull requests
 
 1. Fork the repo and create a branch off `main`.
 2. Make your change, keeping commits focused.
-3. Update documentation (`README.md`, `docs/`) and the [CHANGELOG](./CHANGELOG.md) when relevant.
+3. Update documentation (`README.md`, `docs/`) and the [CHANGELOG](./CHANGELOG.md) when relevant. The documentation website is built from these files, so it updates on its own.
 4. Ensure `make lint`, `make test`, and the UI tests pass.
 5. Open a PR describing **what** changed and **why**.
 

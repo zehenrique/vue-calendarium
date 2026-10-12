@@ -1,5 +1,5 @@
 <template>
-  <div ref="scrollContainer" class="calendar-body day-view" :class="{ 'has-all-day-events': hasAllDayEvents }">
+  <div ref="scrollContainer" class="calendar-body day-view" :class="{ 'has-all-day-events': hasAllDayEvents, 'event-drag-active': isDragging }">
     <div class="day-grid">
       <div class="time-column no-border">
         <div v-if="hasAllDayEvents" class="time-header"></div>
@@ -457,6 +457,12 @@ watch(showCurrentTimeIndicator, value => {
 .hour-slot.drop-target {
   background-color: var(--calendar-drop-target-bg, rgba(26, 115, 232, 0.1));
   border: 2px dashed var(--calendar-primary-color, #1a73e8);
+}
+
+/* While an event is dragged, other events let the pointer through so the hour
+   slot underneath becomes the drop target (otherwise hovering an event clears it) */
+.event-drag-active .day-event {
+  pointer-events: none;
 }
 
 .day-event {

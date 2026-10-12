@@ -58,6 +58,7 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { loadHammer } from '../core/hammer.js';
 
 defineOptions({ name: 'MobileSidebar' });
 
@@ -131,23 +132,26 @@ function cleanupSwipe() {
   }
 }
 
-function initializeSwipeToClose() {
-  if (typeof window === 'undefined' || !window.Hammer || !props.modelValue) return;
+async function initializeSwipeToClose() {
+  if (!props.modelValue) return;
+  const Hammer = await loadHammer();
+  // The sidebar may have closed while Hammer was loading
+  if (!Hammer || !props.modelValue) return;
 
   cleanupSwipe();
   const sidebar = document.querySelector('.mobile-sidebar');
   if (!sidebar) return;
 
-  hammer = new window.Hammer(sidebar);
+  hammer = new Hammer(sidebar);
 
   hammer.get('swipe').set({
-    direction: window.Hammer.DIRECTION_HORIZONTAL,
+    direction: Hammer.DIRECTION_HORIZONTAL,
     threshold: 30,
     velocity: 0.3
   });
 
   hammer.get('pan').set({
-    direction: window.Hammer.DIRECTION_HORIZONTAL,
+    direction: Hammer.DIRECTION_HORIZONTAL,
     threshold: 10
   });
 

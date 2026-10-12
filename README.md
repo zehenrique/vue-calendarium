@@ -3,9 +3,14 @@
 [![npm version](https://img.shields.io/npm/v/vue-calendarium.svg)](https://www.npmjs.com/package/vue-calendarium)
 [![license](https://img.shields.io/npm/l/vue-calendarium.svg)](./LICENSE)
 [![Vue 3](https://img.shields.io/badge/Vue-3-42b883.svg)](https://vuejs.org/)
-[![Vuetify 3](https://img.shields.io/badge/Vuetify-3-1867C0.svg)](https://vuetifyjs.com/)
+[![Vuetify 4](https://img.shields.io/badge/Vuetify-4-1867C0.svg)](https://vuetifyjs.com/)
+[![Live demo](https://img.shields.io/badge/demo-try%20it%20live-1967D2.svg)](https://zehenrique.github.io/vue-calendarium/)
 
-A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 3**. Supports Month, Week, and Day views, recurring events (RRULE), drag-and-drop, mobile gestures, theming via CSS variables, and Temporal-based date handling.
+A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 4**. Supports Month, Week, and Day views, recurring events (RRULE), drag-and-drop, mobile gestures, theming via CSS variables, and Temporal-based date handling.
+
+**[▶ Try the live demo](https://zehenrique.github.io/vue-calendarium/)**. Open it on your phone to try the swipe and pinch gestures. Read the [documentation](https://zehenrique.github.io/vue-calendarium/docs.html) online.
+
+Upgrading from version 1? Follow the [upgrade guide](./docs/UPGRADING.md).
 
 ---
 
@@ -27,13 +32,39 @@ A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 3*
 
 ---
 
+## Why vue-calendarium?
+
+Most free Vue calendars either leave mobile interaction and event forms for you to build, or sell them as paid add-ons. vue-calendarium includes them:
+
+| | vue-calendarium | Typical free alternatives |
+| --- | --- | --- |
+| Recurring events | RRULE plus a recurrence editor UI | Not included, a plugin without an editor, or paid |
+| Create and edit forms | Built in (or bring your own) | Usually build your own, or paid |
+| Swipe between periods, pinch-to-zoom | Built in | Not included |
+| Phone layout (drawer, bottom sheets) | Built in | Responsive layout only |
+| Vuetify / Material Design | Native Vuetify components | Separate design system |
+
+---
+
 ## Requirements
 
 | Peer dependency | Version |
 | --- | --- |
-| Vue | `^3.3` |
-| Vuetify | `^3.3` (your app must be wrapped in `<v-app>`) |
-| vue-i18n | `^9.0` |
+| Vue | `^3.5` |
+| Vuetify | `^4.0` (your app must be wrapped in `<v-app>`) |
+| vue-i18n | `^11.0` |
+
+The calendar uses Vuetify 4's Material Design 3 styling (see [docs/STYLING.md](docs/STYLING.md#vuetify-4)). Two app-level Vuetify 4 changes are worth checking when you upgrade:
+
+- **Breakpoints.** Vuetify 4 lowered its `md`/`lg`/`xl`/`xxl` thresholds. The calendar switches its dialogs to bottom sheets using Vuetify's `mobile` breakpoint, so keep the Vuetify 3 thresholds if you want the same behaviour:
+
+  ```js
+  createVuetify({
+    display: { thresholds: { md: 960, lg: 1280, xl: 1920, xxl: 2560 } },
+  })
+  ```
+
+- **CSS layers.** Vuetify 4 ships all of its CSS in cascade layers, so any unlayered global rule (for example a `* { margin: 0; padding: 0 }` reset) now overrides Vuetify's utility classes, including the ones the calendar uses. Put such rules in a layer declared before Vuetify's, e.g. `@layer app-base { ... }`.
 
 ---
 
@@ -42,6 +73,8 @@ A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 3*
 ```bash
 npm install vue-calendarium
 ```
+
+The package ships a compiled ES module with its styles (imported automatically) and TypeScript type definitions. Touch gestures (HammerJS) are loaded on demand in the browser, so the package is also safe to import during server-side rendering.
 
 ---
 
@@ -252,8 +285,11 @@ See [docs/STYLING.md](./docs/STYLING.md) and [docs/THEME_REFERENCE.md](./docs/TH
 
 ## Documentation
 
+All guides are also on the [documentation website](https://zehenrique.github.io/vue-calendarium/docs.html).
+
 | Guide | Description |
 | --- | --- |
+| [docs/UPGRADING.md](./docs/UPGRADING.md) | Upgrading from 1.x to 2.0 |
 | [docs/USAGE.md](./docs/USAGE.md) | Usage guide with practical examples |
 | [docs/API.md](./docs/API.md) | Full API reference — props, callbacks, services |
 | [docs/STYLING.md](./docs/STYLING.md) | Theming and styling guide |
@@ -261,6 +297,7 @@ See [docs/STYLING.md](./docs/STYLING.md) and [docs/THEME_REFERENCE.md](./docs/TH
 | [docs/THEME_EXAMPLES.md](./docs/THEME_EXAMPLES.md) | Ready-to-use theme examples |
 | [docs/COLORS.md](./docs/COLORS.md) | 12-color Material palette and helpers |
 | [docs/GHOST_EVENTS.md](./docs/GHOST_EVENTS.md) | Ghost events for custom modal workflows |
+| [CHANGELOG.md](./CHANGELOG.md) | Changes in each version |
 
 ---
 
@@ -271,6 +308,17 @@ make dev        # start the dev server
 make test       # unit tests (Vitest)
 make test-ui    # end-to-end tests (Playwright)
 ```
+
+`npm run build:lib` builds the npm package into `lib/` (it also runs automatically before `npm publish`). The type definitions in [`types/index.d.ts`](./types/index.d.ts) are written by hand: update them whenever the public API changes.
+
+### Website
+
+The [website](https://zehenrique.github.io/vue-calendarium/) has two parts:
+
+- **Demo** (`index.html` + `src/App.vue`): this repository's dev app.
+- **Documentation** (`docs.html` + `site/`): renders `README.md`, `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md` and every Markdown file in `docs/` at build time, so it always matches the repository. A new file in `docs/` appears in the sidebar automatically; add it to `SECTIONS` in `site/docs-page.js` to choose its place and label.
+
+Both are built with `make build` and deployed to GitHub Pages by [`.github/workflows/pages.yml`](./.github/workflows/pages.yml) on every push to `main`. To enable it once, open the repository's **Settings > Pages** and set **Source** to **GitHub Actions**.
 
 ---
 

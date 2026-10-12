@@ -20,6 +20,23 @@ import {
 } from 'vue-calendarium';
 ```
 
+### TypeScript
+
+Type definitions ship with the package ([`types/index.d.ts`](../types/index.d.ts)), so the config, callbacks and services are typed without extra setup:
+
+```ts
+import { createCalendar, createViewWeek, type CalendarApp, type CalendarEventData } from 'vue-calendarium';
+
+const calendarApp: CalendarApp = createCalendar({
+  views: [createViewWeek()],
+  onEventCreate: (events: CalendarEventData[]) => saveToBackend(events)
+});
+```
+
+### Styles
+
+The component's CSS is imported by the package entry automatically. If your setup needs it as a separate import, it is also exported as `vue-calendarium/style.css`.
+
 ## `Calendar` (Vue component)
 
 ### Props

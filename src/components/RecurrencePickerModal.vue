@@ -13,12 +13,10 @@
       <v-card-text class="px-6 pb-6">
         <v-container fluid class="pa-0">
           <v-form>
-            <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4"></v-select>
-            <v-row class="mb-4">
-              <v-col cols="12">
-                <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999"></v-text-field>
-              </v-col>
-            </v-row>
+            <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
+            <div class="mb-7">
+              <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999"></v-text-field>
+            </div>
             <div v-if="frequency === 'WEEKLY'" class="mb-4">
               <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>
               <v-chip-group v-model="selectedWeekdays" multiple column>
@@ -83,7 +81,7 @@
 
       <v-card-text class="px-4 pt-3 pb-4 mobile-recurrence-content">
         <v-form>
-          <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4"></v-select>
+          <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
           <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999" class="mb-4"></v-text-field>
           <div v-if="frequency === 'WEEKLY'" class="mb-4">
             <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>

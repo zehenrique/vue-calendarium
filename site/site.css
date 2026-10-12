@@ -1,0 +1,333 @@
+/*
+ * Website (GitHub Pages) styles: the navigation bar shared by the demo and the
+ * documentation, and the documentation page layout.
+ * Not part of the npm package.
+ */
+
+:root {
+  --site-nav-height: 48px;
+  --site-bg: #f5f5f5;
+  --site-surface: #ffffff;
+  --site-text: #3c4043;
+  --site-text-secondary: #5f6368;
+  --site-border: #e0e0e0;
+  --site-accent: #1967d2;
+  --site-accent-soft: #e8f0fe;
+  --site-code-bg: #f1f3f4;
+}
+
+.site-nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  height: var(--site-nav-height);
+  padding-inline: 16px;
+  background: var(--site-surface);
+  border-bottom: 1px solid var(--site-border);
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 14px;
+}
+
+.site-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  color: var(--site-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.site-nav__version {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.site-nav__links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.site-nav__links a {
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--site-text-secondary);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-nav__links a:hover {
+  background: var(--site-bg);
+  color: var(--site-text);
+}
+
+.site-nav__links a[aria-current='page'] {
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  font-weight: 500;
+}
+
+.site-nav a:focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 2px;
+}
+
+/* Phones: the links need the room, the brand name does not */
+@media (max-width: 599px) {
+  .site-nav {
+    gap: 8px;
+    padding-inline: 8px;
+  }
+
+  .site-nav__name,
+  .site-nav__long {
+    display: none;
+  }
+
+  .site-nav__links a {
+    padding: 6px 8px;
+  }
+}
+
+/* Documentation pages (changelog, upgrade guide) */
+
+.doc-page {
+  margin: 0;
+  background: var(--site-bg);
+  color: var(--site-text);
+  font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+/* Sidebar with the list of pages, next to the page content */
+.docs-layout {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 820px);
+  justify-content: center;
+  gap: 32px;
+  padding: 32px 24px 64px;
+}
+
+.docs-toc {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  font-size: 0.9375rem;
+}
+
+/* On wide screens the list is always open, so its toggle is hidden */
+.docs-toc summary {
+  display: none;
+}
+
+.docs-toc__section {
+  margin: 20px 0 6px 12px;
+  color: var(--site-text-secondary);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.docs-toc__section:first-child {
+  margin-top: 0;
+}
+
+.docs-toc ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.docs-toc a {
+  display: block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  color: var(--site-text);
+  text-decoration: none;
+}
+
+.docs-toc a:hover {
+  background: var(--site-surface);
+}
+
+.docs-toc a[aria-current='page'] {
+  background: var(--site-accent-soft);
+  color: var(--site-accent);
+  font-weight: 500;
+}
+
+.docs-toc a:focus-visible,
+.docs-toc summary:focus-visible {
+  outline: 2px solid var(--site-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 959px) {
+  .docs-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 16px 16px 48px;
+  }
+
+  .docs-toc {
+    position: static;
+    max-height: none;
+    padding: 4px 8px;
+    background: var(--site-surface);
+    border: 1px solid var(--site-border);
+    border-radius: 16px;
+  }
+
+  .docs-toc summary {
+    display: list-item;
+    padding: 8px 4px;
+    cursor: pointer;
+    font-weight: 500;
+  }
+
+  .docs-toc[open] summary {
+    border-bottom: 1px solid var(--site-border);
+    margin-bottom: 8px;
+  }
+
+  .docs-toc__current {
+    color: var(--site-accent);
+  }
+}
+
+.doc {
+  box-sizing: border-box;
+  min-width: 0;
+  padding: 32px 40px;
+  background: var(--site-surface);
+  border: 1px solid var(--site-border);
+  border-radius: 24px;
+}
+
+.doc > :first-child {
+  margin-top: 0;
+}
+
+.doc h1,
+.doc h2,
+.doc h3 {
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.doc h1 {
+  font-size: 2rem;
+  font-weight: 400;
+}
+
+.doc h2 {
+  margin-top: 2.5rem;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.doc h3 {
+  margin-top: 1.75rem;
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.doc a {
+  color: var(--site-accent);
+}
+
+.doc code {
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: var(--site-code-bg);
+  font-family: 'Roboto Mono', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+  font-size: 0.875em;
+}
+
+.doc pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--site-code-bg);
+  line-height: 1.5;
+}
+
+.doc pre code {
+  padding: 0;
+  background: none;
+}
+
+.doc table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.doc th,
+.doc td {
+  padding: 8px 12px;
+  border: 1px solid var(--site-border);
+  text-align: left;
+}
+
+.doc th {
+  background: var(--site-bg);
+  font-weight: 500;
+}
+
+.doc li + li {
+  margin-top: 4px;
+}
+
+.doc hr {
+  margin: 2rem 0;
+  border: 0;
+  border-top: 1px solid var(--site-border);
+}
+
+.doc img {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+.doc-source {
+  margin-top: 3rem;
+  color: var(--site-text-secondary);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 599px) {
+  .docs-layout {
+    padding: 12px 0 48px;
+  }
+
+  .docs-toc {
+    margin-inline: 12px;
+  }
+
+  .doc {
+    padding: 24px 16px;
+    border-inline: 0;
+    border-radius: 0;
+  }
+
+  .doc h1 {
+    font-size: 1.6rem;
+  }
+}

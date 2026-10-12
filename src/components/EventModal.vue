@@ -21,7 +21,7 @@
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" hide-details density="compact" class="date-input mr-3" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>
-                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                <v-date-picker class="event-date-picker" :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal" hide-header show-adjacent-months>
                   <template v-slot:actions>
                     <v-btn variant="text" color="primary" @click="handleTodayClick">
                       {{ t('today') || 'Today' }}
@@ -29,10 +29,10 @@
                   </template>
                 </v-date-picker>
               </v-menu>
-              <v-select v-if="!eventData.allDay" v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select mr-2"></v-select>
+              <v-select v-if="!eventData.allDay" v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select mr-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, timeOptions, eventData.startTime)"></v-select>
               <span v-if="!eventData.allDay" class="time-separator">–</span>
-              <v-select v-if="!eventData.allDay" v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select ml-2">
-                <template v-slot:selection="{ item }">
+              <v-select v-if="!eventData.allDay" v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select ml-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, endTimeOptions, eventData.endTime)">
+                <template v-slot:selection="{ internalItem: item }">
                   {{ item.value }}
                 </template>
               </v-select>
@@ -56,14 +56,14 @@
             <div class="d-flex align-center">
               <v-icon class="mr-4" size="20">mdi-calendar-blank</v-icon>
               <div class="flex-grow-1">
-                <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="plain" hide-details density="compact" class="calendar-select" data-testid="calendar-select">
-                  <template v-slot:selection="{ item }">
+                <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="plain" hide-details density="compact" class="calendar-select" data-testid="calendar-select" :menu-props="{ contentClass: 'calendar-select-menu' }">
+                  <template v-slot:selection="{ internalItem: item }">
                     <div class="d-flex align-center">
                       <div class="color-dot mr-2" :style="{ backgroundColor: eventData.color }"></div>
                       <span>{{ item.title }}</span>
                     </div>
                   </template>
-                  <template v-slot:item="{ item, props }">
+                  <template v-slot:item="{ internalItem: item, props }">
                     <v-list-item v-bind="props">
                       <template v-slot:prepend>
                         <div class="color-dot mr-2" :style="{ backgroundColor: getCalendarColor(item.value) }"></div>
@@ -119,7 +119,7 @@
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" density="compact" hide-details class="flex-grow-1" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>
-                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                <v-date-picker class="event-date-picker" :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal" hide-header show-adjacent-months>
                   <template v-slot:actions>
                     <v-btn variant="text" color="primary" @click="handleTodayClick">
                       {{ t('today') || 'Today' }}
@@ -132,10 +132,10 @@
             <!-- Time pickers -->
             <div v-if="!eventData.allDay" class="d-flex align-center">
               <div class="icon-spacer mr-3"></div>
-              <v-select v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile mr-2"></v-select>
+              <v-select v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile mr-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, timeOptions, eventData.startTime)"></v-select>
               <span class="time-separator">–</span>
-              <v-select v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile ml-2">
-                <template v-slot:selection="{ item }">
+              <v-select v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile ml-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, endTimeOptions, eventData.endTime)">
+                <template v-slot:selection="{ internalItem: item }">
                   {{ item.value }}
                 </template>
               </v-select>
@@ -166,18 +166,8 @@
           <div class="d-flex align-center">
             <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-calendar-blank</v-icon>
             <div class="flex-grow-1">
-              <v-select
-                v-model="eventData.calendarId"
-                :items="calendars"
-                item-title="name"
-                item-value="id"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="mobile-calendar-select"
-                data-testid="calendar-select"
-              >
-                <template v-slot:selection="{ item }">
+              <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="outlined" hide-details density="compact" class="mobile-calendar-select" data-testid="calendar-select" :menu-props="{ contentClass: 'calendar-select-menu' }">
+                <template v-slot:selection="{ internalItem: item }">
                   <div class="d-flex align-center">
                     <div
                       class="color-dot mr-2"
@@ -186,7 +176,7 @@
                     <span>{{ item.title }}</span>
                   </div>
                 </template>
-                <template v-slot:item="{ item, props }">
+                <template v-slot:item="{ internalItem: item, props }">
                   <v-list-item v-bind="props">
                     <template v-slot:prepend>
                       <div
@@ -219,6 +209,7 @@ import { useI18n } from 'vue-i18n';
 import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
+import { scrollSelectedOptionToTop } from '../composables/useSelectMenuScroll.js';
 import RecurrencePickerModal from './RecurrencePickerModal.vue';
 
 export default {
@@ -537,6 +528,7 @@ export default {
     return {
       t,
       mobile,
+      scrollSelectedOptionToTop,
       eventData,
       repeatSelection,
       showCustomRecurrence,
@@ -561,10 +553,6 @@ export default {
 </script>
 
 <style scoped>
-.event-modal-card {
-  border-radius: 8px;
-}
-
 .modal-header {
   display: flex;
   align-items: center;
@@ -637,6 +625,13 @@ export default {
   font-size: 0.875rem;
 }
 
+/* Drop the 2px row padding Vuetify 4 adds around the 40px day buttons, so the
+   picker fits below the event title in the dialog */
+.event-date-picker :deep(.v-date-picker-month__day) {
+  height: 40px;
+  padding: 0;
+}
+
 .date-input :deep(.v-field) {
   border-radius: 4px;
 }
@@ -678,6 +673,12 @@ export default {
 .calendar-select :deep(.v-field__input) {
   font-size: 0.875rem;
   padding: 4px 0;
+}
+
+/* Centre the dropdown arrow on the selected calendar (Vuetify pads it for a label) */
+.calendar-select :deep(.v-field__append-inner) {
+  align-items: center;
+  padding-top: 0;
 }
 
 .color-dot {

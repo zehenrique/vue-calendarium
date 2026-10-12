@@ -132,7 +132,7 @@ const customTheme = {
 | `--calendar-font-size-small` | `12px` | Small font size | Labels, captions |
 | `--calendar-font-size-xsmall` | `11px` | Extra small font size | Very small text, timestamps |
 | `--calendar-font-size-large` | `16px` | Large font size | Headings, emphasis |
-| `--calendar-font-size-title` | `1.25rem` | Title font size | Main titles |
+| `--calendar-font-size-title` | `1.25rem` | Title font size | Header month title (desktop and mobile) |
 | `--calendar-font-weight-normal` | `400` | Normal font weight | Regular text |
 | `--calendar-font-weight-medium` | `500` | Medium font weight | Emphasized text, labels |
 
