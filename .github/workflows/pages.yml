@@ -1,4 +1,4 @@
-name: Live demo
+name: Github Pages
 
 # Builds the dev app (index.html + src/App.vue) and publishes it to GitHub Pages:
 #   https://zehenrique.github.io/vue-calendarium/
