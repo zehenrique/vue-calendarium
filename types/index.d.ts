@@ -205,6 +205,10 @@ export interface CalendarConfig extends CalendarCallbacks {
   selectedDate?: Temporal.PlainDate;
   enableModals?: boolean;
   enableMobileSidebar?: boolean;
+  /** Sidebar on desktop with a small month to move around in and the calendars to show or hide (default: true) */
+  enableDesktopSidebar?: boolean;
+  /** Whether the desktop sidebar starts open (default: open, unless the calendar is narrower than 1024px) */
+  sidebarOpen?: boolean;
   mobileViewSelectorPlacement?: 'header' | 'sidebar';
   enableSwipeGestures?: boolean;
   enablePinchToZoom?: boolean;
@@ -221,6 +225,7 @@ export interface CalendarApp {
   locale: ComputedRef<CalendarLocale>;
   enableModals: ComputedRef<boolean>;
   enableMobileSidebar: Ref<boolean>;
+  enableDesktopSidebar: Ref<boolean>;
   mobileViewSelectorPlacement: Ref<'header' | 'sidebar'>;
   enableSwipeGestures: ComputedRef<boolean>;
   enablePinchToZoom: ComputedRef<boolean>;
@@ -230,6 +235,8 @@ export interface CalendarApp {
   /** Events of the visible calendars */
   visibleEvents: ComputedRef<CalendarEventData[]>;
   ghostEvent: ComputedRef<(CalendarEventInput & { isGhost: true }) | null>;
+  /** Whether the desktop sidebar is open */
+  sidebarOpen: ComputedRef<boolean>;
 
   setView(view: CalendarViewName): void;
   setDate(date: Temporal.PlainDate): void;
@@ -241,6 +248,10 @@ export interface CalendarApp {
   showGhostEvent(event: CalendarEventInput): void;
   updateGhostEvent(event: Partial<CalendarEventInput>): void;
   hideGhostEvent(): void;
+  /** Opens or closes the desktop sidebar */
+  setSidebarOpen(open: boolean): void;
+  /** Opens the desktop sidebar if it is closed, and closes it if it is open */
+  toggleSidebar(): void;
 
   callbacks: CalendarCallbacks;
   /** Internal state used by the component; not part of the stable API */

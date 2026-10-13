@@ -29,9 +29,32 @@ To react to the user's navigation, use the `onViewChange(view)` and `onDateChang
 
 ## Header
 
-On desktop the header has **Today**, previous and next buttons, the title (for example "January 2026"), a view dropdown and a date picker. Previous and next move one day, week or month, depending on the view.
+On desktop the header has a menu button that shows or hides the [sidebar](#sidebar), **Today**, previous and next buttons, the title (for example "January 2026"), a view dropdown and a date picker. Previous and next move one day, week or month, depending on the view.
 
 On mobile the header is more compact. See [Mobile layout](./MOBILE.md).
+
+## Sidebar
+
+On desktop, as in Google Calendar, a sidebar on the left has:
+
+- **A small month.** Choosing a day shows it in the calendar, in the current view. Its arrows change the small month without moving the calendar, and it follows the calendar when the calendar moves to another month. Today is shown in a filled circle and the selected date in a lighter one.
+- **The calendars**, each with a checkbox that shows or hides its events.
+
+The menu button in the header hides and shows it: the sidebar slides out to the left and the views take its room (without the animation when the device asks for reduced motion). The sidebar has the header's background (`--calendar-header-bg`), and its width is the `--calendar-sidebar-width` theme variable (256px); see [Styling](./STYLING.md).
+
+A calendar narrower than 1024px starts with the sidebar closed. To choose, or to open and close it from your app:
+
+```js
+const calendarApp = createCalendar({ views, sidebarOpen: false });
+
+calendarApp.setSidebarOpen(true);
+calendarApp.toggleSidebar();
+calendarApp.sidebarOpen.value; // true or false
+```
+
+Set `enableDesktopSidebar: false` to remove the sidebar and its menu button.
+
+On mobile the same controls are in the slide-out sidebar. See [Mobile layout](./MOBILE.md).
 
 ## Month view
 
@@ -94,4 +117,4 @@ All three views can be used with the keyboard. In the week and day views, **Tab*
 
 ## Calendars and visibility
 
-Events belong to a calendar through `calendarId`. A hidden calendar hides all of its events in every view. On mobile the sidebar has a checkbox for each calendar. On desktop there is no built-in control, so call `calendarApp.calendarsService.toggleVisibility(id)` from your own UI. See [Events](./EVENTS.md#calendars).
+Events belong to a calendar through `calendarId`. A hidden calendar hides all of its events in every view. The [sidebar](#sidebar) has a checkbox for each calendar, on desktop and mobile. You can also call `calendarApp.calendarsService.toggleVisibility(id)` from your own UI. See [Events](./EVENTS.md#calendars).

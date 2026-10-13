@@ -12,7 +12,7 @@
         <v-container fluid class="pa-0">
           <v-form>
             <!-- Event title -->
-            <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="text-h5 mb-4 title-input" hide-details autofocus></v-text-field>
+            <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="text-headline-small mb-4 title-input" hide-details autofocus></v-text-field>
 
             <!-- Date and time row -->
             <div class="d-flex align-center mb-2">
@@ -42,7 +42,7 @@
             <div class="d-flex align-center mb-4">
               <div class="icon-spacer mr-4"></div>
               <div class="flex-grow-1">
-                <div class="text-body-2 d-flex align-center flex-wrap options-row">
+                <div class="text-body-medium d-flex align-center flex-wrap options-row">
                   <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
                   <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
                 </div>
@@ -75,11 +75,11 @@
       </v-card-text>
 
       <v-card-actions class="px-8 pb-4 pt-0">
-        <v-btn variant="text" @click="handleClose">
+        <v-spacer></v-spacer>
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleClose">
           {{ t('cancel') }}
         </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" variant="flat" size="large" @click="handleSave" :disabled="!eventData.title" class="px-8">
+        <v-btn color="primary" variant="flat" :slim="false" class="px-6" @click="handleSave" :disabled="!eventData.title">
           {{ t('save') }}
         </v-btn>
       </v-card-actions>
@@ -145,7 +145,7 @@
           <div class="mb-3 d-flex align-center">
             <div class="icon-spacer mr-3"></div>
             <div class="flex-grow-1">
-              <div class="text-body-2 d-flex align-center flex-wrap options-row">
+              <div class="text-body-medium d-flex align-center flex-wrap options-row">
                 <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
                 <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
               </div>

@@ -48,18 +48,18 @@ test.describe('Calendar Views (Desktop)', () => {
     const header = getHeaderTitle(page);
     const initialMonth = (await header.textContent())?.trim();
 
-    await page.getByRole('button', { name: /Next/i }).click();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
     await expect(header).not.toHaveText(initialMonth || '', { timeout: 1000 });
 
-    await page.getByRole('button', { name: /Previous/i }).click();
+    await page.getByRole('button', { name: 'Previous', exact: true }).click();
     await expect(header).toHaveText(initialMonth || '', { timeout: 1000 });
   });
 
   test('should navigate to today', async ({ page }) => {
     const header = getHeaderTitle(page);
 
-    await page.getByRole('button', { name: /Next/i }).click();
-    await page.getByRole('button', { name: /Next/i }).click();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
+    await page.getByRole('button', { name: 'Next', exact: true }).click();
 
     await page.getByTestId('today-button').click();
 

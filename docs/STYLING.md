@@ -185,6 +185,7 @@ The `--calendar-font-family` variable is applied to the calendar surface and to 
 | `--calendar-header-padding` | `16px 20px` | Header padding |
 | `--calendar-header-gap` | `12px` | Gap between header elements |
 | `--calendar-time-column-width` | `60px` | Time column width (desktop) |
+| `--calendar-sidebar-width` | `256px` | Width of the desktop sidebar |
 | `--calendar-time-column-width-mobile` | `50px` | Time column width (mobile) |
 | `--calendar-day-number-size` | `24px` | Day number circle size |
 | `--calendar-week-day-number-size` | `36px` | Week view day number size |
@@ -479,11 +480,14 @@ The calendar's dialogs, menus, buttons and text use Vuetify 4's Material Design 
 
 - **Header title.** The month title in the header is sized by `--calendar-font-size-title` (20px by default) on desktop and mobile, instead of a Vuetify typography class.
 - **Dialog corners.** Dialogs use `rounded="xl"` and bottom sheets `rounded="t-xl"` (24px).
+- **Dialog buttons.** As in Google Calendar, a dialog's buttons sit together on the right (**Cancel** next to **Save**) and have the same height and padding, so a text button's hover background is as large as the filled button.
+- **Buttons.** As in Google Calendar, buttons are pill-shaped and icon buttons round, including the hover background. The calendar sets this with a `v-defaults-provider` ([`src/config/vuetifyDefaults.js`](../src/config/vuetifyDefaults.js)), so it does not depend on your app's `VBtn` defaults. The header's **Today** button keeps its 12px corners, to match the view selector and date field next to it.
+- **Typography.** Text uses Vuetify 4's Material Design 3 classes (`text-headline-small`, `text-title-large`, `text-body-large`, `text-body-medium`, `text-body-small`), following Vuetify's [typography migration](https://vuetifyjs.com/en/getting-started/upgrade-guide/#typography).
 - **Icon and text rows.** In the event details, each icon (or colour dot) sits in a box one text line tall (`height: 1lh`), so it stays centred on the first line of its text at any font size.
 - **Date picker in the event dialog.** The day rows are 40px tall without Vuetify's extra row padding, so the picker opens below the event title. All date pickers use `control-variant="modal"` (month and year button plus previous/next arrows).
 - **Time dropdowns.** Vuetify 4 centres the selected option when a select menu opens. The time selects use `no-auto-scroll` and [`scrollSelectedOptionToTop`](../src/composables/useSelectMenuScroll.js) to show it at the top of the list.
 
-Vuetify 4 ships all of its CSS in cascade layers, so unlayered CSS in your app overrides Vuetify's utility classes. See *Requirements* in the [README](../README.md#requirements) for the app-level notes on breakpoints and CSS resets.
+Vuetify 4 ships all of its CSS in cascade layers, so unlayered CSS in your app overrides Vuetify's utility classes. Load Vuetify's styles (`import 'vuetify/styles'`) before any code that imports a Vuetify component directly: the first stylesheet to name a layer fixes its place in the order, and if component styles come first, Vuetify's reset overrides them (icon buttons, for example, grow to the size of the surrounding text). See *Requirements* in the [README](../README.md#requirements) for the app-level notes on breakpoints and CSS resets.
 
 ## Resources
 

@@ -1,5 +1,7 @@
 <template>
-  <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile }">
+  <!-- Buttons look the same whatever the app's Vuetify defaults -->
+  <v-defaults-provider :defaults="CALENDAR_DEFAULTS">
+  <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile, 'has-desktop-sidebar': desktopSidebarVisible }" :style="{ '--calendar-topbar-height': `${topBarHeight}px` }">
     <CalendarHeader
       :current-title="currentTitle"
       :current-view="currentView"
@@ -7,6 +9,8 @@
       :views="views"
       :is-mobile="isMobile"
       :show-mobile-menu="mobileSidebarEnabled"
+      :show-desktop-menu="desktopSidebarEnabled"
+      :menu-expanded="isMobile ? showMobileSidebar : desktopSidebarVisible"
       :show-mobile-navigation="!swipeGesturesEnabled"
       :mobile-view-selector-placement="mobileViewSelectorPlacement"
       :swipe-enabled="swipeDeckEnabled"
@@ -17,7 +21,7 @@
       :next-week-days="currentView === 'week' ? nextWeekViewDays : null"
       :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
-      @toggle-sidebar="toggleMobileSidebar"
+      @toggle-sidebar="toggleSidebar"
       @previous="previousPeriod"
       @next="nextPeriod"
       @today="goToToday"
@@ -27,6 +31,9 @@
       @day-number-click="onAllDaySlotClick"
       @date-change="handleDateChange"
     />
+
+    <!-- Desktop: Google Calendar's sidebar, under the top bar -->
+    <DesktopSidebar v-if="desktopSidebarShown" :open="desktopSidebarVisible" :selected-date="currentDate" :today="todayDate" :locale="calendarLocale" :calendars="calendars" :visible-calendars="visibleCalendarIds" @date-select="handleMiniMonthSelect" @update:visible-calendars="handleVisibleCalendarsUpdate"/>
 
     <div ref="swipeDeck" class="swipe-deck" :class="{ 'is-active': swipeDeckEnabled, 'is-animating': swipeIsAnimating, 'is-panning': swipeIsPanning }">
       <div class="swipe-track" :class="{ 'is-single': !swipeRenderNeighbors }" :style="swipeTrackStyle">
@@ -242,6 +249,7 @@
       @update:visible-calendars="handleVisibleCalendarsUpdate"
       @view-change="handleViewChange"/>
   </div>
+  </v-defaults-provider>
 </template>
 
 <script setup>
@@ -260,6 +268,8 @@ import EventDetailModal from './components/EventDetailModal.vue';
 import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
 import RecurrenceScopeModal from './components/RecurrenceScopeModal.vue';
 import MobileSidebar from './components/MobileSidebar.vue';
+import DesktopSidebar from './components/DesktopSidebar.vue';
+import { CALENDAR_DEFAULTS } from './config/vuetifyDefaults.js';
 import {
   createDefaultEventDraft,
   ensureDraftCalendar,
@@ -307,6 +317,7 @@ const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
 const modalsEnabled = computed(() => props.calendarApp.enableModals?.value ?? true);
 const mobileSidebarEnabled = computed(() => props.calendarApp.enableMobileSidebar?.value ?? true);
+const desktopSidebarEnabled = computed(() => props.calendarApp.enableDesktopSidebar?.value ?? true);
 const dragAndDropEnabled = computed(() => props.calendarApp.enableDragAndDrop?.value ?? false);
 
 const mobileViewSelectorPlacement = computed(() => {
@@ -934,9 +945,48 @@ watch(() => props.theme, (newTheme) => {
   }
 }, { deep: true });
 
-function toggleMobileSidebar() {
-  showMobileSidebar.value = !showMobileSidebar.value;
+// The header's menu button opens the slide-out sidebar on mobile, and shows or hides the
+// sidebar on desktop, as in Google Calendar. The app can also open or close it
+// (calendarApp.setSidebarOpen, toggleSidebar)
+const desktopSidebarOpen = props.calendarApp._refs.desktopSidebarOpen;
+// As in Google Calendar, a narrow calendar starts with the sidebar closed, unless the app chose
+const SIDEBAR_MIN_CALENDAR_WIDTH = 1024;
+onMounted(() => {
+  if (desktopSidebarOpen.value === null) {
+    desktopSidebarOpen.value = (calendarRoot.value?.offsetWidth ?? Infinity) >= SIDEBAR_MIN_CALENDAR_WIDTH;
+  }
+});
+const desktopSidebarShown = computed(() => !isMobile.value && desktopSidebarEnabled.value);
+const desktopSidebarVisible = computed(() => desktopSidebarShown.value && Boolean(desktopSidebarOpen.value));
+const todayDate = computed(() => currentTime.value.toPlainDate());
+
+function toggleSidebar() {
+  if (isMobile.value) {
+    showMobileSidebar.value = !showMobileSidebar.value;
+  } else {
+    props.calendarApp.toggleSidebar();
+  }
 }
+
+function handleMiniMonthSelect(date) {
+  currentDate.value = date;
+  props.calendarApp.callbacks.onDateChange?.(date);
+}
+
+// The sidebar sits under the header's top bar (its first row), whose height depends on the
+// font and on wrapping, so it is measured
+const topBarHeight = ref(0);
+let topBarObserver = null;
+function observeTopBar() {
+  const topBar = calendarRoot.value?.querySelector('.header-content');
+  if (!topBar || typeof ResizeObserver === 'undefined') return;
+  topBarObserver = new ResizeObserver(() => {
+    topBarHeight.value = topBar.offsetHeight;
+  });
+  topBarObserver.observe(topBar);
+}
+onMounted(observeTopBar);
+onBeforeUnmount(() => topBarObserver?.disconnect());
 
 function handleVisibleCalendarsUpdate(calendarIds) {
   // Update calendar visibility through calendarsService
@@ -1340,6 +1390,25 @@ watch(showModal, (isOpen) => {
   min-height: 0;
   position: relative;
   overflow: hidden;
+}
+
+/* Desktop sidebar: the week's day headers and the views move right to make room for it,
+   sliding with the sidebar */
+.swipe-deck,
+.vue-calendarium :deep(.week-strip) {
+  transition: margin-left var(--calendar-transition-fast, 0.2s) ease;
+}
+
+.has-desktop-sidebar .swipe-deck,
+.has-desktop-sidebar :deep(.week-strip) {
+  margin-left: var(--calendar-sidebar-width, 256px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-deck,
+  .vue-calendarium :deep(.week-strip) {
+    transition: none;
+  }
 }
 
 .swipe-track {

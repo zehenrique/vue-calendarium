@@ -16,6 +16,8 @@ import { toPlainDateTimeString } from './dateTime.js';
  * @param {Object} config.selectedDate - Initial selected date (Temporal.PlainDate)
  * @param {Boolean} config.enableModals - Enable/disable modals (default: true)
  * @param {Boolean} config.enableMobileSidebar - Enable/disable mobile sidebar (default: true)
+ * @param {Boolean} config.enableDesktopSidebar - Enable/disable the desktop sidebar with the small month and the calendars (default: true)
+ * @param {Boolean} config.sidebarOpen - Whether the desktop sidebar starts open (default: open, unless the calendar is narrower than 1024px)
  * @param {'header'|'sidebar'} config.mobileViewSelectorPlacement - Where the view selector is shown on mobile (default: 'sidebar')
  * @param {Boolean} config.enableSwipeGestures - Enable/disable mobile swipe gestures (default: true)
  * @param {Boolean} config.enablePinchToZoom - Enable/disable pinch-to-zoom on mobile (default: true)
@@ -55,6 +57,8 @@ export function createCalendar(config = {}) {
     selectedDate,
     enableModals = true,
     enableMobileSidebar = true,
+    enableDesktopSidebar = true,
+    sidebarOpen,
     mobileViewSelectorPlacement = 'sidebar',
     enableSwipeGestures = true,
     enablePinchToZoom = true,
@@ -84,6 +88,9 @@ export function createCalendar(config = {}) {
   const currentDate = ref(selectedDate !== undefined ? selectedDate : _getCurrentDate());
   const modalsEnabled = ref(enableModals);
   const mobileSidebarEnabled = ref(enableMobileSidebar);
+  const desktopSidebarEnabled = ref(enableDesktopSidebar);
+  // null until the calendar is on screen, which then opens it unless it is narrow
+  const desktopSidebarOpen = ref(typeof sidebarOpen === 'boolean' ? sidebarOpen : null);
   const mobileViewSelectorPlacementRef = ref(mobileViewSelectorPlacement);
   const swipeGesturesEnabled = ref(enableSwipeGestures);
   const pinchToZoomEnabled = ref(enablePinchToZoom);
@@ -185,6 +192,15 @@ export function createCalendar(config = {}) {
     ghostEvent.value = null;
   };
 
+  // Desktop sidebar, also shown and hidden by the header's menu button
+  const setSidebarOpen = (open) => {
+    desktopSidebarOpen.value = Boolean(open);
+  };
+
+  const toggleSidebar = () => {
+    desktopSidebarOpen.value = !desktopSidebarOpen.value;
+  };
+
   // Return calendar instance
   return {
     // Services
@@ -197,6 +213,7 @@ export function createCalendar(config = {}) {
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
     enableMobileSidebar: mobileSidebarEnabled,
+    enableDesktopSidebar: desktopSidebarEnabled,
     mobileViewSelectorPlacement: mobileViewSelectorPlacementRef,
     enableSwipeGestures: computed(() => swipeGesturesEnabled.value),
     enablePinchToZoom: computed(() => pinchToZoomEnabled.value),
@@ -205,6 +222,7 @@ export function createCalendar(config = {}) {
     views: computed(() => availableViews.value),
     visibleEvents,
     ghostEvent: computed(() => ghostEvent.value),
+    sidebarOpen: computed(() => Boolean(desktopSidebarOpen.value)),
 
     // Methods
     setView,
@@ -216,6 +234,8 @@ export function createCalendar(config = {}) {
     showGhostEvent,
     updateGhostEvent,
     hideGhostEvent,
+    setSidebarOpen,
+    toggleSidebar,
 
     // Callbacks
     callbacks: {
@@ -236,6 +256,8 @@ export function createCalendar(config = {}) {
       currentLocale,
       modalsEnabled,
       mobileSidebarEnabled,
+      desktopSidebarEnabled,
+      desktopSidebarOpen,
       swipeGesturesEnabled,
       pinchToZoomEnabled,
       currentTimeIndicatorEnabled,

@@ -104,6 +104,11 @@ The calendar now uses Vuetify 4's Material Design 3 styling in its dialogs, menu
 - The selected item in a dropdown shows a stronger highlight when the dropdown opens, because keyboard focus now moves to it.
 - The mobile side menu's section headings ("Views", "Calendars") are uppercase.
 - Date picker day cells are larger, except in the event dialog.
+- On desktop, a sidebar on the left has a small month and the calendars, as in Google Calendar. The views are 256px narrower while it is open; the header's menu button hides it, and `enableDesktopSidebar: false` removes it.
+- A dialog's buttons sit together on the right, with the same size.
+- Buttons are pill-shaped and icon buttons round, as in Google Calendar, whatever your app's `VBtn` defaults are.
+- Dialog titles and the side menu use Vuetify 4's typography: the side menu title is 22px.
+- The custom repeat dialog has Google Calendar's layout: "Repeat every [1] [week]" on one line, round weekday buttons, and the end options with their fields in one column.
 
 These stay the same as in version 1:
 

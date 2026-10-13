@@ -4,25 +4,25 @@
     <v-card class="pa-0" rounded="xl">
       <v-card-title class="d-flex align-center px-6 pt-6 pb-4">
         <v-icon color="error" size="24" class="mr-3">mdi-alert-circle-outline</v-icon>
-        <span class="text-h6 font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
+        <span class="text-title-large font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-6 pb-6">
         <div v-if="isRecurring" class="mb-4">
-          <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
+          <div class="text-body-large mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
             <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
             <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
             <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
-        <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
+        <div v-else class="text-body-large">{{ t('confirmDelete') }}</div>
       </v-card-text>
       <v-card-actions class="px-6 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn variant="text" @click="handleCancel" class="mr-2">
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">
           {{ t('no') }}
         </v-btn>
-        <v-btn color="error" variant="flat" @click="handleConfirm">
+        <v-btn color="error" variant="flat" :slim="false" class="px-6" @click="handleConfirm">
           {{ t('yes') }}
         </v-btn>
       </v-card-actions>
@@ -34,25 +34,25 @@
     <v-card class="mobile-delete-sheet" rounded="t-xl">
       <v-card-title class="d-flex align-center px-4 pt-5 pb-3">
         <v-icon color="error" size="24" class="mr-3">mdi-alert-circle-outline</v-icon>
-        <span class="text-h6 font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
+        <span class="text-title-large font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-4 pb-4">
         <div v-if="isRecurring" class="mb-4">
-          <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
+          <div class="text-body-large mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
             <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
             <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
             <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
-        <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
+        <div v-else class="text-body-large">{{ t('confirmDelete') }}</div>
       </v-card-text>
       <v-card-actions class="px-4 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn variant="text" @click="handleCancel" class="mr-2">
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">
           {{ t('no') }}
         </v-btn>
-        <v-btn color="error" variant="flat" @click="handleConfirm">
+        <v-btn color="error" variant="flat" :slim="false" class="px-6" @click="handleConfirm">
           {{ t('yes') }}
         </v-btn>
       </v-card-actions>

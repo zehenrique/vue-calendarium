@@ -21,6 +21,7 @@ Upgrading from 1.x? Follow the [upgrade guide](docs/UPGRADING.md).
 ### Added
 
 - TypeScript type definitions (`types/index.d.ts`).
+- A desktop sidebar, as in Google Calendar: a small month to move to any day, and a checkbox for each calendar to show or hide its events. The header's menu button slides it in and out, and the app can too (`calendarApp.toggleSidebar()`, `setSidebarOpen()`, `sidebarOpen`). It has the header's background. Options `enableDesktopSidebar` (default `true`) and `sidebarOpen`, and theme variable `--calendar-sidebar-width`.
 - Changing a repeating event asks which events to change, as in Google Calendar: **This event**, **This and following events** or **All events**, for edits, drag and drop and deletes. A single changed occurrence is stored as an event that takes the place of that occurrence (`recurringEventId`, `originalStart`), and changes to the series are copied to its changed occurrences, which keep their own time and other changes. Moving a series to another day also moves the days its rule repeats on.
 - An [upgrade guide](docs/UPGRADING.md) for moving from 1.x to 2.0.
 - A [documentation website](https://zehenrique.github.io/vue-calendarium/docs.html) with every guide, the changelog and the upgrade guide, linked from the live demo.
@@ -35,6 +36,10 @@ Upgrading from 1.x? Follow the [upgrade guide](docs/UPGRADING.md).
 - A repeat can be removed again: the repeat link opens a menu, as in Google Calendar, with **Does not repeat**, the usual rules for the event's date ("Weekly on Wednesday", "Monthly on the third Wednesday", "Annually on January 15", "Every weekday") and **Custom...**. Before, it opened the custom dialog, which had no way back to "Does not repeat".
 - On mobile, **All day** and the repeat link share a row in the create dialog, as on desktop; the link moves to its own line only when it does not fit.
 - Repeat descriptions write out the days ("Weekly on Monday, Wednesday") instead of abbreviations ("MON, WED").
+- The custom repeat dialog follows Google Calendar's layout: "Repeat every [1] [week]" on one line, round weekday buttons, a dropdown for the monthly options, and the end options' fields lined up in one column with space between them.
+- Dialog buttons sit together on the right with the same size; the text buttons' hover background was smaller than the filled buttons.
+- Buttons are pill-shaped and icon buttons round, with a round hover background, as in Google Calendar, whatever the app's `VBtn` defaults.
+- Text uses Vuetify 4's typography classes. The Vuetify 3 classes it used before (`text-h6`, `text-body-1`...) no longer exist in Vuetify 4, so some text had lost its size; the colour dot in the event details is centred on the title again.
 - The custom repeat dialog's monthly options show the day and weekday ("Monthly on day 15", "Monthly on the third Wednesday") instead of an empty placeholder.
 - Dates with `Z` or an offset are converted to the viewer's time zone instead of causing an error.
 - The month view's **+N** button opens a list of that day's events.

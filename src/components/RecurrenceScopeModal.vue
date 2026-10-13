@@ -3,7 +3,7 @@
   <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="handleCancel" max-width="440" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-scope-modal">
     <v-card class="pa-0" rounded="xl">
       <v-card-title class="px-6 pt-6 pb-2">
-        <span class="text-h6">{{ t('editRecurringTitle') }}</span>
+        <span class="text-title-large">{{ t('editRecurringTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-6 pb-2">
         <v-radio-group v-model="scope" hide-details>
@@ -12,8 +12,8 @@
       </v-card-text>
       <v-card-actions class="px-6 pb-6 pt-2">
         <v-spacer></v-spacer>
-        <v-btn variant="text" class="mr-2" @click="handleCancel">{{ t('cancel') }}</v-btn>
-        <v-btn color="primary" variant="flat" @click="handleConfirm">{{ t('ok') }}</v-btn>
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">{{ t('cancel') }}</v-btn>
+        <v-btn color="primary" variant="flat" :slim="false" class="px-6" @click="handleConfirm">{{ t('ok') }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -22,7 +22,7 @@
   <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="handleCancel" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-scope-modal-mobile">
     <v-card rounded="t-xl">
       <v-card-title class="px-4 pt-5 pb-2">
-        <span class="text-h6">{{ t('editRecurringTitle') }}</span>
+        <span class="text-title-large">{{ t('editRecurringTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-4 pb-2">
         <v-radio-group v-model="scope" hide-details>
@@ -31,8 +31,8 @@
       </v-card-text>
       <v-card-actions class="px-4 pb-6 pt-2">
         <v-spacer></v-spacer>
-        <v-btn variant="text" class="mr-2" @click="handleCancel">{{ t('cancel') }}</v-btn>
-        <v-btn color="primary" variant="flat" @click="handleConfirm">{{ t('ok') }}</v-btn>
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">{{ t('cancel') }}</v-btn>
+        <v-btn color="primary" variant="flat" :slim="false" class="px-6" @click="handleConfirm">{{ t('ok') }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-bottom-sheet>

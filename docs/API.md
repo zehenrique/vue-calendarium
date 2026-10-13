@@ -92,6 +92,8 @@ Feature flags:
 
 - `enableModals` (default `true`)
 - `enableMobileSidebar` (default `true`)
+- `enableDesktopSidebar` (default `true`): the sidebar on desktop, with a small month and the calendars. See [Views](./VIEWS.md#sidebar).
+- `sidebarOpen` (default: open, unless the calendar is narrower than 1024px): whether the desktop sidebar starts open.
 - `mobileViewSelectorPlacement` (default `'sidebar'`)
 - `enableSwipeGestures` (default `true`)
 - `enablePinchToZoom` (default `true`)
@@ -116,6 +118,7 @@ State (computed refs):
 - `currentView`, `currentDate`, `locale`
 - `visibleEvents` (events filtered by visible calendars)
 - `ghostEvent`
+- `sidebarOpen`: whether the desktop sidebar is open
 
 Services:
 
@@ -126,6 +129,10 @@ Navigation methods:
 
 - `setView(viewName)`, `setDate(date)`, `setLocale(locale)`
 - `goToToday()`, `goToNext()`, `goToPrevious()`
+
+Sidebar methods (desktop):
+
+- `setSidebarOpen(open)`, `toggleSidebar()`: open or close the sidebar, as the header's menu button does
 
 Ghost event methods:
 

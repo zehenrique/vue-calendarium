@@ -285,6 +285,8 @@ See [docs/STYLING.md](./docs/STYLING.md) and [docs/THEME_REFERENCE.md](./docs/TH
 | --- | --- | --- |
 | `enableModals` | `true` | Built-in create/edit/delete modals |
 | `enableMobileSidebar` | `true` | Slide-out sidebar on mobile |
+| `enableDesktopSidebar` | `true` | Sidebar on desktop with a small month and the calendars, as in Google Calendar |
+| `sidebarOpen` | open unless narrower than 1024px | Whether the desktop sidebar starts open; `calendarApp.toggleSidebar()` and `setSidebarOpen()` change it |
 | `mobileViewSelectorPlacement` | `'sidebar'` | `'header'` or `'sidebar'` |
 | `enableSwipeGestures` | `true` | Horizontal swipe navigation |
 | `enablePinchToZoom` | `true` | Pinch-to-zoom on Day/Week views |

@@ -11,6 +11,7 @@ This page describes what the calendar does for keyboard and screen reader users 
   - **Week and day views:** an hour slot, labelled for example "Create event on Wednesday, January 15 at 09:00". The arrow keys move up and down between hours and left and right between days. **Enter** or **Space** opens the create dialog for that hour.
   - **Month view:** the day number, labelled "Create event on Wednesday, January 15". The left and right arrows move by a day, up and down by a week, and **Enter** or **Space** opens the create dialog for that day.
   - The grid starts on today when today is shown, and otherwise on the first day.
+- **The small month in the desktop sidebar** is a grid with one tab stop: the selected day. The arrow keys move by a day or a week, **Page Up** and **Page Down** by a month, **Home** and **End** to the start and end of the week, and **Enter** shows the day. Each day is labelled with its full date, and today is marked as the current date.
 - **The +N button in the month view** opens a list of all the day's events. The list items are buttons.
 - **Period changes are announced.** The title in the header ("January 2026") is a polite live region, so screen readers read it when the user moves to another month, week or day. It is also the page's `<h1>`.
 - **Reduced motion.** When the device asks for reduced motion, swiping changes the page without the slide animation.

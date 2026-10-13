@@ -7,12 +7,13 @@
     <div class="header-content">
       <div class="header-left">
         <v-btn
-          v-if="isMobile && showMobileMenu"
+          v-if="isMobile ? showMobileMenu : showDesktopMenu"
           style="margin-left: -10px;"
           icon
           variant="text"
           :aria-label="t('menu')"
-          data-testid="mobile-menu-button"
+          :data-testid="isMobile ? 'mobile-menu-button' : 'desktop-menu-button'"
+          :aria-expanded="menuExpanded"
           @click="$emit('toggle-sidebar')">
           <v-icon>mdi-menu</v-icon>
         </v-btn>
@@ -177,6 +178,16 @@ const props = defineProps({
     default: () => ['day', 'week', 'month']
   },
   isMobile: {
+    type: Boolean,
+    default: false
+  },
+  // Desktop: the button that shows or hides the sidebar
+  showDesktopMenu: {
+    type: Boolean,
+    default: false
+  },
+  // Whether the sidebar the menu button controls is open
+  menuExpanded: {
     type: Boolean,
     default: false
   },

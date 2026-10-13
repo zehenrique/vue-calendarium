@@ -111,3 +111,47 @@ test.describe('Repeat menu', () => {
     ]);
   });
 });
+
+test.describe('Custom recurrence dialog', () => {
+  test('builds a rule like Google Calendar\'s', async ({ page }) => {
+    await loadWeekView(page);
+    await openNewEvent(page);
+    await page.getByPlaceholder(/Event title/i).fill('Training');
+    await chooseRepeat(page, 'Custom...');
+
+    const dialog = page.getByTestId('recurrence-picker-modal');
+    await expect(dialog.getByRole('heading', { name: 'Custom recurrence' })).toBeVisible();
+    // The event's weekday starts selected
+    await expect(dialog.getByRole('button', { name: 'Wednesday' })).toHaveAttribute('aria-pressed', 'true');
+
+    await dialog.getByLabel('Repeat every').fill('2');
+    await dialog.getByRole('button', { name: 'Monday' }).click();
+    await dialog.getByRole('radio', { name: 'After' }).check();
+    await dialog.getByLabel('Number of occurrences').fill('5');
+    await dialog.getByRole('button', { name: 'Done' }).click();
+
+    await expect(repeatLink(page)).toHaveText('Every 2 weeks on Monday, Wednesday, 5 times');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    expect(await storedEvent(page, 'Training')).toMatchObject({ rrule: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=5' });
+  });
+
+  test('the end fields line up and are only editable for their option', async ({ page }) => {
+    await loadWeekView(page);
+    await openNewEvent(page);
+    await chooseRepeat(page, 'Custom...');
+
+    const dialog = page.getByTestId('recurrence-picker-modal');
+    const until = dialog.getByTestId('recurrence-until');
+    const count = dialog.getByTestId('recurrence-count');
+    await expect(until.locator('input')).toBeDisabled();
+    await expect(count.locator('input')).toBeDisabled();
+
+    const untilBox = await until.boundingBox();
+    const countBox = await count.boundingBox();
+    expect(untilBox.x).toBe(countBox.x);
+    expect(countBox.y - (untilBox.y + untilBox.height)).toBeGreaterThanOrEqual(8);
+
+    await dialog.getByRole('radio', { name: 'On' }).check();
+    await expect(until.locator('input')).toBeEnabled();
+  });
+});

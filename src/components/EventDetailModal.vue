@@ -19,20 +19,20 @@
       <v-card-text class="px-6 py-4">
         <!-- Title with color indicator -->
         <div class="detail-row mb-4">
-          <div class="detail-row__icon detail-title">
+          <div class="detail-row__icon text-headline-small">
             <div class="color-dot" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
           </div>
-          <h2 class="detail-title">{{ event?.title }}</h2>
+          <h2 class="detail-title text-headline-small">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
         <div class="detail-row mb-2">
-          <div class="detail-row__icon text-body-1">
+          <div class="detail-row__icon text-body-large">
             <v-icon size="20">mdi-clock-outline</v-icon>
           </div>
           <div>
-            <div class="text-body-1">{{ dateTimeDisplay }}</div>
-            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+            <div class="text-body-large">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-medium text-medium-emphasis mt-1">
               {{ formatRRule(event.rrule) }}
             </div>
           </div>
@@ -40,10 +40,10 @@
 
         <!-- Calendar name -->
         <div v-if="calendarName" class="detail-row">
-          <div class="detail-row__icon text-body-1">
+          <div class="detail-row__icon text-body-large">
             <v-icon size="20">mdi-calendar-blank</v-icon>
           </div>
-          <div class="text-body-1">{{ calendarName }}</div>
+          <div class="text-body-large">{{ calendarName }}</div>
         </div>
       </v-card-text>
     </v-card>
@@ -71,20 +71,20 @@
       <v-card-text class="px-4 pt-4 pb-6">
         <!-- Title with color indicator -->
         <div class="detail-row mb-4">
-          <div class="detail-row__icon detail-title">
+          <div class="detail-row__icon text-title-large">
             <div class="color-dot" :style="{ backgroundColor: event?.color }"></div>
           </div>
-          <h2 class="detail-title">{{ event?.title }}</h2>
+          <h2 class="detail-title text-title-large">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
         <div class="detail-row mb-2">
-          <div class="detail-row__icon text-body-1">
+          <div class="detail-row__icon text-body-large">
             <v-icon size="20">mdi-clock-outline</v-icon>
           </div>
           <div>
-            <div class="text-body-1">{{ dateTimeDisplay }}</div>
-            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+            <div class="text-body-large">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-medium text-medium-emphasis mt-1">
               {{ formatRRule(event.rrule) }}
             </div>
           </div>
@@ -92,10 +92,10 @@
 
         <!-- Calendar name -->
         <div v-if="calendarName" class="detail-row">
-          <div class="detail-row__icon text-body-1">
+          <div class="detail-row__icon text-body-large">
             <v-icon size="20">mdi-calendar-blank</v-icon>
           </div>
-          <div class="text-body-1">{{ calendarName }}</div>
+          <div class="text-body-large">{{ calendarName }}</div>
         </div>
       </v-card-text>
     </v-card>
@@ -215,13 +215,8 @@ export default {
   height: 1lh;
 }
 
-/* The title and its colour dot share one font size and line height, so the dot is
-   centred on the title's first line */
 .detail-title {
   margin: 0;
-  font-size: 1.5rem;
-  font-weight: 400;
-  line-height: 1.5;
 }
 
 .color-dot {

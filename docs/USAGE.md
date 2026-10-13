@@ -427,6 +427,8 @@ Creates a calendar instance.
 - `selectedDate` (Temporal.PlainDate): Initial selected date
 - `enableModals` (Boolean): Enable/disable modals
 - `enableMobileSidebar` (Boolean): Enable/disable mobile sidebar
+- `enableDesktopSidebar` (Boolean): Enable/disable the desktop sidebar (small month and calendars)
+- `sidebarOpen` (Boolean): Whether the desktop sidebar starts open
 - `mobileViewSelectorPlacement` ('header'|'sidebar'): Where the view selector is shown on mobile
 - `enableSwipeGestures` (Boolean): Enable/disable horizontal swipe navigation on mobile
 - `enablePinchToZoom` (Boolean): Enable/disable pinch-to-zoom on mobile Day/Week views

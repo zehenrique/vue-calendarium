@@ -1,354 +1,209 @@
 <template>
-  <!-- Desktop Dialog -->
-  <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal">
-    <v-card class="pa-0" rounded="xl">
-      <v-card-title class="d-flex align-center pa-6 pb-4">
-        <span class="text-h6 font-weight-medium">{{ t('customRecurrence') }}</span>
-        <v-spacer></v-spacer>
-        <v-btn icon variant="text" size="small" @click="handleCancel" :aria-label="t('close')" class="text-medium-emphasis">
-          <v-icon>mdi-close</v-icon>
-        </v-btn>
-      </v-card-title>
+  <!-- Google Calendar's "Custom recurrence": a dialog on desktop, a bottom sheet on mobile.
+       The Vuetify components are used by name, not imported: an import would load their CSS
+       before the app's Vuetify styles and break Vuetify's CSS layer order. -->
+  <component :is="mobile ? 'v-bottom-sheet' : 'v-dialog'" :model-value="modelValue" @update:model-value="handleCancel" :max-width="mobile ? undefined : 440" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" :data-testid="mobile ? 'recurrence-picker-modal-mobile' : 'recurrence-picker-modal'">
+    <v-card class="recurrence-card" :class="{ 'recurrence-card--mobile': mobile }" :rounded="mobile ? 't-xl' : 'xl'">
+      <!-- Mobile: Cancel, title and Done at the top, as in the other sheets -->
+      <template v-if="mobile">
+        <v-card-actions class="pa-4 pb-2">
+          <v-btn variant="text" @click="handleCancel">{{ t('cancel') }}</v-btn>
+          <v-spacer></v-spacer>
+          <h2 class="recurrence-title--mobile">{{ t('customRecurrenceTitle') }}</h2>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" variant="text" @click="handleDone">{{ t('done') }}</v-btn>
+        </v-card-actions>
+        <v-divider></v-divider>
+      </template>
+      <h2 v-else class="recurrence-title text-headline-small">{{ t('customRecurrenceTitle') }}</h2>
 
-      <v-card-text class="px-6 pb-6">
-        <v-container fluid class="pa-0">
-          <v-form>
-            <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
-            <div class="mb-7">
-              <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999"></v-text-field>
-            </div>
-            <div v-if="frequency === 'WEEKLY'" class="mb-4">
-              <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>
-              <v-chip-group v-model="selectedWeekdays" multiple column>
-                <v-chip v-for="day in weekdayOptions" :key="day.value" :value="day.value" filter variant="outlined">
-                  {{ day.text }}
-                </v-chip>
-              </v-chip-group>
-            </div>
-            <div v-if="frequency === 'MONTHLY'" class="mb-4">
-              <v-radio-group v-model="monthlyType">
-                <v-radio :label="monthlyByDayLabel" value="bymonthday"></v-radio>
-                <v-radio :label="monthlyByWeekdayLabel" value="byweekday"></v-radio>
-              </v-radio-group>
-            </div>
-            <v-divider class="my-4"></v-divider>
-            <div class="text-body-2 text-medium-emphasis mb-3">{{ t('ends') }}</div>
-            <v-radio-group v-model="endType" class="mb-2">
+      <v-card-text class="recurrence-content">
+        <!-- Repeat every [1] [week] -->
+        <div class="repeat-every">
+          <span class="recurrence-label">{{ t('repeatEveryLabel') }}</span>
+          <v-number-input v-model="form.interval.value" :min="1" :max="999" control-variant="stacked" variant="solo-filled" flat density="compact" hide-details class="interval-input recurrence-number" :aria-label="t('repeatEveryLabel')"></v-number-input>
+          <v-select v-model="form.frequency.value" :items="form.unitOptions.value" variant="solo-filled" flat density="compact" hide-details class="unit-select" data-testid="recurrence-unit" :aria-label="t('repeatFrequency')" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
+        </div>
+
+        <!-- Weekly: the days, as round buttons -->
+        <div v-if="form.frequency.value === 'WEEKLY'" class="recurrence-section">
+          <div class="recurrence-label mb-3">{{ t('repeatOn') }}</div>
+          <div class="weekday-buttons" role="group" :aria-label="t('repeatOn')">
+            <v-btn v-for="day in form.weekdayOptions.value" :key="day.value" icon size="32" :variant="isSelectedDay(day.value) ? 'flat' : 'tonal'" :color="isSelectedDay(day.value) ? 'primary' : undefined" :aria-label="day.name" :aria-pressed="isSelectedDay(day.value)" class="weekday-button" @click="form.toggleWeekday(day.value)">{{ day.letter }}</v-btn>
+          </div>
+        </div>
+
+        <!-- Monthly: on the same day, or on the same weekday of the month -->
+        <v-select v-if="form.frequency.value === 'MONTHLY'" v-model="form.monthlyType.value" :items="form.monthlyOptions.value" variant="solo-filled" flat density="compact" hide-details class="recurrence-section monthly-select" data-testid="recurrence-monthly" :aria-label="t('repeatMonthly')" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
+
+        <!-- Ends: never, on a date, or after a number of occurrences; the fields line up in one column -->
+        <div class="recurrence-section">
+          <div class="recurrence-label mb-1">{{ t('ends') }}</div>
+          <v-radio-group v-model="form.endType.value" hide-details>
+            <div class="ends-grid">
               <v-radio :label="t('never')" value="never"></v-radio>
-              <v-radio value="until">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <span class="mr-2">{{ t('on') }}</span>
-                    <v-text-field v-model="untilDate" type="date" density="compact" hide-details :disabled="endType !== 'until'" style="max-width: 180px;" @click.stop></v-text-field>
-                  </div>
+              <span></span>
+
+              <v-radio :label="t('on')" value="until"></v-radio>
+              <v-menu v-model="showUntilPicker" content-class="calendar-font-scope" :close-on-content-click="false" :disabled="form.endType.value !== 'until'">
+                <template v-slot:activator="{ props: menuProps }">
+                  <v-text-field :model-value="form.untilDateDisplay.value" readonly variant="solo-filled" flat density="compact" hide-details :disabled="form.endType.value !== 'until'" class="ends-field" data-testid="recurrence-until" :aria-label="t('untilDateLabel')" v-bind="menuProps"></v-text-field>
                 </template>
-              </v-radio>
-              <v-radio value="count">
-                <template v-slot:label>
-                  <div class="d-flex align-center">
-                    <span class="mr-2">{{ t('after') }}</span>
-                    <v-text-field v-model.number="count" type="number" min="1" max="999" density="compact" hide-details :disabled="endType !== 'count'" style="max-width: 80px;" @click.stop></v-text-field>
-                    <span class="ml-2">{{ t('occurrences') }}</span>
-                  </div>
-                </template>
-              </v-radio>
-            </v-radio-group>
-          </v-form>
-        </v-container>
-      </v-card-text>
+                <v-date-picker class="event-date-picker" :model-value="untilPickerValue" @update:model-value="handleUntilChange" control-variant="modal" hide-header show-adjacent-months></v-date-picker>
+              </v-menu>
 
-      <v-card-actions class="px-6 pb-6 pt-0">
-        <v-spacer></v-spacer>
-        <v-btn variant="text" @click="handleCancel" class="mr-2">{{ t('cancel') }}</v-btn>
-        <v-btn color="primary" variant="flat" @click="handleDone">{{ t('done') }}</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
-
-  <!-- Mobile Bottom Sheet -->
-  <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="recurrence-picker-modal-mobile">
-    <v-card class="mobile-recurrence-sheet" rounded="t-xl">
-      <!-- Action buttons at top -->
-      <v-card-actions class="pa-4 pb-2">
-        <v-btn variant="text" @click="handleCancel">{{ t('cancel') }}</v-btn>
-        <v-spacer></v-spacer>
-        <span class="text-subtitle-1 font-weight-medium">{{ t('customRecurrence') }}</span>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" variant="text" @click="handleDone">{{ t('done') }}</v-btn>
-      </v-card-actions>
-
-      <v-divider></v-divider>
-
-      <v-card-text class="px-4 pt-3 pb-4 mobile-recurrence-content">
-        <v-form>
-          <v-select v-model="frequency" :label="t('repeatFrequency')" :items="frequencyOptions" item-title="text" item-value="value" class="mb-4" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
-          <v-text-field v-model.number="interval" :label="intervalLabel" type="number" min="1" max="999" class="mb-4"></v-text-field>
-          <div v-if="frequency === 'WEEKLY'" class="mb-4">
-            <div class="text-body-2 text-medium-emphasis mb-2">{{ t('repeatOn') }}</div>
-            <v-chip-group v-model="selectedWeekdays" multiple column>
-              <v-chip v-for="day in weekdayOptions" :key="day.value" :value="day.value" filter variant="outlined">
-                {{ day.text }}
-              </v-chip>
-            </v-chip-group>
-          </div>
-          <div v-if="frequency === 'MONTHLY'" class="mb-4">
-            <v-radio-group v-model="monthlyType">
-              <v-radio :label="monthlyByDayLabel" value="bymonthday"></v-radio>
-              <v-radio :label="monthlyByWeekdayLabel" value="byweekday"></v-radio>
-            </v-radio-group>
-          </div>
-          <v-divider class="my-4"></v-divider>
-          <div class="text-body-2 text-medium-emphasis mb-3">{{ t('ends') }}</div>
-          <v-radio-group v-model="endType" class="mb-2">
-            <v-radio :label="t('never')" value="never"></v-radio>
-            <v-radio value="until">
-              <template v-slot:label>
-                <div class="d-flex align-center">
-                  <span class="mr-2">{{ t('on') }}</span>
-                  <v-text-field v-model="untilDate" type="date" density="compact" hide-details :disabled="endType !== 'until'" style="max-width: 180px;" @click.stop></v-text-field>
-                </div>
-              </template>
-            </v-radio>
-            <v-radio value="count">
-              <template v-slot:label>
-                <div class="d-flex align-center">
-                  <span class="mr-2">{{ t('after') }}</span>
-                  <v-text-field v-model.number="count" type="number" min="1" max="999" density="compact" hide-details :disabled="endType !== 'count'" style="max-width: 80px;" @click.stop></v-text-field>
-                  <span class="ml-2">{{ t('occurrences') }}</span>
-                </div>
-              </template>
-            </v-radio>
+              <v-radio :label="t('after')" value="count"></v-radio>
+              <v-number-input v-model="form.count.value" :min="1" :max="730" control-variant="stacked" variant="solo-filled" flat density="compact" hide-details :suffix="t('occurrences')" :disabled="form.endType.value !== 'count'" class="ends-field recurrence-number" data-testid="recurrence-count" :aria-label="t('countLabel')"></v-number-input>
+            </div>
           </v-radio-group>
-        </v-form>
+        </div>
       </v-card-text>
+
+      <v-card-actions v-if="!mobile" class="recurrence-actions">
+        <v-spacer></v-spacer>
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">{{ t('cancel') }}</v-btn>
+        <v-btn color="primary" variant="flat" :slim="false" class="px-6" @click="handleDone">{{ t('done') }}</v-btn>
+      </v-card-actions>
     </v-card>
-  </v-bottom-sheet>
+  </component>
 </template>
 
-<script>
-import { ref, computed, watch } from 'vue';
+<script setup>
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
-import { getRuleParts } from '../core/recurrence.js';
+import { useRecurrenceForm } from '../composables/useRecurrenceForm.js';
 
-export default {
-  name: 'RecurrencePickerModal',
-  props: {
-    modelValue: {
-      type: Boolean,
-      required: true
-    },
-    rrule: {
-      type: String,
-      default: ''
-    },
-    startDate: {
-      type: String,
-      default: ''
-    }
-  },
-  emits: ['update:modelValue', 'save'],
-  setup(props, { emit }) {
-    const { t, locale } = useI18n();
-    const { mobile } = useDisplay();
+const props = defineProps({
+  modelValue: { type: Boolean, required: true },
+  // The rule to start from, '' for none
+  rrule: { type: String, default: '' },
+  // The event's start date, 'YYYY-MM-DD'
+  startDate: { type: String, default: '' }
+});
 
-    const frequency = ref('WEEKLY');
-    const interval = ref(1);
-    const selectedWeekdays = ref([]);
-    const monthlyType = ref('bymonthday');
-    const endType = ref('never');
-    const untilDate = ref('');
-    const count = ref(10);
+const emit = defineEmits(['update:modelValue', 'save']);
 
-    const frequencyOptions = computed(() => [
-      { text: t('repeatDaily'), value: 'DAILY' },
-      { text: t('repeatWeekly'), value: 'WEEKLY' },
-      { text: t('repeatMonthly'), value: 'MONTHLY' },
-      { text: t('repeatYearly'), value: 'YEARLY' }
-    ]);
+const { t } = useI18n();
+const { mobile } = useDisplay();
+const form = useRecurrenceForm(() => props.startDate);
+const showUntilPicker = ref(false);
 
-    const weekdayOptions = computed(() => [
-      { text: t('sunday'), value: 'SU' },
-      { text: t('monday'), value: 'MO' },
-      { text: t('tuesday'), value: 'TU' },
-      { text: t('wednesday'), value: 'WE' },
-      { text: t('thursday'), value: 'TH' },
-      { text: t('friday'), value: 'FR' },
-      { text: t('saturday'), value: 'SA' }
-    ]);
+const isSelectedDay = (day) => form.weekdays.value.includes(day);
 
-    const intervalLabel = computed(() => {
-      const freqMap = {
-        DAILY: t('days'),
-        WEEKLY: t('weeks'),
-        MONTHLY: t('months'),
-        YEARLY: t('years')
-      };
-      return t('repeatEvery', { unit: freqMap[frequency.value] || '' });
-    });
+// Start from the event's rule each time the dialog opens; without one, weekly on the event's day
+watch(() => [props.modelValue, props.rrule], ([isOpen]) => {
+  if (isOpen) form.load(props.rrule);
+}, { immediate: true });
 
-    // "Monthly on day 15" and "Monthly on the third Wednesday", for the event's date
-    const eventDate = computed(() => {
-      try {
-        return props.startDate ? Temporal.PlainDate.from(props.startDate) : null;
-      } catch {
-        return null;
-      }
-    });
-    const monthlyByDayLabel = computed(() => t('repeatMonthlyByDay', { day: eventDate.value?.day ?? '' }));
-    const monthlyByWeekdayLabel = computed(() => {
-      const date = eventDate.value;
-      if (!date) return t('repeatMonthlyByWeekday', { nth: '', weekday: '' });
-      const nth = t(`ordinal${Math.ceil(date.day / 7)}`);
-      return t('repeatMonthlyByWeekday', { nth, weekday: date.toLocaleString(locale.value, { weekday: 'long' }) });
-    });
+// The date picker works with JavaScript dates; the form keeps 'YYYY-MM-DD'
+const untilPickerValue = computed(() => {
+  if (!form.untilDate.value) return null;
+  const date = Temporal.PlainDate.from(form.untilDate.value);
+  return new Date(date.year, date.month - 1, date.day);
+});
 
-    const parseRRule = (rruleStr) => {
-      Object.entries(getRuleParts(rruleStr)).forEach(([key, value]) => {
-        switch (key) {
-          case 'FREQ':
-            frequency.value = value;
-            break;
-          case 'INTERVAL':
-            interval.value = parseInt(value, 10);
-            break;
-          case 'BYDAY':
-            // '3WE' is a monthly "third Wednesday"; 'MO,WE' are weekly days
-            if (/^[+-]?\d/.test(value)) {
-              monthlyType.value = 'byweekday';
-            } else {
-              selectedWeekdays.value = value.split(',');
-            }
-            break;
-          case 'UNTIL': {
-            endType.value = 'until';
-            // Parse UNTIL date (format: YYYYMMDD or YYYYMMDDTHHMMSSZ)
-            const dateStr = value.replace(/T.*/, '');
-            untilDate.value = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
-            break;
-          }
-          case 'COUNT':
-            endType.value = 'count';
-            count.value = parseInt(value, 10);
-            break;
-        }
-      });
-    };
+function handleUntilChange(date) {
+  if (!date) return;
+  form.untilDate.value = new Temporal.PlainDate(date.getFullYear(), date.getMonth() + 1, date.getDate()).toString();
+  showUntilPicker.value = false;
+}
 
-    const resetToDefaults = () => {
-      frequency.value = 'WEEKLY';
-      interval.value = 1;
-      monthlyType.value = 'bymonthday';
-      endType.value = 'never';
-      untilDate.value = '';
-      count.value = 10;
-      
-      // Set current weekday if startDate available
-      if (props.startDate) {
-        try {
-          const date = Temporal.PlainDate.from(props.startDate);
-          const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-          selectedWeekdays.value = [dayMap[date.dayOfWeek % 7]];
-        } catch (e) {
-          selectedWeekdays.value = ['MO'];
-        }
-      } else {
-        selectedWeekdays.value = ['MO'];
-      }
-    };
+function handleCancel() {
+  emit('update:modelValue', false);
+}
 
-    // Start from the event's rule each time the dialog opens; without one, weekly on the event's day
-    watch(() => [props.modelValue, props.rrule], ([isOpen]) => {
-      if (!isOpen) return;
-      resetToDefaults();
-      if (props.rrule) {
-        parseRRule(props.rrule);
-      }
-    }, { immediate: true });
-
-    const buildRRule = () => {
-      let parts = [`FREQ=${frequency.value}`];
-      
-      if (interval.value > 1) {
-        parts.push(`INTERVAL=${interval.value}`);
-      }
-      
-      if (frequency.value === 'WEEKLY' && selectedWeekdays.value.length > 0) {
-        parts.push(`BYDAY=${selectedWeekdays.value.join(',')}`);
-      }
-      
-      if (frequency.value === 'MONTHLY') {
-        if (monthlyType.value === 'bymonthday' && props.startDate) {
-          try {
-            const date = Temporal.PlainDate.from(props.startDate);
-            parts.push(`BYMONTHDAY=${date.day}`);
-          } catch (e) {
-            // Fallback
-          }
-        } else if (monthlyType.value === 'byweekday' && props.startDate) {
-          try {
-            const date = Temporal.PlainDate.from(props.startDate);
-            const dayMap = ['SU', 'MO', 'TU', 'WE', 'TH', 'FR', 'SA'];
-            const weekday = dayMap[date.dayOfWeek % 7];
-            const weekNum = Math.ceil(date.day / 7);
-            parts.push(`BYDAY=${weekNum}${weekday}`);
-          } catch (e) {
-            // Fallback
-          }
-        }
-      }
-      
-      if (endType.value === 'until' && untilDate.value) {
-        // The end of that day, so an occurrence on the last day is included
-        const cleanDate = untilDate.value.replace(/-/g, '');
-        parts.push(`UNTIL=${cleanDate}T235959Z`);
-      } else if (endType.value === 'count' && count.value > 0) {
-        parts.push(`COUNT=${count.value}`);
-      }
-      
-      return parts.join(';');
-    };
-
-    const handleCancel = () => {
-      emit('update:modelValue', false);
-    };
-
-    const handleDone = () => {
-      const rrule = buildRRule();
-      emit('save', rrule);
-      emit('update:modelValue', false);
-    };
-
-    return {
-      t,
-      mobile,
-      frequency,
-      interval,
-      selectedWeekdays,
-      monthlyType,
-      endType,
-      untilDate,
-      count,
-      frequencyOptions,
-      weekdayOptions,
-      intervalLabel,
-      monthlyByDayLabel,
-      monthlyByWeekdayLabel,
-      handleCancel,
-      handleDone
-    };
-  }
-};
+function handleDone() {
+  emit('save', form.toRule());
+  emit('update:modelValue', false);
+}
 </script>
 
 <style scoped>
-.mobile-recurrence-sheet {
+.recurrence-title {
+  margin: 0;
+  padding: 24px 24px 8px;
+}
+
+.recurrence-title--mobile {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: var(--calendar-font-weight-medium, 500);
+}
+
+.recurrence-content {
+  padding: 16px 24px 8px;
+}
+
+.recurrence-label {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.repeat-every {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.interval-input {
+  flex: 0 0 96px;
+}
+
+.unit-select {
+  flex: 0 0 140px;
+}
+
+/* Number fields as tall as the others (40px): the arrows are as tall as their icons
+   (height: auto), so smaller icons make the two arrows and their divider fit */
+.recurrence-number :deep(.v-number-input__control .v-icon) {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+.recurrence-section {
+  margin-top: 24px;
+}
+
+.weekday-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.weekday-button {
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* The radios in one column, their fields in another, so the fields line up */
+.ends-grid {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 220px);
+  align-items: center;
+  column-gap: 24px;
+  row-gap: 8px;
+}
+
+/* Vuetify places radios in a named grid area of its own; here they take the next cell */
+.ends-grid > :deep(*) {
+  grid-area: auto;
+}
+
+.recurrence-actions {
+  gap: 8px;
+  padding: 8px 24px 24px;
+}
+
+/* Bottom sheet: scroll the form when the screen is short */
+.recurrence-card--mobile {
   max-height: 90vh;
 }
 
-.mobile-recurrence-content {
-  max-height: calc(90vh - 64px);
+.recurrence-card--mobile .recurrence-content {
+  padding: 16px;
   overflow-y: auto;
 }
 </style>

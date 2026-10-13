@@ -54,13 +54,14 @@ In the create and edit dialogs, the repeat link next to **All day** ("Does not r
 - When the date changes, a choice from the menu follows it: "Weekly on Wednesday" becomes "Weekly on Thursday".
 - A rule the menu does not list, such as one set in code or with the custom dialog, is shown at the top of the menu with its description, for example "Every 2 weeks, 6 times".
 
-The **Custom...** dialog lets users choose:
+**Custom...** opens the **Custom recurrence** dialog, laid out as in Google Calendar:
 
-- **Repeat frequency:** daily, weekly, monthly or yearly.
-- **Repeat every:** the interval, for example every 2 weeks.
-- **Repeat on** (weekly): the days of the week.
-- **Monthly on** (monthly): either the same day of the month ("Monthly on day 15"), or the same weekday of the month ("Monthly on the third Wednesday"). Both are based on the event's start date.
-- **Ends:** never, on a date (that day included), or after a number of occurrences.
+- **Repeat every** [number] [day / week / month / year]: the interval and the unit, for example every 2 weeks. The unit reads "week" or "weeks" to match the number.
+- **Repeat on** (weekly): round buttons for the days of the week, Monday first. The event's own weekday is selected when the dialog opens on an event that does not repeat.
+- **Monthly** (monthly): a dropdown with the same day of the month ("Monthly on day 15") or the same weekday of the month ("Monthly on the third Wednesday"). Both are based on the event's start date.
+- **Ends:** **Never**, **On** a date (that day included), or **After** a number of occurrences. The date and the number are only editable when their option is chosen; they start at three months after the event and 13 occurrences.
+
+On mobile the dialog opens as a bottom sheet, with **Cancel** and **Done** at the top.
 
 The event details dialog describes the rule in the calendar's language, for example "Weekly on Monday, Wednesday" or "Semanalmente, 6 vezes".
 
