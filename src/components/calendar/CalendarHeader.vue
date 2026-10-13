@@ -57,9 +57,19 @@
           </v-btn>
         </div>
         
-        <h1 class="calendar-title">{{ currentTitle }}</h1>
+        <h1 class="calendar-title" aria-live="polite">{{ currentTitle }}</h1>
       </div>
       <div class="header-right">
+        <!-- Mobile without swipe navigation: previous and next buttons -->
+        <template v-if="isMobile && showMobileNavigation">
+          <v-btn icon size="small" variant="text" :aria-label="t('previous')" data-testid="mobile-previous" @click="$emit('previous')">
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+          <v-btn icon size="small" variant="text" :aria-label="t('next')" data-testid="mobile-next" @click="$emit('next')">
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+        </template>
+
         <!-- Mobile: Icon button for Today -->
         <v-btn
           v-if="isMobile"
@@ -173,6 +183,11 @@ const props = defineProps({
   showMobileMenu: {
     type: Boolean,
     default: true
+  },
+  // Show previous and next buttons on mobile (when swiping between periods is turned off)
+  showMobileNavigation: {
+    type: Boolean,
+    default: false
   },
   mobileViewSelectorPlacement: {
     type: String,

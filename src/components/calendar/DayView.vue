@@ -22,16 +22,7 @@
           </div>
         </div>
         <div class="day-column">
-          <div
-            v-for="hour in 24"
-            :key="hour"
-            class="hour-slot"
-            :class="{ 'drop-target': isDropTarget(date, hour - 1) }"
-            @click="$emit('hour-slot-select', { date, hour: hour - 1 })"
-            @mouseenter="handleSlotHover(date, hour - 1)"
-            @mouseleave="handleSlotLeave"
-          >
-          </div>
+          <div v-for="hour in 24" :key="hour" class="hour-slot" :class="{ 'drop-target': isDropTarget(date, hour - 1) }" role="button" :tabindex="isActiveSlot(0, hour - 1) ? 0 : -1" :data-slot="`0-${hour - 1}`" :aria-label="getSlotLabel(dayLabel, hour - 1, t)" @click="$emit('hour-slot-select', { date, hour: hour - 1 })" @keydown="handleSlotKeydown($event, 0, hour - 1)" @mouseenter="handleSlotHover(date, hour - 1)" @mouseleave="handleSlotLeave"></div>
           <div
             v-if="showCurrentTimeIndicator"
             class="current-time-indicator"
@@ -46,15 +37,20 @@
             :class="{
               'ghost-event': event.isGhost,
               'is-dragging': isDraggingEvent(event.id),
-              'draggable': enableDragAndDrop && !event.isGhost
+              'draggable': enableDragAndDrop && !event.isGhost && !event.recurringEventId
             }"
             :style="{
               ...getEventStyle(event, pixelsPerHour, isMobile),
               ...getEventColorStyle(event.color, isEventPast(event)),
               ...(isDraggingEvent(event.id) ? { transform: dragTransform, opacity: 0.5, zIndex: 1000, pointerEvents: 'none' } : {})
             }"
+            role="button"
+            :tabindex="event.isGhost ? -1 : 0"
+            :aria-label="getEventLabel(event, locale, t)"
             @mousedown.stop="handleEventMouseDown(event, $event)"
-            @click.stop="handleEventClick(event)">
+            @click.stop="handleEventClick(event)"
+            @keydown.enter.prevent="handleEventClick(event)"
+            @keydown.space.prevent="handleEventClick(event)">
             <div class="event-title">{{ event.title || t('untitled') }}</div>
           </div>
         </div>
@@ -66,6 +62,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, toRefs, watch, onBeforeUnmount } from 'vue';
 import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
+import { formatDayLabel, getEventLabel, getSlotLabel, useTimeGridKeyboard } from '../../composables/useTimeGridKeyboard.js';
 
 const props = defineProps({
   date: {
@@ -147,6 +144,11 @@ const emit = defineEmits([
   'slot-drag-leave'
 ]);
 
+// Keyboard: arrow keys move between hour slots, Enter or Space opens the create dialog
+const columns = computed(() => [{ date: date.value }]);
+const { isActiveSlot, handleSlotKeydown } = useTimeGridKeyboard(columns, slot => emit('hour-slot-select', slot));
+const dayLabel = computed(() => formatDayLabel(date.value, locale.value));
+
 // Drag and drop helper methods
 const isDraggingEvent = (eventId) => {
   return props.isDragging && props.draggedEventId === eventId;
@@ -163,7 +165,8 @@ const ignoreNextClick = ref(false);
 const activeDragCleanup = ref(null);
 
 const handleEventMouseDown = (event, mouseEvent) => {
-  if (!props.enableDragAndDrop || event.isGhost) return;
+  // Repeating events are changed from the edit dialog, as a whole series
+  if (!props.enableDragAndDrop || event.isGhost || event.recurringEventId) return;
 
   dragStartPos.value = { x: mouseEvent.clientX, y: mouseEvent.clientY };
   ignoreNextClick.value = false;
@@ -463,6 +466,13 @@ watch(showCurrentTimeIndicator, value => {
    slot underneath becomes the drop target (otherwise hovering an event clears it) */
 .event-drag-active .day-event {
   pointer-events: none;
+}
+
+/* Keyboard focus on hour slots and events */
+.hour-slot:focus-visible,
+.day-event:focus-visible {
+  outline: 2px solid var(--calendar-primary-color, #1a73e8);
+  outline-offset: -2px;
 }
 
 .day-event {

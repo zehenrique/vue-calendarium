@@ -22,9 +22,20 @@ Upgrading from 1.x? Follow the [upgrade guide](docs/UPGRADING.md).
 - TypeScript type definitions (`types/index.d.ts`).
 - An [upgrade guide](docs/UPGRADING.md) for moving from 1.x to 2.0.
 - A [documentation website](https://zehenrique.github.io/vue-calendarium/docs.html) with every guide, the changelog and the upgrade guide, linked from the live demo.
+- Guides for views, events and dialogs, recurring events, drag and drop, the mobile layout, touch gestures (swipe and pinch-to-zoom), languages, accessibility and troubleshooting.
 
 ### Fixed
 
+- Repeating events show at the right time in every time zone. Before, they were shifted by the viewer's offset from UTC.
+- Editing an occurrence of a repeating event edits the series. Before, it created a second series or moved the start of the series.
+- Deleting one occurrence of a repeating event works for any id, including generated UUIDs, and occurrences have stable ids (`'<series id>@<start>'`) with a `recurringEventId` field.
+- The repeat picker's end date includes that day.
+- Events whose calendar does not exist are shown, and dates with `Z` or an offset are converted to the viewer's time zone instead of causing an error.
+- The month view's **+N** button opens a list of that day's events.
+- On mobile with `enableSwipeGestures: false`, the header has previous and next buttons.
+- Text that was not translated: the end time durations, the date in the details dialog, repeat descriptions ("Every 2 weeks", "6 times", "until") and the "All day" label for screen readers.
+- Keyboard access: events in every view are buttons, the time grid and the month view can be navigated with the arrow keys to create events, the header title announces period changes, and swiping respects reduced motion.
+- Repeating events can no longer be dragged, which used to move the series or do nothing.
 - Icons and colour dots in the event details, and the warning icon in the delete confirmation, now line up with their text. The event dialog's calendar dropdown arrow lines up with the selected calendar.
 - Dragging an event onto a time that already has another event now moves it there. Before, the drop was ignored.
 

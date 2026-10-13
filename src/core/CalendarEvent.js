@@ -1,5 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
+import { toPlainDateTimeString } from './dateTime.js';
 
 /**
  * CalendarEvent class represents a single event in the calendar
@@ -8,8 +9,8 @@ export class CalendarEvent {
   constructor(data = {}) {
     this.id = data.id || this._generateId();
     this.title = data.title || '';
-    this.start = data.start || null;
-    this.end = data.end || null;
+    this.start = toPlainDateTimeString(data.start) || null;
+    this.end = toPlainDateTimeString(data.end) || null;
     this.allDay = data.allDay || false;
     this.calendarId = data.calendarId || data.calendar || 'default';
     this.color = data.color || DEFAULT_COLOR;
@@ -71,6 +72,8 @@ export class CalendarEvent {
     Object.keys(data).forEach(key => {
       if (key === 'custom') {
         this.custom = { ...this.custom, ...data.custom };
+      } else if (key === 'start' || key === 'end') {
+        this[key] = toPlainDateTimeString(data[key]) || null;
       } else if (key !== 'id') {
         this[key] = data[key];
       }

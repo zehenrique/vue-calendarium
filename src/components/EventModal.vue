@@ -210,6 +210,7 @@ import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
 import { scrollSelectedOptionToTop } from '../composables/useSelectMenuScroll.js';
+import { getRuleParts, keepExceptionDates } from '../core/recurrence.js';
 import RecurrencePickerModal from './RecurrencePickerModal.vue';
 
 export default {
@@ -233,7 +234,7 @@ export default {
   },
   emits: ['update:modelValue', 'save'],
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { mobile } = useDisplay();
     
     const eventData = ref({
@@ -287,13 +288,13 @@ export default {
           
           if (durationMinutes < 60) {
             // Less than 1 hour - show minutes
-            durationLabel = ` (${durationMinutes} minutos)`;
+            durationLabel = ` (${t('durationMinutes', { count: durationMinutes })})`;
           } else if (minutes === 0) {
             // Exact hours
-            durationLabel = hours === 1 ? ' (1 hora)' : ` (${hours} horas)`;
+            durationLabel = ` (${hours === 1 ? t('durationOneHour') : t('durationHours', { count: hours })})`;
           } else if (minutes === 30) {
-            // Half hours
-            durationLabel = ` (${hours},5 horas)`;
+            // Half hours, with the language's decimal separator (1.5 or 1,5)
+            durationLabel = ` (${t('durationHours', { count: (hours + 0.5).toLocaleString(locale.value) })})`;
           } else {
             // Hours and minutes
             durationLabel = ` (${hours}h${String(minutes).padStart(2, '0')})`;
@@ -400,21 +401,15 @@ export default {
     };
 
     const repeatDisplayText = computed(() => {
-      if (!eventData.value.rrule || eventData.value.rrule === '') {
-        return t('doesNotRepeat') || 'Não se repete';
+      const parts = getRuleParts(eventData.value.rrule);
+      if (!parts.FREQ) {
+        return t('doesNotRepeat');
       }
-      
-      if (eventData.value.rrule === 'FREQ=DAILY') {
-        return t('repeatDaily');
-      } else if (eventData.value.rrule === 'FREQ=WEEKLY') {
-        return t('repeatWeekly');
-      } else if (eventData.value.rrule === 'FREQ=MONTHLY') {
-        return t('repeatMonthly');
-      } else if (eventData.value.rrule === 'FREQ=YEARLY') {
-        return t('repeatYearly');
-      }
-      
-      return t('customRecurrence');
+
+      // A plain frequency ('FREQ=WEEKLY') gets its own label; anything more is custom
+      const frequencyKeys = { DAILY: 'repeatDaily', WEEKLY: 'repeatWeekly', MONTHLY: 'repeatMonthly', YEARLY: 'repeatYearly' };
+      const isPlainFrequency = Object.keys(parts).length === 1 && frequencyKeys[parts.FREQ];
+      return isPlainFrequency ? t(frequencyKeys[parts.FREQ]) : t('customRecurrence');
     });
 
     const getCalendarColor = (calendarId) => {
@@ -506,7 +501,8 @@ export default {
     };
 
     const handleCustomRecurrenceSave = (rrule) => {
-      eventData.value.rrule = rrule;
+      // Occurrences deleted from the series stay deleted when its rule changes
+      eventData.value.rrule = keepExceptionDates(rrule, eventData.value.rrule);
       repeatSelection.value = 'custom';
     };
 

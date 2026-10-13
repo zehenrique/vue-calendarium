@@ -76,6 +76,13 @@ npm install vue-calendarium
 
 The package ships a compiled ES module with its styles (imported automatically) and TypeScript type definitions. Touch gestures (HammerJS) are loaded on demand in the browser, so the package is also safe to import during server-side rendering.
 
+The calendar uses [Material Design Icons](https://pictogrammers.com/library/mdi/). The font is installed with the package (`@mdi/font`), but you import its stylesheet once in your app, together with Vuetify's styles:
+
+```js
+import 'vuetify/styles';
+import '@mdi/font/css/materialdesignicons.css';
+```
+
 ---
 
 ## Quick Start
@@ -291,6 +298,15 @@ All guides are also on the [documentation website](https://zehenrique.github.io/
 | --- | --- |
 | [docs/UPGRADING.md](./docs/UPGRADING.md) | Upgrading from 1.x to 2.0 |
 | [docs/USAGE.md](./docs/USAGE.md) | Usage guide with practical examples |
+| [docs/VIEWS.md](./docs/VIEWS.md) | Month, week and day views, navigation and the current time indicator |
+| [docs/EVENTS.md](./docs/EVENTS.md) | Creating, viewing, editing and deleting events, calendars and callbacks |
+| [docs/RECURRING_EVENTS.md](./docs/RECURRING_EVENTS.md) | Repeat rules, the repeat picker and deleting occurrences |
+| [docs/DRAG_AND_DROP.md](./docs/DRAG_AND_DROP.md) | Moving events by dragging them |
+| [docs/MOBILE.md](./docs/MOBILE.md) | The mobile layout, side menu and bottom sheets |
+| [docs/GESTURES.md](./docs/GESTURES.md) | Swipe, pinch-to-zoom and sidebar gestures |
+| [docs/I18N.md](./docs/I18N.md) | Languages, date and time formats |
+| [docs/ACCESSIBILITY.md](./docs/ACCESSIBILITY.md) | What works with keyboards and screen readers, and what does not yet |
+| [docs/TROUBLESHOOTING.md](./docs/TROUBLESHOOTING.md) | Fixes for common problems |
 | [docs/API.md](./docs/API.md) | Full API reference — props, callbacks, services |
 | [docs/STYLING.md](./docs/STYLING.md) | Theming and styling guide |
 | [docs/THEME_REFERENCE.md](./docs/THEME_REFERENCE.md) | Complete CSS variables reference |

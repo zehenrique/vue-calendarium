@@ -115,6 +115,18 @@ If you wrote custom CSS that targets Vuetify's internal classes inside the calen
 
 ## Behaviour changes
 
-- Dropping a dragged event onto a time that already has another event now moves it there. In version 1 the drop was ignored.
+Check these if your app reads occurrence ids or relies on the old behaviour:
+
+- **Occurrence ids.** An occurrence of a repeating event has the id `'<series id>@<start>'` and a `recurringEventId` field with the series' id. In version 1 the first occurrence on screen had the series' id and the others `'<id>-1'`, `'<id>-2'` and so on. If your `onEventClick` looks events up by id, use `recurringEventId` for occurrences. See [Recurring events](./RECURRING_EVENTS.md#how-occurrences-are-shown).
+- **Editing a repeating event** edits the whole series, from its first occurrence. In version 1, saving from a later occurrence created a second series or moved the start of the series.
+- **Repeating events cannot be dragged.** In version 1, dragging them moved the series or did nothing.
+- **Times of repeating events** are the same in every time zone. In version 1 they were shifted by the viewer's offset from UTC, so a 10:00 event showed at 15:00 in New York. The `DTSTART` line of a rule is ignored: the series starts at the event's `start`.
+- **Deleting one occurrence** (`EXDATE`) works for any series id. In version 1 it failed for ids with a hyphen, such as generated UUIDs. Exception dates written by version 1 were in UTC, so in time zones other than UTC some deleted occurrences may show again. Delete them again in version 2.
+- **The repeat picker's end date** now includes that day (`UNTIL=20260331T235959Z`). In version 1 the last day was left out.
+- **Events whose calendar does not exist** are shown. In version 1 they were hidden.
+- **Dates with `Z` or an offset** are converted to the viewer's time zone. In version 1 they caused an error.
+- **The +N button in the month view** opens a list of that day's events. In version 1 it opened the create dialog.
+- **On mobile with `enableSwipeGestures: false`**, the header shows previous and next buttons.
+- **Dropping a dragged event onto a time that already has another event** now moves it there. In version 1 the drop was ignored.
 
 See the [changelog](../CHANGELOG.md) for the full list of changes.

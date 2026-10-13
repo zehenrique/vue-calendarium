@@ -96,7 +96,17 @@ const translations = {
     zoomOut: 'Zoom out',
     resetZoom: 'Reset zoom',
     zoom: 'Zoom',
-    untitled: '(No title)'
+    untitled: '(No title)',
+    repeatEveryCount: 'Every {count} {unit}',
+    repeatOnDays: '{rule} on {days}',
+    repeatTimes: '{rule}, {count} times',
+    repeatUntil: '{rule}, until {date}',
+    durationMinutes: '{count} min',
+    durationOneHour: '1 hr',
+    durationHours: '{count} hrs',
+    moreEvents: '{count} more events',
+    createEventOn: 'Create event on {date}',
+    createEventAt: 'Create event on {date} at {time}'
   },
   pt: {
     today: 'Hoje',
@@ -195,7 +205,17 @@ const translations = {
     zoomOut: 'Diminuir zoom',
     resetZoom: 'Redefinir zoom',
     zoom: 'Zoom',
-    untitled: '(Sem título)'
+    untitled: '(Sem título)',
+    repeatEveryCount: 'A cada {count} {unit}',
+    repeatOnDays: '{rule} ({days})',
+    repeatTimes: '{rule}, {count} vezes',
+    repeatUntil: '{rule}, até {date}',
+    durationMinutes: '{count} minutos',
+    durationOneHour: '1 hora',
+    durationHours: '{count} horas',
+    moreEvents: 'Mais {count} eventos',
+    createEventOn: 'Criar evento a {date}',
+    createEventAt: 'Criar evento a {date} às {time}'
   }
 };
 

@@ -21,6 +21,17 @@ const SECTIONS = [
     { slug: 'usage', path: 'docs/USAGE.md', label: 'Usage guide' },
     { slug: 'upgrade', path: 'docs/UPGRADING.md', label: 'Upgrade to v2' },
   ] },
+  { title: 'Guides', pages: [
+    { slug: 'views', path: 'docs/VIEWS.md', label: 'Views' },
+    { slug: 'events', path: 'docs/EVENTS.md', label: 'Events and dialogs' },
+    { slug: 'recurring-events', path: 'docs/RECURRING_EVENTS.md', label: 'Recurring events' },
+    { slug: 'drag-and-drop', path: 'docs/DRAG_AND_DROP.md', label: 'Drag and drop' },
+    { slug: 'mobile', path: 'docs/MOBILE.md', label: 'Mobile layout' },
+    { slug: 'gestures', path: 'docs/GESTURES.md', label: 'Touch gestures' },
+    { slug: 'languages', path: 'docs/I18N.md', label: 'Languages and formats' },
+    { slug: 'accessibility', path: 'docs/ACCESSIBILITY.md', label: 'Accessibility' },
+    { slug: 'troubleshooting', path: 'docs/TROUBLESHOOTING.md', label: 'Troubleshooting' },
+  ] },
   { title: 'Reference', pages: [
     { slug: 'api', path: 'docs/API.md', label: 'API' },
     { slug: 'ghost-events', path: 'docs/GHOST_EVENTS.md', label: 'Ghost events' },

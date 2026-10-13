@@ -1,10 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { rrulestr } from 'rrule';
 import { getStartOfWeek, getEndOfWeek, calculateEventColumns } from './useCalendarUtils.js';
 import { DEFAULT_COLOR } from '../config/colors.js';
 
 const DEFAULT_EVENT_COLOR = DEFAULT_COLOR;
-const MAX_RECURRING_OCCURRENCES = 52;
 const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 function resolvePrimaryCalendar(calendars) {
@@ -215,35 +213,3 @@ export function buildEventPayloadFromDraft(draft, calendars) {
   };
 }
 
-export function generateRecurringEvents(baseEvent, maxOccurrences = MAX_RECURRING_OCCURRENCES) {
-  const dtstart = new Date(baseEvent.start);
-  const baseStart = Temporal.PlainDateTime.from(baseEvent.start);
-  const baseEnd = Temporal.PlainDateTime.from(baseEvent.end || baseEvent.start);
-  const dur = baseEnd.since(baseStart);
-
-  const rruleText = baseEvent.rrule;
-  if (!rruleText || rruleText.trim() === '') {
-    return [baseEvent];
-  }
-
-  const rule = rrulestr(rruleText.startsWith('RRULE:') ? rruleText : `RRULE:${rruleText}`, {
-    dtstart
-  });
-
-  const dates = [];
-  rule.all((date, i) => {
-    if (i >= maxOccurrences) return false;
-    dates.push(date);
-    return true;
-  });
-
-  return dates.map((jsDate, idx) => {
-    const t = Temporal.PlainDateTime.from(jsDate.toISOString().slice(0, 19));
-    return {
-      ...baseEvent,
-      id: idx === 0 ? baseEvent.id : `${baseEvent.id}-${idx}`,
-      start: t.toString(),
-      end: t.add(dur).toString()
-    };
-  });
-}

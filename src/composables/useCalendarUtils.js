@@ -48,10 +48,10 @@ export function isEventPast(event) {
 /**
  * Format event time for display (24-hour format)
  */
-export function formatEventTime(event, locale = 'en-US') {
+export function formatEventTime(event, locale = 'en-US', allDayLabel = 'All day') {
   const start = Temporal.PlainDateTime.from(event.start);
   if (event.allDay) {
-    return 'All day';
+    return allDayLabel;
   }
   return start.toLocaleString(locale, { 
     hour: '2-digit', 

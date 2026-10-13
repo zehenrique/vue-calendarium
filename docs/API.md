@@ -139,8 +139,8 @@ Common fields:
 
 - `id: string`
 - `title: string`
-- `start: string` (ISO date-time)
-- `end: string | null` (ISO date-time)
+- `start: string` (wall-clock date-time, `'2026-03-14T10:00:00'`; values with `Z` or an offset are converted to the viewer's time zone)
+- `end: string | null` (same format)
 - `allDay: boolean`
 - `calendarId: string`
 - `color: string`
@@ -148,6 +148,8 @@ Common fields:
 - `description: string`
 - `location: string`
 - `custom: Record<string, unknown>`
+
+Occurrences of a repeating event, as passed to `onEventClick`, also have `recurringEventId` (the series' id), and their `id` is `'<series id>@<start>'`. See [Recurring events](./RECURRING_EVENTS.md#how-occurrences-are-shown).
 
 ### `CalendarModel`
 

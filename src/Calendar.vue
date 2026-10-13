@@ -7,6 +7,7 @@
       :views="views"
       :is-mobile="isMobile"
       :show-mobile-menu="mobileSidebarEnabled"
+      :show-mobile-navigation="!swipeGesturesEnabled"
       :mobile-view-selector-placement="mobileViewSelectorPlacement"
       :swipe-enabled="swipeDeckEnabled"
       :swipe-render-neighbors="swipeRenderNeighbors"
@@ -267,7 +268,7 @@ import {
   buildEventPayloadFromDraft
 } from './composables/useCalendarEventHelpers.js';
 import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
-import { expandRecurrence } from './composables/useCalendarInterop.js';
+import { addExceptionDate, expandRecurrence } from './core/recurrence.js';
 import { createSwipeTransitionController } from './composables/useSwipeTransition.js';
 import { createPinchToZoomController } from './composables/usePinchToZoom.js';
 import { useDragAndDrop } from './composables/useDragAndDrop.js';
@@ -646,8 +647,20 @@ function clearSwipeAnimationTimeout() {
   }
 }
 
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
 function animateSwipeTo(targetDeltaX, { onComplete } = {}) {
   clearSwipeAnimationTimeout();
+
+  // Users who ask for less motion get the result without the slide
+  if (prefersReducedMotion()) {
+    swipeDeltaX.value = targetDeltaX;
+    onComplete?.();
+    return;
+  }
+
   swipeIsAnimating.value = true;
   swipeDeltaX.value = targetDeltaX;
   swipeAnimationTimeoutId = setTimeout(() => {
@@ -1055,8 +1068,11 @@ function onEventClick(event) {
 }
 
 function editSelectedEvent(event) {
-  const target = event || selectedEvent.value;
-  if (!target) return;
+  const clicked = event || selectedEvent.value;
+  if (!clicked) return;
+
+  // A repeating event is edited as a whole series, from its first occurrence
+  const target = (clicked.recurringEventId && props.calendarApp.eventsService.get(clicked.recurringEventId)) || clicked;
 
   const start = Temporal.PlainDateTime.from(target.start);
   const end = target.end ? Temporal.PlainDateTime.from(target.end) : start.add({ hours: 1 });
@@ -1094,70 +1110,23 @@ function deleteSelectedEvent(event) {
 }
 
 function confirmDelete(options = {}) {
-  if (!selectedEvent.value) {
-    showDeleteConfirm.value = false;
-    showEventDetail.value = false;
-    return;
+  const occurrence = selectedEvent.value;
+  if (occurrence) {
+    const { deleteAll = false } = options;
+    const seriesId = occurrence.recurringEventId ?? occurrence.id;
+    const series = props.calendarApp.eventsService.get(seriesId);
+
+    if (series?.rrule && !deleteAll) {
+      // Deleting one occurrence: exclude its date from the series
+      const updatedSeries = { ...series, rrule: addExceptionDate(series, occurrence.start) };
+      props.calendarApp.eventsService.update(updatedSeries);
+      props.calendarApp.callbacks.onEventUpdate?.(updatedSeries);
+    } else if (series) {
+      props.calendarApp.eventsService.remove(seriesId);
+      props.calendarApp.callbacks.onEventDelete?.(series);
+    }
   }
 
-  const { deleteAll = false } = options;
-  
-  // If deleting all events in the series, or if not a recurring event
-  if (deleteAll || (!selectedEvent.value.rrule && !selectedEvent.value.recurringEventId)) {
-    props.calendarApp.eventsService.remove(selectedEvent.value.id);
-    props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
-  } else {
-    // Deleting single occurrence - find the base event and add EXDATE
-    const selectedId = selectedEvent.value.id.toString();
-    const baseEventId = selectedId.includes('-') ? selectedId.split('-')[0] : selectedId;
-    
-    // Find the base event from events (not the expanded displayEvents)
-    const baseEvent = events.value.find(e => e.id.toString() === baseEventId);
-    
-    if (!baseEvent || !baseEvent.rrule) {
-      // Fallback: if we can't find base event or it doesn't have rrule, delete normally
-      props.calendarApp.eventsService.remove(selectedEvent.value.id);
-      props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
-      selectedEvent.value = null;
-      showDeleteConfirm.value = false;
-      showEventDetail.value = false;
-      return;
-    }
-    
-    // Create updated event with EXDATE
-    const eventToUpdate = { ...baseEvent };
-    const dateToExclude = selectedEvent.value.start;
-    
-    // Parse the ISO date to get formatted date for EXDATE (YYYYMMDDTHHMMSSZ format)
-    const excludeDate = new Date(dateToExclude);
-    const exdateFormatted = excludeDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    
-    // Parse existing RRULE
-    let rruleString = eventToUpdate.rrule || '';
-    
-    // Check if EXDATE already exists in the RRULE
-    if (rruleString.includes('\nEXDATE:')) {
-      // Append to existing EXDATE
-      rruleString = rruleString.replace(
-        /\nEXDATE:([^\n]+)/,
-        (match, dates) => `\nEXDATE:${dates},${exdateFormatted}`
-      );
-    } else {
-      // Add new EXDATE line
-      // Ensure RRULE has proper format (DTSTART\nRRULE:...)
-      if (!rruleString.includes('DTSTART:')) {
-        // Use the base event's start for DTSTART, not the occurrence's start
-        const dtstart = new Date(baseEvent.start).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-        rruleString = `DTSTART:${dtstart}\nRRULE:${rruleString.replace(/^RRULE:/, '')}`;
-      }
-      rruleString += `\nEXDATE:${exdateFormatted}`;
-    }
-    
-    eventToUpdate.rrule = rruleString;
-    props.calendarApp.eventsService.update(eventToUpdate);
-    props.calendarApp.callbacks.onEventUpdate?.(eventToUpdate);
-  }
-  
   selectedEvent.value = null;
   showDeleteConfirm.value = false;
   showEventDetail.value = false;
@@ -1201,8 +1170,8 @@ function handleEventDragEnd() {
       end: newEnd.toString()
     };
     
-    // Update in service
-    props.calendarApp.eventsService.update(updatedEvent);
+    // Update in service; nothing to report if the event no longer exists
+    if (!props.calendarApp.eventsService.update(updatedEvent)) return;
     
     // Call callback if provided
     props.calendarApp.callbacks.onEventDrop?.({

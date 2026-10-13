@@ -130,6 +130,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
+import { getRuleParts } from '../core/recurrence.js';
 
 export default {
   name: 'RecurrencePickerModal',
@@ -188,12 +189,7 @@ export default {
     });
 
     const parseRRule = (rruleStr) => {
-      // Simple RRULE parser
-      const str = rruleStr.startsWith('RRULE:') ? rruleStr.substring(6) : rruleStr;
-      const parts = str.split(';');
-      
-      parts.forEach(part => {
-        const [key, value] = part.split('=');
+      Object.entries(getRuleParts(rruleStr)).forEach(([key, value]) => {
         switch (key) {
           case 'FREQ':
             frequency.value = value;
@@ -282,9 +278,9 @@ export default {
       }
       
       if (endType.value === 'until' && untilDate.value) {
-        // Convert to YYYYMMDD format
+        // The end of that day, so an occurrence on the last day is included
         const cleanDate = untilDate.value.replace(/-/g, '');
-        parts.push(`UNTIL=${cleanDate}`);
+        parts.push(`UNTIL=${cleanDate}T235959Z`);
       } else if (endType.value === 'count' && count.value > 0) {
         parts.push(`COUNT=${count.value}`);
       }

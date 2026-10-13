@@ -17,7 +17,10 @@ export interface CalendarView {
   type: CalendarViewName;
 }
 
-/** Event data you pass in. Dates are ISO strings such as '2026-01-27T10:00:00'. */
+/**
+ * Event data you pass in. Dates are wall-clock date-times such as '2026-01-27T10:00:00'.
+ * A value with Z or an offset ('2026-01-27T10:00:00Z') is converted to the viewer's time zone.
+ */
 export interface CalendarEventInput {
   /** Generated when omitted */
   id?: string | number;
@@ -39,6 +42,14 @@ export interface CalendarEventInput {
 export interface CalendarEventData extends Required<Omit<CalendarEventInput, 'end'>> {
   end: string | null;
   _options: Record<string, unknown>;
+}
+
+/**
+ * The event passed to `onEventClick`. For an occurrence of a repeating event, `id` is
+ * '<series id>@<start>' and `recurringEventId` is the id of the series.
+ */
+export interface CalendarEventOccurrence extends CalendarEventData {
+  recurringEventId?: string | number;
 }
 
 export interface CalendarInput {
@@ -162,7 +173,7 @@ export function createCalendarsService(initialCalendars?: CalendarInput[]): Cale
 // ---------------------------------------------------------------------------
 
 export interface CalendarCallbacks {
-  onEventClick?: (event: CalendarEventData) => void;
+  onEventClick?: (event: CalendarEventOccurrence) => void;
   onEventCreate?: (events: CalendarEventData[]) => void;
   onEventUpdate?: (event: CalendarEventData) => void;
   onEventDelete?: (event: CalendarEventData) => void;

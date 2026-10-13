@@ -1,6 +1,5 @@
 // Interop utilities for iCalendar (RFC5545) and RRULE handling
 // Uses ical.js for ICS parsing/serialization and rrule for recurrence expansion
-import { Temporal } from '@js-temporal/polyfill';
 import ICAL from 'ical.js';
 import { RRule, rrulestr } from 'rrule';
 
@@ -125,41 +124,8 @@ export function serializeRRule(input) {
   return rule.toString();
 }
 
-export function expandRecurrence(event, rangeStart, rangeEnd) {
-  // Returns array of occurrence events with adjusted start/end in internal shape
-  if (!event.rrule) return [event];
-
-  // Handle full RFC strings (DTSTART, RRULE, EXDATE) or simple RRULE strings
-  let rule;
-  if (event.rrule.includes('\n') || event.rrule.includes('DTSTART:')) {
-    // Full RFC format string - parse directly
-    rule = rrulestr(event.rrule);
-  } else {
-    // Simple RRULE string - add RRULE: prefix if needed and provide dtstart
-    const value = event.rrule.startsWith('RRULE:') ? event.rrule : `RRULE:${event.rrule}`;
-    rule = rrulestr(value, { dtstart: new Date(event.start) });
-  }
-  
-  // rrule returns JS Date in local TZ
-  const after = new Date(rangeStart);
-  const before = new Date(rangeEnd);
-  const dates = rule.between(after, before, true);
-
-  const baseStart = Temporal.PlainDateTime.from(event.start);
-  const baseEnd = Temporal.PlainDateTime.from(event.end || event.start);
-  const dur = baseEnd.since(baseStart);
-
-  return dates.map((jsDate, idx) => {
-    const t = Temporal.PlainDateTime.from(jsDate.toISOString().slice(0, 19));
-    const end = t.add(dur);
-    return {
-      ...event,
-      id: idx === 0 ? event.id : `${event.id}-${idx}`,
-      start: t.toString(),
-      end: end.toString()
-    };
-  });
-}
+// Occurrence expansion lives with the rest of the recurrence logic
+export { expandRecurrence } from '../core/recurrence.js';
 
 function cryptoRandomId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();

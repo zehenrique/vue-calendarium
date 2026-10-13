@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { createEventsService } from '../services/EventsService.js';
 import { createCalendarsService } from '../services/CalendarsService.js';
 import { Temporal } from '@js-temporal/polyfill';
+import { toPlainDateTimeString } from './dateTime.js';
 
 /**
  * Create a calendar instance
@@ -98,11 +99,11 @@ export function createCalendar(config = {}) {
 
   // Computed properties
   const visibleEvents = computed(() => {
-    const visibleCalendarIds = calendarsService.getVisible().map(c => c.id);
+    // Only events of a hidden calendar are left out; events whose calendar does not exist are shown
+    const hiddenCalendarIds = calendarsService.getAll().filter(c => !c.visible).map(c => c.id);
     // Directly access the reactive ref array and map to objects
     const allEvents = eventsService._events.value.map(e => e.toObject());
-    const filtered = allEvents.filter(e => visibleCalendarIds.includes(e.calendarId));
-    return filtered;
+    return allEvents.filter(e => !hiddenCalendarIds.includes(e.calendarId));
   });
 
   // Methods
@@ -156,9 +157,16 @@ export function createCalendar(config = {}) {
   };
 
   // Ghost event methods (for external control when modals are disabled)
+  // Ghost event dates accept the same formats as events
+  const withPlainDates = (eventData) => ({
+    ...eventData,
+    ...('start' in eventData ? { start: toPlainDateTimeString(eventData.start) } : {}),
+    ...('end' in eventData ? { end: toPlainDateTimeString(eventData.end) } : {})
+  });
+
   const showGhostEvent = (eventData) => {
     ghostEvent.value = {
-      ...eventData,
+      ...withPlainDates(eventData),
       id: eventData.id || 'ghost-event',
       isGhost: true
     };
@@ -168,7 +176,7 @@ export function createCalendar(config = {}) {
     if (ghostEvent.value) {
       ghostEvent.value = {
         ...ghostEvent.value,
-        ...eventData,
+        ...withPlainDates(eventData),
         isGhost: true
       };
     }

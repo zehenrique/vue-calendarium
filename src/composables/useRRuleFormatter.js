@@ -1,91 +1,67 @@
 import { useI18n } from 'vue-i18n';
+import { Temporal } from '@js-temporal/polyfill';
+import { getRuleParts } from '../core/recurrence.js';
+
+const FREQUENCY_KEYS = {
+  DAILY: 'repeatDaily',
+  WEEKLY: 'repeatWeekly',
+  MONTHLY: 'repeatMonthly',
+  YEARLY: 'repeatYearly'
+};
+
+const UNIT_KEYS = {
+  DAILY: 'days',
+  WEEKLY: 'weeks',
+  MONTHLY: 'months',
+  YEARLY: 'years'
+};
+
+const WEEKDAY_KEYS = {
+  SU: 'sunday',
+  MO: 'monday',
+  TU: 'tuesday',
+  WE: 'wednesday',
+  TH: 'thursday',
+  FR: 'friday',
+  SA: 'saturday'
+};
 
 /**
  * Composable to format RRULE strings into human-readable text
  */
 export function useRRuleFormatter() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   /**
-   * Convert RRULE string to human-readable description
-   * @param {string} rruleStr - RRULE string (with or without RRULE: prefix)
+   * Convert an RRULE string to a human-readable description in the current language,
+   * for example "Weekly on Monday, Wednesday" or "Every 2 weeks, 6 times".
+   * @param {string} rruleStr - RRULE string, with or without the RRULE: prefix and other lines
    * @returns {string} Human-readable recurrence description
    */
   const formatRRule = (rruleStr) => {
-    if (!rruleStr || rruleStr === '') {
+    const parts = getRuleParts(rruleStr);
+    const freq = parts.FREQ;
+    if (!freq) {
       return t('repeatNone');
     }
 
-    // Remove RRULE: prefix if present
-    const str = rruleStr.startsWith('RRULE:') ? rruleStr.substring(6) : rruleStr;
-    const parts = {};
-    
-    // Parse RRULE parts
-    str.split(';').forEach(part => {
-      const [key, value] = part.split('=');
-      parts[key] = value;
-    });
-
-    const freq = parts.FREQ;
     const interval = parseInt(parts.INTERVAL || '1', 10);
-    const count = parts.COUNT ? parseInt(parts.COUNT, 10) : null;
-    const until = parts.UNTIL;
-    const byday = parts.BYDAY;
+    let description = interval === 1
+      ? (FREQUENCY_KEYS[freq] ? t(FREQUENCY_KEYS[freq]) : freq)
+      : t('repeatEveryCount', { count: interval, unit: UNIT_KEYS[freq] ? t(UNIT_KEYS[freq]) : freq.toLowerCase() });
 
-    let description;
-
-    // Base frequency
-    if (interval === 1) {
-      switch (freq) {
-        case 'DAILY':
-          description = t('repeatDaily');
-          break;
-        case 'WEEKLY':
-          description = t('repeatWeekly');
-          break;
-        case 'MONTHLY':
-          description = t('repeatMonthly');
-          break;
-        case 'YEARLY':
-          description = t('repeatYearly');
-          break;
-        default:
-          description = freq;
-      }
-    } else {
-      // Custom interval
-      const unitMap = {
-        DAILY: t('days'),
-        WEEKLY: t('weeks'),
-        MONTHLY: t('months'),
-        YEARLY: t('years')
-      };
-      description = `Every ${interval} ${unitMap[freq] || freq.toLowerCase()}`;
+    // Weekdays of a weekly rule; BYDAY values like '2TU' (monthly) are left out
+    if (freq === 'WEEKLY' && parts.BYDAY) {
+      const days = parts.BYDAY.split(',').map(day => (WEEKDAY_KEYS[day] ? t(WEEKDAY_KEYS[day]) : day)).join(', ');
+      description = t('repeatOnDays', { rule: description, days });
     }
 
-    // Add BYDAY details for weekly
-    if (freq === 'WEEKLY' && byday) {
-      const dayMap = {
-        SU: t('sunday'),
-        MO: t('monday'),
-        TU: t('tuesday'),
-        WE: t('wednesday'),
-        TH: t('thursday'),
-        FR: t('friday'),
-        SA: t('saturday')
-      };
-      const days = byday.split(',').map(d => dayMap[d] || d).join(', ');
-      description += ` on ${days}`;
-    }
-
-    // Add end condition
-    if (count) {
-      description += `, ${count} times`;
-    } else if (until) {
-      // Format UNTIL date
-      const dateStr = until.replace(/T.*/, '');
-      const formatted = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
-      description += `, until ${formatted}`;
+    if (parts.COUNT) {
+      description = t('repeatTimes', { rule: description, count: parseInt(parts.COUNT, 10) });
+    } else if (parts.UNTIL) {
+      const until = parts.UNTIL.replace(/T.*/, '');
+      const date = Temporal.PlainDate.from(`${until.slice(0, 4)}-${until.slice(4, 6)}-${until.slice(6, 8)}`);
+      description = t('repeatUntil', { rule: description, date: date.toLocaleString(locale.value, { dateStyle: 'medium' }) });
     }
 
     return description;

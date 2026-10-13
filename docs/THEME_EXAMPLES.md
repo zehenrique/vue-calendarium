@@ -235,4 +235,4 @@ See `STYLING.md` for the complete list of 60+ CSS custom properties you can cust
 
 - [Complete Styling Guide](./STYLING.md) - Full documentation with all properties
 - [API Documentation](./API.md) - Component API reference
-- [Live Demo](../theme-examples.html) - Interactive theme switcher
+- [Live Demo](https://zehenrique.github.io/vue-calendarium/) - Try the calendar in your browser

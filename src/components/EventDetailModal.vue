@@ -141,13 +141,11 @@ export default {
       const start = Temporal.PlainDateTime.from(props.event.start);
       const end = props.event.end ? Temporal.PlainDateTime.from(props.event.end) : start.add({ hours: 1 });
       
-      // Format the day and date
-      const dayOfWeek = start.toLocaleString(props.locale, { weekday: 'long' });
-      const dayNumber = start.day;
-      const month = start.toLocaleString(props.locale, { month: 'long' });
+      // Weekday and date in the calendar's language: "Monday, January 13" or "segunda-feira, 13 de janeiro"
+      const date = start.toLocaleString(props.locale, { weekday: 'long', day: 'numeric', month: 'long' });
       
       if (props.event.allDay) {
-        return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()}`;
+        return date;
       }
       
       const startTime = start.toLocaleString(props.locale, {
@@ -162,7 +160,7 @@ export default {
         hour12: false
       });
       
-      return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()} · ${startTime} – ${endTime}`;
+      return `${date} · ${startTime} – ${endTime}`;
     });
 
     const calendarName = computed(() => {
