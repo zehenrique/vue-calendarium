@@ -209,6 +209,7 @@
     <EventModal
       v-if="modalsEnabled"
       v-model="showModal"
+      :is-editing="isEditingEvent"
       :event="newEvent"
       :calendars="calendars"
       @save="saveEvent"/>
@@ -227,6 +228,8 @@
       v-model="showDeleteConfirm"
       :event="selectedEvent"
       @confirm="confirmDelete"/>
+
+    <RecurrenceScopeModal v-if="modalsEnabled" v-model="showScopeChoice" :allow-this-event="pendingRecurringChange?.allowThisEvent ?? true" @confirm="applyRecurringChange" @cancel="pendingRecurringChange = null"/>
 
     <MobileSidebar
       v-if="mobileSidebarEnabled"
@@ -255,6 +258,7 @@ import DayView from './components/calendar/DayView.vue';
 import EventModal from './components/EventModal.vue';
 import EventDetailModal from './components/EventDetailModal.vue';
 import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
+import RecurrenceScopeModal from './components/RecurrenceScopeModal.vue';
 import MobileSidebar from './components/MobileSidebar.vue';
 import {
   createDefaultEventDraft,
@@ -268,7 +272,8 @@ import {
   buildEventPayloadFromDraft
 } from './composables/useCalendarEventHelpers.js';
 import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
-import { addExceptionDate, expandRecurrence } from './core/recurrence.js';
+import { expandRecurrence } from './core/recurrence.js';
+import { changesRule, planRecurringDelete, planRecurringEdit } from './core/recurringChanges.js';
 import { createSwipeTransitionController } from './composables/useSwipeTransition.js';
 import { createPinchToZoomController } from './composables/usePinchToZoom.js';
 import { useDragAndDrop } from './composables/useDragAndDrop.js';
@@ -295,6 +300,9 @@ const { current: vuetifyLocale } = useLocale();
 
 // Reactive data sources from calendar app
 const events = computed(() => props.calendarApp.visibleEvents.value);
+// Changed occurrences of repeating events, from every calendar: each replaces an occurrence
+// of its series even when its own calendar is hidden
+const storedExceptions = computed(() => props.calendarApp.eventsService.getAll().filter(event => event.recurringEventId));
 const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
 const modalsEnabled = computed(() => props.calendarApp.enableModals?.value ?? true);
@@ -369,6 +377,12 @@ const isMobile = ref(false);
 const showModal = ref(false);
 const showEventDetail = ref(false);
 const showDeleteConfirm = ref(false);
+// Repeating events: the instance being edited, and a change waiting for "this / following / all"
+const editingInstance = ref(null);
+// Whether the event dialog edits an existing event, for its title
+const isEditingEvent = ref(false);
+const pendingRecurringChange = ref(null);
+const showScopeChoice = ref(false);
 const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
@@ -473,7 +487,7 @@ function buildDisplayEventsFor(view, date) {
 
   for (const e of events.value) {
     if (e && e.rrule) {
-      expanded.push(...expandRecurrence(e, range.start, range.end));
+      expanded.push(...expandRecurrence(e, range.start, range.end, { exceptions: storedExceptions.value }));
     } else {
       expanded.push(e);
     }
@@ -1033,6 +1047,7 @@ function onAllDaySlotClick(date) {
 }
 
 function openCreateModal(overrides = {}, context = {}) {
+  isEditingEvent.value = false;
   const draft = createDefaultEventDraft(calendars.value, overrides);
   newEvent.value = draft;
 
@@ -1068,11 +1083,14 @@ function onEventClick(event) {
 }
 
 function editSelectedEvent(event) {
-  const clicked = event || selectedEvent.value;
-  if (!clicked) return;
+  const target = event || selectedEvent.value;
+  if (!target) return;
 
-  // A repeating event is edited as a whole series, from its first occurrence
-  const target = (clicked.recurringEventId && props.calendarApp.eventsService.get(clicked.recurringEventId)) || clicked;
+  // An instance of a repeating event opens with its own date and the series' rule;
+  // saving then asks which events the change applies to
+  const series = getSeriesOf(target);
+  editingInstance.value = series ? target : null;
+  isEditingEvent.value = true;
 
   const start = Temporal.PlainDateTime.from(target.start);
   const end = target.end ? Temporal.PlainDateTime.from(target.end) : start.add({ hours: 1 });
@@ -1084,7 +1102,7 @@ function editSelectedEvent(event) {
     startTime: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
     endDate: end.toPlainDate().toString(),
     endTime: `${String(end.hour).padStart(2, '0')}:${String(end.minute).padStart(2, '0')}`,
-    rrule: target.rrule || '',
+    rrule: series?.rrule ?? target.rrule ?? '',
     calendarId: target.calendarId || calendars.value[0]?.id || 'default',
     color: target.color || calendars.value[0]?.color || DEFAULT_COLOR,
     allDay: target.allDay || false
@@ -1109,27 +1127,65 @@ function deleteSelectedEvent(event) {
   }
 }
 
-function confirmDelete(options = {}) {
-  const occurrence = selectedEvent.value;
-  if (occurrence) {
-    const { deleteAll = false } = options;
-    const seriesId = occurrence.recurringEventId ?? occurrence.id;
-    const series = props.calendarApp.eventsService.get(seriesId);
+function confirmDelete({ scope = 'all' } = {}) {
+  const instance = selectedEvent.value;
+  const series = getSeriesOf(instance);
 
-    if (series?.rrule && !deleteAll) {
-      // Deleting one occurrence: exclude its date from the series
-      const updatedSeries = { ...series, rrule: addExceptionDate(series, occurrence.start) };
-      props.calendarApp.eventsService.update(updatedSeries);
-      props.calendarApp.callbacks.onEventUpdate?.(updatedSeries);
-    } else if (series) {
-      props.calendarApp.eventsService.remove(seriesId);
-      props.calendarApp.callbacks.onEventDelete?.(series);
-    }
+  if (series) {
+    applyChangePlan(planRecurringDelete({ series, exceptions: getExceptionsOf(series), instance, scope }));
+  } else if (instance) {
+    applyChangePlan({ remove: [instance] });
   }
 
   selectedEvent.value = null;
   showDeleteConfirm.value = false;
   showEventDetail.value = false;
+}
+
+// Repeating events. An instance is an occurrence generated from a series' rule, or an
+// exception: an event stored in place of one occurrence. Both carry `recurringEventId`.
+function getSeriesOf(event) {
+  if (!event?.recurringEventId) return null;
+  const series = props.calendarApp.eventsService.get(event.recurringEventId);
+  return series?.rrule ? series : null;
+}
+
+function getExceptionsOf(series) {
+  return props.calendarApp.eventsService.getAll().filter(event => event.recurringEventId === series.id);
+}
+
+// Store a set of changes and report each one through the callbacks
+function applyChangePlan({ update = [], add = [], remove = [] }) {
+  const { eventsService, callbacks } = props.calendarApp;
+  update.forEach((event) => {
+    const updated = eventsService.update(event);
+    if (updated) callbacks.onEventUpdate?.(updated);
+  });
+  remove.forEach((event) => {
+    const removed = eventsService.remove(event.id);
+    if (removed) callbacks.onEventDelete?.(removed);
+  });
+  const added = add.map(event => eventsService.add(event)).filter(Boolean);
+  if (added.length) callbacks.onEventCreate?.(added);
+}
+
+// Ask "this event / this and following / all events" before changing a repeating event
+function askRecurringScope(change) {
+  pendingRecurringChange.value = change;
+  showScopeChoice.value = true;
+}
+
+function applyRecurringChange(scope) {
+  const change = pendingRecurringChange.value;
+  pendingRecurringChange.value = null;
+  if (!change) return;
+
+  const { series, instance, changes, dropTarget } = change;
+  applyChangePlan(planRecurringEdit({ series, exceptions: getExceptionsOf(series), instance, changes, scope }));
+
+  if (dropTarget) {
+    props.calendarApp.callbacks.onEventDrop?.({ event: changes, originalEvent: instance, dropTarget, scope });
+  }
 }
 
 // Drag and drop handlers
@@ -1170,6 +1226,18 @@ function handleEventDragEnd() {
       end: newEnd.toString()
     };
     
+    // A repeating event asks which events to move first
+    const series = getSeriesOf(event);
+    if (series) {
+      if (modalsEnabled.value) {
+        askRecurringScope({ series, instance: event, changes: updatedEvent, allowThisEvent: true, dropTarget: target });
+      } else {
+        // Without the built-in dialogs the app decides what to change
+        props.calendarApp.callbacks.onEventDrop?.({ event: updatedEvent, originalEvent: event, dropTarget: target });
+      }
+      return;
+    }
+
     // Update in service; nothing to report if the event no longer exists
     if (!props.calendarApp.eventsService.update(updatedEvent)) return;
     
@@ -1207,18 +1275,19 @@ function saveEvent(eventDataFromModal) {
   const normalizedDraft = ensureDraftCalendar(eventToSave, calendars.value);
   const eventPayload = buildEventPayloadFromDraft(normalizedDraft, calendars.value);
 
-  // Check if event exists in the service (not just if it has an ID)
-  const existingEvent = eventPayload.id ? props.calendarApp.eventsService.get(eventPayload.id) : null;
-  
-  if (existingEvent) {
-    // Update existing event
-    props.calendarApp.eventsService.update(eventPayload);
-    props.calendarApp.callbacks.onEventUpdate?.(eventPayload);
+  const instance = editingInstance.value;
+  editingInstance.value = null;
+  const series = getSeriesOf(instance);
+
+  if (series) {
+    // An instance of a repeating event: ask which events the change applies to
+    askRecurringScope({ series, instance, changes: eventPayload, allowThisEvent: !changesRule(series, eventPayload, instance) });
+  } else if (eventPayload.id && props.calendarApp.eventsService.get(eventPayload.id)) {
+    applyChangePlan({ update: [eventPayload] });
   } else {
     // Add new event (remove any auto-generated ID first)
     delete eventPayload.id;
-    props.calendarApp.eventsService.add(eventPayload);
-    props.calendarApp.callbacks.onEventCreate?.([eventPayload]);
+    applyChangePlan({ add: [eventPayload] });
   }
 
   // Clear ghost event after saving
@@ -1228,6 +1297,9 @@ function saveEvent(eventDataFromModal) {
 
 // Watch for modal close to clear ghost event if cancelled
 watch(showModal, (isOpen) => {
+  if (!isOpen) {
+    editingInstance.value = null;
+  }
   if (!isOpen && ghostEvent.value) {
     // Modal was closed without saving, clear ghost event
     props.calendarApp.hideGhostEvent();

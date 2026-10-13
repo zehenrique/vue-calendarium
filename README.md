@@ -157,7 +157,7 @@ calendarApp.eventsService.add({
   start:       string,            // ISO date-time, required
   end:         string,            // ISO date-time, required
   allDay:      boolean,
-  calendarId:  string,
+  calendarId:  string,            // required: the id of an existing calendar
   color:       string,            // hex color
   rrule:       string,            // RRULE string for recurring events
   description: string,
@@ -169,7 +169,7 @@ calendarApp.eventsService.add({
 ### Managing events
 
 ```js
-calendarApp.eventsService.add({ title: 'Sprint Review', start: '...', end: '...' });
+calendarApp.eventsService.add({ title: 'Sprint Review', start: '...', end: '...', calendarId: 'work' });
 calendarApp.eventsService.update({ id: '1', title: 'Updated title' });
 calendarApp.eventsService.remove('1');
 calendarApp.eventsService.getAll();
@@ -214,11 +214,14 @@ calendarApp.eventsService.add({
   title: 'Weekly Standup',
   start: '2026-01-05T09:00:00',
   end:   '2026-01-05T09:15:00',
+  calendarId: 'work',
   rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'
 });
 ```
 
-The built-in recurrence picker modal covers daily, weekly, monthly, and yearly rules with custom interval and end options.
+Editing, dragging or deleting one occurrence asks whether the change applies to that event, to it and the following events, or to the whole series, as in Google Calendar. See [Recurring events](./docs/RECURRING_EVENTS.md).
+
+In the create and edit dialogs, the repeat menu offers **Does not repeat**, the usual rules for the event's date ("Weekly on Wednesday", "Monthly on the third Wednesday", "Every weekday"...) and **Custom...**, a dialog for daily, weekly, monthly and yearly rules with an interval and an end.
 
 ---
 
@@ -300,7 +303,7 @@ All guides are also on the [documentation website](https://zehenrique.github.io/
 | [docs/USAGE.md](./docs/USAGE.md) | Usage guide with practical examples |
 | [docs/VIEWS.md](./docs/VIEWS.md) | Month, week and day views, navigation and the current time indicator |
 | [docs/EVENTS.md](./docs/EVENTS.md) | Creating, viewing, editing and deleting events, calendars and callbacks |
-| [docs/RECURRING_EVENTS.md](./docs/RECURRING_EVENTS.md) | Repeat rules, the repeat picker and deleting occurrences |
+| [docs/RECURRING_EVENTS.md](./docs/RECURRING_EVENTS.md) | Repeat rules, the repeat menu, and changing or deleting occurrences |
 | [docs/DRAG_AND_DROP.md](./docs/DRAG_AND_DROP.md) | Moving events by dragging them |
 | [docs/MOBILE.md](./docs/MOBILE.md) | The mobile layout, side menu and bottom sheets |
 | [docs/GESTURES.md](./docs/GESTURES.md) | Swipe, pinch-to-zoom and sidebar gestures |

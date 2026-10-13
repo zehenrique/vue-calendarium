@@ -10,9 +10,9 @@ const TEST_NOW = '2025-01-15T09:00:00';
 
 const repeatLabels = {
   daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-  yearly: 'Yearly'
+  weekly: 'Weekly on',
+  monthly: 'Monthly on',
+  yearly: 'Annually on'
 };
 
 async function switchToView(page, view) {

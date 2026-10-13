@@ -28,7 +28,8 @@ export interface CalendarEventInput {
   start: string;
   end?: string | null;
   allDay?: boolean;
-  calendarId?: string;
+  /** Required: the id of an existing calendar. Events without one are rejected. */
+  calendarId: string;
   /** Hex color, e.g. '#1967D2' */
   color?: string;
   /** RRULE (RFC 5545), e.g. 'FREQ=WEEKLY;BYDAY=MO,WE' */
@@ -36,6 +37,10 @@ export interface CalendarEventInput {
   description?: string;
   location?: string;
   custom?: Record<string, unknown>;
+  /** On an event that replaces one occurrence of a repeating event: the series' id */
+  recurringEventId?: string | number | null;
+  /** On an event that replaces one occurrence of a repeating event: that occurrence's start in the series */
+  originalStart?: string | null;
 }
 
 /** Event data returned by the calendar (all fields filled in). */
@@ -45,12 +50,15 @@ export interface CalendarEventData extends Required<Omit<CalendarEventInput, 'en
 }
 
 /**
- * The event passed to `onEventClick`. For an occurrence of a repeating event, `id` is
- * '<series id>@<start>' and `recurringEventId` is the id of the series.
+ * An event as the calendar shows it. For an instance of a repeating event, `recurringEventId`
+ * is the id of the series and `originalStart` the start the instance has in the series.
+ * Instances have the id '<series id>@<original start>', including changed occurrences (stored
+ * events that replace one occurrence, created by "This event").
  */
-export interface CalendarEventOccurrence extends CalendarEventData {
-  recurringEventId?: string | number;
-}
+export type CalendarEventOccurrence = CalendarEventData;
+
+/** Which events of a repeating series a change applies to. */
+export type RecurrenceScope = 'this' | 'following' | 'all';
 
 export interface CalendarInput {
   /** Generated when omitted */
@@ -90,9 +98,11 @@ export interface CalendarEventCreateRequest {
 }
 
 export interface CalendarEventDrop {
-  event: CalendarEventData;
-  originalEvent: CalendarEventData;
-  dropTarget: unknown;
+  event: CalendarEventOccurrence;
+  originalEvent: CalendarEventOccurrence;
+  dropTarget: { date: Temporal.PlainDate; hour: number };
+  /** For a repeating event, the choice the user made */
+  scope?: RecurrenceScope;
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +150,8 @@ export class EventsService {
   constructor(initialEvents?: CalendarEventInput[]);
   getAll(): CalendarEventData[];
   get(id: string | number): CalendarEventData | null;
-  add(event: CalendarEventInput): CalendarEventData;
+  /** Returns null, and logs a console error, when the event has no valid calendarId */
+  add(event: CalendarEventInput): CalendarEventData | null;
   /** Merges the given fields into the event with the same `id` */
   update(event: Partial<CalendarEventInput> & { id: string | number }): CalendarEventData | null;
   remove(id: string | number): CalendarEventData | null;

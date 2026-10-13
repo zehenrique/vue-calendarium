@@ -14,8 +14,9 @@ export default defineConfig({
   // Load the app once so the dev server has compiled it before parallel tests start
   globalSetup: './tests/global-setup.js',
 
-  // Maximum time one test can run (reduced from 30s to 15s)
-  timeout: 15 * 1000,
+  // Maximum time one test can run. Some tests go through several dialogs, and with 8 workers
+  // sharing one dev server they can take three times as long as when run alone.
+  timeout: 30 * 1000,
   
   // Run tests in files in parallel
   fullyParallel: true,
@@ -52,8 +53,8 @@ export default defineConfig({
     // Reduce action timeout for faster failures (5s instead of default 30s)
     actionTimeout: 5000,
     
-    // Faster navigation timeout
-    navigationTimeout: 10000,
+    // Page loads are slow while 8 workers share the dev server
+    navigationTimeout: 30 * 1000,
   },
 
   // Configure projects for major browsers

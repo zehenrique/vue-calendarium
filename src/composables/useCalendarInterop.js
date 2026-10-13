@@ -2,6 +2,7 @@
 // Uses ical.js for ICS parsing/serialization and rrule for recurrence expansion
 import ICAL from 'ical.js';
 import { RRule, rrulestr } from 'rrule';
+import { getExceptionDates, getRuleParts } from '../core/recurrence.js';
 
 // Internal event shape contract
 // {
@@ -12,8 +13,14 @@ import { RRule, rrulestr } from 'rrule';
 //   color?: string,
 //   calendar?: string,
 //   allDay?: boolean,
-//   rrule?: string // optional full RFC string including DTSTART or plain RRULE line
+//   rrule?: string, // optional full RFC string including DTSTART or plain RRULE line
+//   recurringEventId?: string, // for a changed occurrence: the id (UID) of its series
+//   originalStart?: string // for a changed occurrence: its start in the series (RECURRENCE-ID)
 // }
+//
+// Repeating events follow RFC 5545, as Google Calendar exports them: a series is a VEVENT
+// with RRULE and EXDATE (deleted occurrences), and each changed occurrence is a VEVENT with
+// the series' UID and a RECURRENCE-ID holding the occurrence's original start.
 
 function icTimeToPlainString(icTime) {
   // Returns local date-time string without timezone suffix, with seconds
@@ -43,19 +50,25 @@ export function parseICal(icsString) {
     const start = icTimeToPlainString(ev.startDate);
     const end = ev.endDate ? icTimeToPlainString(ev.endDate) : start;
     const rruleProp = vevent.getFirstProperty('rrule');
-    const rrule = rruleProp ? `RRULE:${rruleProp.getFirstValue().toICALString()}` : undefined;
+    const exdates = vevent.getAllProperties('exdate').flatMap(prop => prop.getValues()).map(icTimeToRuleDate);
+    const ruleLines = [`RRULE:${rruleProp?.getFirstValue()}`, ...(exdates.length ? [`EXDATE:${exdates.join(',')}`] : [])];
+    const rrule = rruleProp ? ruleLines.join('\n') : undefined;
+    const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+    const originalStart = recurrenceId ? icTimeToPlainString(recurrenceId) : null;
 
     // Detect all-day via VALUE=date
     const dtstartProp = vevent.getFirstProperty('dtstart');
     const isAllDay = dtstartProp && dtstartProp.type === 'date';
 
     return {
-      id: uid,
+      // A changed occurrence shares its series' UID, so it takes the occurrence's id
+      id: originalStart ? `${uid}@${originalStart}` : uid,
       title,
       start,
       end,
       allDay: Boolean(isAllDay),
-      rrule
+      rrule,
+      ...(originalStart ? { recurringEventId: uid, originalStart } : {})
     };
   });
 }
@@ -69,7 +82,11 @@ export function serializeICal(events, { prodId = '-//Calendar Component//EN', tz
     const vevent = new ICAL.Component('vevent');
     const ev = new ICAL.Event(vevent);
 
-    ev.uid = e.id || cryptoRandomId();
+    // A changed occurrence is written under its series' UID, with the occurrence's original start
+    ev.uid = e.recurringEventId ?? (e.id || cryptoRandomId());
+    if (e.recurringEventId && e.originalStart) {
+      addTimeProperty(vevent, 'recurrence-id', e.originalStart, tzid);
+    }
     ev.summary = e.title || '';
 
     // DTSTART / DTEND
@@ -86,11 +103,11 @@ export function serializeICal(events, { prodId = '-//Calendar Component//EN', tz
       ev.endDate = dtEnd;
     }
 
-    // RRULE (if provided either as full string or just the value)
+    // RRULE, and EXDATE for deleted occurrences, in the same time zone as DTSTART
     if (e.rrule) {
-      const value = e.rrule.startsWith('RRULE:') ? e.rrule.substring(6) : e.rrule;
-      const recur = ICAL.Recur.fromString(value);
-      vevent.addPropertyWithValue('rrule', recur);
+      const parts = Object.entries(getRuleParts(e.rrule)).map(([key, value]) => `${key}=${value}`).join(';');
+      vevent.addPropertyWithValue('rrule', ICAL.Recur.fromString(parts));
+      getExceptionDates(e.rrule).forEach(date => addTimeProperty(vevent, 'exdate', date.toString(), tzid));
     }
 
     vcal.addSubcomponent(vevent);
@@ -126,6 +143,16 @@ export function serializeRRule(input) {
 
 // Occurrence expansion lives with the rest of the recurrence logic
 export { expandRecurrence } from '../core/recurrence.js';
+
+// EXDATE values are stored as wall-clock times with a Z suffix ('20250122T100000Z')
+function icTimeToRuleDate(icTime) {
+  return `${icTimeToPlainString(icTime).replace(/[-:]/g, '')}Z`;
+}
+
+function addTimeProperty(vevent, name, dtString, tzid) {
+  const property = vevent.addPropertyWithValue(name, plainStringToICALTime(dtString));
+  if (tzid) property.setParameter('tzid', tzid);
+}
 
 function cryptoRandomId() {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();

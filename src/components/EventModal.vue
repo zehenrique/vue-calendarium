@@ -1,8 +1,8 @@
 <template>
   <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480" scrim="rgba(0, 0, 0, 0.5)" content-class="calendar-font-scope event-modal-positioning" data-testid="event-modal">
     <v-card class="pa-0 event-modal-card" rounded="xl">
-      <!-- Header with tabs and close button -->
       <div class="modal-header">
+        <h2 class="modal-title">{{ dialogTitle }}</h2>
         <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')" class="ml-auto mr-2">
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -44,10 +44,7 @@
               <div class="flex-grow-1">
                 <div class="text-body-2 d-flex align-center flex-wrap options-row">
                   <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
-                  <span class="separator">•</span>
-                  <a href="#" class="option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
-                    {{ repeatDisplayText }}
-                  </a>
+                  <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
                 </div>
               </div>
             </div>
@@ -98,6 +95,8 @@
           {{ t('cancel') }}
         </v-btn>
         <v-spacer></v-spacer>
+        <h2 class="modal-title modal-title--mobile">{{ dialogTitle }}</h2>
+        <v-spacer></v-spacer>
         <v-btn color="primary" variant="text" @click="handleSave" :disabled="!eventData.title">
           {{ t('save') }}
         </v-btn>
@@ -142,23 +141,14 @@
             </div>
           </div>
 
-          <!-- All day toggle -->
-          <div class="mb-3">
-            <div class="d-flex align-center">
-              <div class="icon-spacer mr-3"></div>
-              <div class="flex-grow-1">
-                <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="mobile-checkbox"></v-checkbox>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recurrence -->
+          <!-- All day and recurrence row: as on desktop, the repeat link wraps to a new line only when it does not fit -->
           <div class="mb-3 d-flex align-center">
-            <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-repeat</v-icon>
+            <div class="icon-spacer mr-3"></div>
             <div class="flex-grow-1">
-              <a href="#" class="mobile-option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
-                {{ repeatDisplayText }}
-              </a>
+              <div class="text-body-2 d-flex align-center flex-wrap options-row">
+                <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
+                <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
+              </div>
             </div>
           </div>
 
@@ -194,13 +184,6 @@
     </v-card>
   </v-bottom-sheet>
 
-  <!-- Custom recurrence picker - outside main dialog -->
-  <RecurrencePickerModal
-    v-model="showCustomRecurrence"
-    :rrule="eventData.rrule"
-    :start-date="eventData.startDate"
-    @save="handleCustomRecurrenceSave"
-  />
 </template>
 
 <script>
@@ -210,18 +193,22 @@ import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
 import { scrollSelectedOptionToTop } from '../composables/useSelectMenuScroll.js';
-import { getRuleParts, keepExceptionDates } from '../core/recurrence.js';
-import RecurrencePickerModal from './RecurrencePickerModal.vue';
+import RepeatSelect from './RepeatSelect.vue';
 
 export default {
   name: 'EventModal',
   components: {
-    RecurrencePickerModal
+    RepeatSelect
   },
   props: {
     modelValue: {
       type: Boolean,
       required: true
+    },
+    // Editing an existing event (the title says "Edit event" instead of "New event")
+    isEditing: {
+      type: Boolean,
+      default: false
     },
     event: {
       type: Object,
@@ -249,8 +236,6 @@ export default {
       allDay: false
     });
 
-    const repeatSelection = ref('none');
-    const showCustomRecurrence = ref(false);
     const showDatePicker = ref(false);
 
     // Generate time options in 15-minute intervals
@@ -400,17 +385,7 @@ export default {
       }
     };
 
-    const repeatDisplayText = computed(() => {
-      const parts = getRuleParts(eventData.value.rrule);
-      if (!parts.FREQ) {
-        return t('doesNotRepeat');
-      }
-
-      // A plain frequency ('FREQ=WEEKLY') gets its own label; anything more is custom
-      const frequencyKeys = { DAILY: 'repeatDaily', WEEKLY: 'repeatWeekly', MONTHLY: 'repeatMonthly', YEARLY: 'repeatYearly' };
-      const isPlainFrequency = Object.keys(parts).length === 1 && frequencyKeys[parts.FREQ];
-      return isPlainFrequency ? t(frequencyKeys[parts.FREQ]) : t('customRecurrence');
-    });
+    const dialogTitle = computed(() => (props.isEditing ? t('editEvent') : t('newEvent')));
 
     const getCalendarColor = (calendarId) => {
       const calendar = props.calendars.find(c => c.id === calendarId);
@@ -438,21 +413,6 @@ export default {
         if (calendar) {
           eventData.value.color = calendar.color;
         }
-        
-        // Set repeat selection based on RRULE
-        if (!newEvent.rrule || newEvent.rrule === '') {
-          repeatSelection.value = 'none';
-        } else if (newEvent.rrule === 'FREQ=DAILY') {
-          repeatSelection.value = 'daily';
-        } else if (newEvent.rrule === 'FREQ=WEEKLY') {
-          repeatSelection.value = 'weekly';
-        } else if (newEvent.rrule === 'FREQ=MONTHLY') {
-          repeatSelection.value = 'monthly';
-        } else if (newEvent.rrule === 'FREQ=YEARLY') {
-          repeatSelection.value = 'yearly';
-        } else {
-          repeatSelection.value = 'custom';
-        }
       }
     }, { immediate: true, deep: true });
 
@@ -470,41 +430,6 @@ export default {
         eventData.value.endDate = newDate;
       }
     });
-
-    const toggleRepeatPicker = () => {
-      showCustomRecurrence.value = true;
-    };
-
-    const handleRepeatChange = (val) => {
-      if (val === 'custom') {
-        showCustomRecurrence.value = true;
-        return;
-      }
-      
-      // Map simple repeats to RRULE
-      switch (val) {
-        case 'daily':
-          eventData.value.rrule = 'FREQ=DAILY';
-          break;
-        case 'weekly':
-          eventData.value.rrule = 'FREQ=WEEKLY';
-          break;
-        case 'monthly':
-          eventData.value.rrule = 'FREQ=MONTHLY';
-          break;
-        case 'yearly':
-          eventData.value.rrule = 'FREQ=YEARLY';
-          break;
-        default:
-          eventData.value.rrule = '';
-      }
-    };
-
-    const handleCustomRecurrenceSave = (rrule) => {
-      // Occurrences deleted from the series stay deleted when its rule changes
-      eventData.value.rrule = keepExceptionDates(rrule, eventData.value.rrule);
-      repeatSelection.value = 'custom';
-    };
 
     const handleClose = () => {
       emit('update:modelValue', false);
@@ -526,8 +451,6 @@ export default {
       mobile,
       scrollSelectedOptionToTop,
       eventData,
-      repeatSelection,
-      showCustomRecurrence,
       showDatePicker,
       timeOptions,
       endTimeOptions,
@@ -535,11 +458,8 @@ export default {
       datePickerValue,
       handleDatePickerChange,
       handleTodayClick,
-      repeatDisplayText,
+      dialogTitle,
       getCalendarColor,
-      toggleRepeatPicker,
-      handleRepeatChange,
-      handleCustomRecurrenceSave,
       handleClose,
       handleSave,
       handleDateChange
@@ -552,8 +472,19 @@ export default {
 .modal-header {
   display: flex;
   align-items: center;
-  padding: 8px 8px 8px 16px;
+  padding: 8px 8px 8px 32px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: var(--calendar-font-size-title, 1.25rem);
+  font-weight: var(--calendar-font-weight-medium, 500);
+  line-height: 1.6;
+}
+
+.modal-title--mobile {
+  font-size: 1rem;
 }
 
 .title-input :deep(.v-field__input) {
@@ -641,14 +572,32 @@ export default {
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* "All day • Does not repeat". The repeat link moves to a new line when it does not fit;
+   its dot then falls outside the row, which hides it. The padding and negative margin
+   keep the checkbox's focus ring visible. */
 .options-row {
-  gap: 8px;
-  margin-top: 4px;
+  row-gap: 4px;
+  margin: -4px -8px -8px;
+  padding: 8px 8px 8px;
+  overflow: hidden;
 }
 
-.separator {
+.all-day-checkbox {
+  flex: 0 0 auto;
+  margin-right: 29px;
+}
+
+.repeat-option {
+  display: inline-flex;
+  align-items: center;
+  margin-left: -29px;
+}
+
+.repeat-option::before {
+  content: '•' / '';
+  display: inline-block;
+  padding: 0 12px;
   color: rgba(0, 0, 0, 0.38);
-  padding: 0 4px;
 }
 
 .option-text {
@@ -656,13 +605,13 @@ export default {
   font-size: 0.875rem;
 }
 
-.option-link {
+:deep(.option-link) {
   color: #1967d2;
   text-decoration: none;
   font-size: 0.875rem;
 }
 
-.option-link:hover {
+:deep(.option-link:hover) {
   text-decoration: underline;
 }
 
@@ -682,10 +631,6 @@ export default {
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.all-day-checkbox {
-  margin-right: 0;
 }
 
 .all-day-checkbox :deep(.v-label) {
@@ -721,37 +666,8 @@ export default {
   color: rgba(0, 0, 0, 0.38);
 }
 
-.mobile-option-link {
-  color: rgba(0, 0, 0, 0.87);
-  text-decoration: none;
-  font-size: 0.875rem;
-  display: block;
-  padding: 8px 0;
-}
-
-.mobile-option-link:hover {
-  text-decoration: underline;
-}
-
 .mobile-calendar-select :deep(.v-field__input) {
   font-size: 0.875rem;
-}
-
-.mobile-checkbox {
-  margin-right: 0;
-}
-
-.mobile-checkbox :deep(.v-label) {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.mobile-checkbox :deep(.v-selection-control) {
-  min-height: 24px;
-}
-
-.mobile-checkbox :deep(.v-selection-control__wrapper) {
-  height: 24px;
 }
 
 .time-field-mobile {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Temporal } from '@js-temporal/polyfill';
 import { toPlainDateTimeString } from '../../src/core/dateTime.js';
 import { CalendarEvent } from '../../src/core/CalendarEvent.js';
@@ -44,16 +44,40 @@ describe('CalendarEvent dates', () => {
   });
 });
 
-describe('visible events', () => {
+describe('calendarId', () => {
   const event = (id, calendarId) => ({ id, title: id, start: '2026-03-02T09:00:00', end: '2026-03-02T10:00:00', calendarId });
+  const calendars = [{ id: 'work', name: 'Work', color: '#1967D2' }, { id: 'private', name: 'Private', color: '#0B8043', visible: false }];
 
-  it('shows events whose calendar does not exist, and hides those of a hidden calendar', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('rejects events without a calendarId or with an unknown one, and reports them', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {});
     const calendarApp = createCalendar({
       views: [createViewMonth()],
-      calendars: [{ id: 'work', name: 'Work', color: '#1967D2' }, { id: 'private', name: 'Private', color: '#0B8043', visible: false }],
+      calendars,
       events: [event('a', 'work'), event('b', 'private'), event('c', 'missing'), event('d', undefined)]
     });
 
-    expect(calendarApp.visibleEvents.value.map(e => e.id)).toEqual(['a', 'c', 'd']);
+    expect(calendarApp.eventsService.getAll().map(e => e.id)).toEqual(['a', 'b']);
+    expect(error).toHaveBeenCalledTimes(2);
+    expect(error.mock.calls[0][0]).toContain('"c" (c) was rejected: its calendarId "missing" does not match any calendar');
+    expect(error.mock.calls[1][0]).toContain('"d" (d) was rejected: it has no calendarId');
+  });
+
+  it('rejects them when added or updated later', () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const calendarApp = createCalendar({ views: [createViewMonth()], calendars, events: [event('a', 'work')] });
+
+    expect(calendarApp.eventsService.add(event('x', 'missing'))).toBeNull();
+    expect(calendarApp.eventsService.add(event('y', 'work'))).not.toBeNull();
+    expect(calendarApp.eventsService.update({ id: 'a', calendarId: 'missing' })).toBeNull();
+    expect(calendarApp.eventsService.get('a').calendarId).toBe('work');
+  });
+
+  it('shows only the events of visible calendars', () => {
+    const calendarApp = createCalendar({ views: [createViewMonth()], calendars, events: [event('a', 'work'), event('b', 'private')] });
+    expect(calendarApp.visibleEvents.value.map(e => e.id)).toEqual(['a']);
   });
 });

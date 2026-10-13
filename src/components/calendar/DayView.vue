@@ -37,7 +37,7 @@
             :class="{
               'ghost-event': event.isGhost,
               'is-dragging': isDraggingEvent(event.id),
-              'draggable': enableDragAndDrop && !event.isGhost && !event.recurringEventId
+              'draggable': enableDragAndDrop && !event.isGhost
             }"
             :style="{
               ...getEventStyle(event, pixelsPerHour, isMobile),
@@ -165,8 +165,7 @@ const ignoreNextClick = ref(false);
 const activeDragCleanup = ref(null);
 
 const handleEventMouseDown = (event, mouseEvent) => {
-  // Repeating events are changed from the edit dialog, as a whole series
-  if (!props.enableDragAndDrop || event.isGhost || event.recurringEventId) return;
+  if (!props.enableDragAndDrop || event.isGhost) return;
 
   dragStartPos.value = { x: mouseEvent.clientX, y: mouseEvent.clientY };
   ignoreNextClick.value = false;

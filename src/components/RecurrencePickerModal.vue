@@ -27,8 +27,8 @@
             </div>
             <div v-if="frequency === 'MONTHLY'" class="mb-4">
               <v-radio-group v-model="monthlyType">
-                <v-radio :label="t('repeatMonthlyByDay')" value="bymonthday"></v-radio>
-                <v-radio :label="t('repeatMonthlyByWeekday')" value="byweekday"></v-radio>
+                <v-radio :label="monthlyByDayLabel" value="bymonthday"></v-radio>
+                <v-radio :label="monthlyByWeekdayLabel" value="byweekday"></v-radio>
               </v-radio-group>
             </div>
             <v-divider class="my-4"></v-divider>
@@ -93,8 +93,8 @@
           </div>
           <div v-if="frequency === 'MONTHLY'" class="mb-4">
             <v-radio-group v-model="monthlyType">
-              <v-radio :label="t('repeatMonthlyByDay')" value="bymonthday"></v-radio>
-              <v-radio :label="t('repeatMonthlyByWeekday')" value="byweekday"></v-radio>
+              <v-radio :label="monthlyByDayLabel" value="bymonthday"></v-radio>
+              <v-radio :label="monthlyByWeekdayLabel" value="byweekday"></v-radio>
             </v-radio-group>
           </div>
           <v-divider class="my-4"></v-divider>
@@ -150,7 +150,7 @@ export default {
   },
   emits: ['update:modelValue', 'save'],
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { mobile } = useDisplay();
 
     const frequency = ref('WEEKLY');
@@ -188,6 +188,22 @@ export default {
       return t('repeatEvery', { unit: freqMap[frequency.value] || '' });
     });
 
+    // "Monthly on day 15" and "Monthly on the third Wednesday", for the event's date
+    const eventDate = computed(() => {
+      try {
+        return props.startDate ? Temporal.PlainDate.from(props.startDate) : null;
+      } catch {
+        return null;
+      }
+    });
+    const monthlyByDayLabel = computed(() => t('repeatMonthlyByDay', { day: eventDate.value?.day ?? '' }));
+    const monthlyByWeekdayLabel = computed(() => {
+      const date = eventDate.value;
+      if (!date) return t('repeatMonthlyByWeekday', { nth: '', weekday: '' });
+      const nth = t(`ordinal${Math.ceil(date.day / 7)}`);
+      return t('repeatMonthlyByWeekday', { nth, weekday: date.toLocaleString(locale.value, { weekday: 'long' }) });
+    });
+
     const parseRRule = (rruleStr) => {
       Object.entries(getRuleParts(rruleStr)).forEach(([key, value]) => {
         switch (key) {
@@ -198,7 +214,12 @@ export default {
             interval.value = parseInt(value, 10);
             break;
           case 'BYDAY':
-            selectedWeekdays.value = value.split(',');
+            // '3WE' is a monthly "third Wednesday"; 'MO,WE' are weekly days
+            if (/^[+-]?\d/.test(value)) {
+              monthlyType.value = 'byweekday';
+            } else {
+              selectedWeekdays.value = value.split(',');
+            }
             break;
           case 'UNTIL': {
             endType.value = 'until';
@@ -218,7 +239,9 @@ export default {
     const resetToDefaults = () => {
       frequency.value = 'WEEKLY';
       interval.value = 1;
+      monthlyType.value = 'bymonthday';
       endType.value = 'never';
+      untilDate.value = '';
       count.value = 10;
       
       // Set current weekday if startDate available
@@ -235,13 +258,12 @@ export default {
       }
     };
 
-    // Parse RRULE when modal opens
-    watch(() => props.rrule, (newRRule) => {
-      if (newRRule && newRRule !== '') {
-        parseRRule(newRRule);
-      } else {
-        // Default to weekly on current day
-        resetToDefaults();
+    // Start from the event's rule each time the dialog opens; without one, weekly on the event's day
+    watch(() => [props.modelValue, props.rrule], ([isOpen]) => {
+      if (!isOpen) return;
+      resetToDefaults();
+      if (props.rrule) {
+        parseRRule(props.rrule);
       }
     }, { immediate: true });
 
@@ -311,6 +333,8 @@ export default {
       frequencyOptions,
       weekdayOptions,
       intervalLabel,
+      monthlyByDayLabel,
+      monthlyByWeekdayLabel,
       handleCancel,
       handleDone
     };

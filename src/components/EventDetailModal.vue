@@ -19,10 +19,10 @@
       <v-card-text class="px-6 py-4">
         <!-- Title with color indicator -->
         <div class="detail-row mb-4">
-          <div class="detail-row__icon text-h5">
+          <div class="detail-row__icon detail-title">
             <div class="color-dot" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
           </div>
-          <h2 class="text-h5 font-weight-regular">{{ event?.title }}</h2>
+          <h2 class="detail-title">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
@@ -71,10 +71,10 @@
       <v-card-text class="px-4 pt-4 pb-6">
         <!-- Title with color indicator -->
         <div class="detail-row mb-4">
-          <div class="detail-row__icon text-h6">
+          <div class="detail-row__icon detail-title">
             <div class="color-dot" :style="{ backgroundColor: event?.color }"></div>
           </div>
-          <h2 class="text-h6 font-weight-regular">{{ event?.title }}</h2>
+          <h2 class="detail-title">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
@@ -213,6 +213,15 @@ export default {
   align-items: center;
   flex-shrink: 0;
   height: 1lh;
+}
+
+/* The title and its colour dot share one font size and line height, so the dot is
+   centred on the title's first line */
+.detail-title {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 .color-dot {

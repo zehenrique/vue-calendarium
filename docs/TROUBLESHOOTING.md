@@ -2,7 +2,9 @@
 
 ## My events do not show up
 
-**Their calendar is hidden.** Events of a calendar with `visible: false`, or one hidden with `calendarsService.toggleVisibility()` or the mobile side menu, are not drawn. Events whose `calendarId` does not match any calendar are always shown.
+**They were rejected.** Every event needs a `calendarId` that matches a calendar you created. Events without one are not added, and the browser console shows an error such as `Event "Lunch" (12) was rejected: it has no calendarId`. Create the calendars first, and give every event its `calendarId`.
+
+**Their calendar is hidden.** Events of a calendar with `visible: false`, or one hidden with `calendarsService.toggleVisibility()` or the mobile side menu, are not drawn.
 
 **The event is on another date.** Check `start`, and that you are looking at the right month or week with `calendarApp.setDate()`.
 
@@ -60,7 +62,11 @@ The dialogs follow Vuetify's `mobile` flag, which is based on a Vuetify breakpoi
 
 ## Editing one repeating event changed all of them
 
-That is by design: editing an occurrence edits the whole series. To change a single occurrence, delete it from the series ("This event") and create a separate event. See [Recurring events](./RECURRING_EVENTS.md#editing-repeating-events).
+After saving, the calendar asks which events the change applies to. Choose **This event** to change only that occurrence. The option is not offered when you also changed the repeat rule, because a single event cannot repeat on its own. See [Recurring events](./RECURRING_EVENTS.md#changing-one-occurrence-or-many).
+
+## An event keeps repeating
+
+Open the event, choose **Edit**, click the repeat link next to **All day** and choose **Does not repeat**. For an occurrence of a series, saving then asks **This and following events** (the series stops before this occurrence) or **All events** (the series becomes a single event on its first date). See [Recurring events](./RECURRING_EVENTS.md#the-repeat-menu).
 
 ## Server-side rendering
 

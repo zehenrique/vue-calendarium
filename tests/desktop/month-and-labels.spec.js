@@ -36,14 +36,19 @@ test.describe('Month view "+N" button', () => {
 });
 
 test.describe('Event data', () => {
-  test('events whose calendar does not exist are shown', async ({ page }) => {
+  test('events without a valid calendarId are rejected with a console error', async ({ page }) => {
+    const errors = [];
+    page.on('console', message => message.type() === 'error' && errors.push(message.text()));
     await loadCalendar(page);
-    await page.evaluate(() => {
-      window.calendarApp.eventsService.add({ title: 'Unknown calendar', start: '2025-01-16T10:00:00', end: '2025-01-16T11:00:00', calendarId: 'missing' });
-      window.calendarApp.eventsService.add({ title: 'No calendar', start: '2025-01-16T12:00:00', end: '2025-01-16T13:00:00' });
-    });
-    await expect(page.locator('.event', { hasText: 'Unknown calendar' })).toBeVisible();
-    await expect(page.locator('.event', { hasText: 'No calendar' })).toBeVisible();
+    const results = await page.evaluate(() => [
+      window.calendarApp.eventsService.add({ title: 'Unknown calendar', start: '2025-01-16T10:00:00', end: '2025-01-16T11:00:00', calendarId: 'missing' }),
+      window.calendarApp.eventsService.add({ title: 'No calendar', start: '2025-01-16T12:00:00', end: '2025-01-16T13:00:00' })
+    ]);
+
+    expect(results).toEqual([null, null]);
+    await expect(page.locator('.event', { hasText: 'calendar' })).toHaveCount(0);
+    expect(errors.some(text => text.includes('"Unknown calendar"') && text.includes('does not match any calendar'))).toBe(true);
+    expect(errors.some(text => text.includes('"No calendar"') && text.includes('has no calendarId'))).toBe(true);
   });
 
   test('events of a hidden calendar are not shown', async ({ page }) => {
@@ -71,6 +76,20 @@ test.describe('Event data', () => {
       expect(await page.evaluate(() => window.calendarApp.eventsService.get('zulu').start)).toBe('2025-01-16T10:00:00');
       expect(errors).toEqual([]);
     });
+  });
+});
+
+test.describe('Event dialog title', () => {
+  test('says "New event" when creating and "Edit event" when editing', async ({ page }) => {
+    await loadCalendar(page);
+    await switchToView(page, 'Week');
+    await page.locator('.hour-slot').nth(10).click();
+    await expect(page.getByTestId('event-modal').getByRole('heading', { name: 'New event' })).toBeVisible();
+    await page.keyboard.press('Escape');
+
+    await page.locator('.week-event', { hasText: 'Team Meeting' }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await expect(page.getByTestId('event-modal').getByRole('heading', { name: 'Edit event' })).toBeVisible();
   });
 });
 

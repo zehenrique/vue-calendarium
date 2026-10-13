@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { addExceptionDate, expandRecurrence, getRuleParts, keepExceptionDates } from '../../src/core/recurrence.js';
+import { addExceptionDate, expandRecurrence, getRuleParts, hasOccurrenceAt, keepExceptionDates, moveRule } from '../../src/core/recurrence.js';
 
 const weekly = {
   id: 'standup',
@@ -112,5 +112,45 @@ describe('keepExceptionDates', () => {
 
   it('keeps "does not repeat" empty', () => {
     expect(keepExceptionDates('', 'RRULE:FREQ=WEEKLY\nEXDATE:20250122T100000Z')).toBe('');
+  });
+});
+
+describe('changed occurrences', () => {
+  const exception = { id: 'standup@2025-01-22T10:00:00', recurringEventId: 'standup', originalStart: '2025-01-22T10:00:00', start: '2025-01-23T15:00:00' };
+
+  it('replace their occurrence in the series', () => {
+    const occurrences = expandRecurrence(weekly, '2025-01-01T00:00:00', '2025-03-31T23:59:59', { exceptions: [exception] });
+    expect(starts(occurrences)).not.toContain('2025-01-22T10:00:00');
+    expect(occurrences).toHaveLength(5);
+  });
+
+  it('only replace occurrences of their own series', () => {
+    const other = { ...exception, recurringEventId: 'other' };
+    expect(expandRecurrence(weekly, '2025-01-01T00:00:00', '2025-03-31T23:59:59', { exceptions: [other] })).toHaveLength(6);
+  });
+
+  it('find the slot of an occurrence, deleted or not', () => {
+    const withDeleted = { ...weekly, rrule: addExceptionDate(weekly, '2025-01-22T10:00:00') };
+    expect(hasOccurrenceAt(withDeleted, '2025-01-22T10:00:00')).toBe(true);
+    expect(hasOccurrenceAt(weekly, '2025-01-23T10:00:00')).toBe(false);
+  });
+});
+
+describe('moveRule', () => {
+  it('moves the weekdays of a weekly rule', () => {
+    const rule = moveRule('FREQ=WEEKLY;BYDAY=MO,WE', '2025-01-15T10:00:00', '2025-01-16T10:00:00');
+    expect(getRuleParts(rule).BYDAY).toBe('TU,TH');
+  });
+
+  it('moves a monthly day of the month and an nth weekday', () => {
+    expect(getRuleParts(moveRule('FREQ=MONTHLY;BYMONTHDAY=15', '2025-01-15T10:00:00', '2025-01-17T10:00:00')).BYMONTHDAY).toBe('17');
+    // Second Wednesday, 8 January, to Thursday 16 January: the third Thursday
+    expect(getRuleParts(moveRule('FREQ=MONTHLY;BYDAY=2WE', '2025-01-08T10:00:00', '2025-01-16T10:00:00')).BYDAY).toBe('3TH');
+  });
+
+  it('only moves deleted occurrences when the time of day changes', () => {
+    const rule = moveRule('FREQ=WEEKLY;BYDAY=WE\nEXDATE:20250122T100000Z', '2025-01-15T10:00:00', '2025-01-15T14:00:00');
+    expect(getRuleParts(rule).BYDAY).toBe('WE');
+    expect(rule).toContain('EXDATE:20250122T140000Z');
   });
 });

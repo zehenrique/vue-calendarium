@@ -107,7 +107,7 @@ Callbacks:
 - `onEventUpdate(event)`
 - `onEventDelete(event)`
 - `onEventCreateRequest({ draft, context })` (used when `enableModals=false`)
-- `onEventDrop({ event, originalEvent, dropTarget })` (used when `enableDragAndDrop=true`)
+- `onEventDrop({ event, originalEvent, dropTarget, scope })` (used when `enableDragAndDrop=true`; `scope` is set for repeating events)
 
 ### Returned `calendarApp`
 
@@ -142,14 +142,14 @@ Common fields:
 - `start: string` (wall-clock date-time, `'2026-03-14T10:00:00'`; values with `Z` or an offset are converted to the viewer's time zone)
 - `end: string | null` (same format)
 - `allDay: boolean`
-- `calendarId: string`
+- `calendarId: string` (required: the id of an existing calendar)
 - `color: string`
 - `rrule: string`
 - `description: string`
 - `location: string`
 - `custom: Record<string, unknown>`
 
-Occurrences of a repeating event, as passed to `onEventClick`, also have `recurringEventId` (the series' id), and their `id` is `'<series id>@<start>'`. See [Recurring events](./RECURRING_EVENTS.md#how-occurrences-are-shown).
+- `recurringEventId: string | null` and `originalStart: string | null`: set on an instance of a repeating event, meaning an occurrence generated from the rule (with the id `'<series id>@<start>'`) or a changed occurrence: a stored event that takes the place of one occurrence and keeps its id. See [Recurring events](./RECURRING_EVENTS.md#changed-occurrences).
 
 ### `CalendarModel`
 
@@ -168,6 +168,8 @@ Common fields:
 
 - `getAll()`, `get(id)`, `add(event)`, `update(event)`, `remove(id)`, `set(events)`
 - `getByCalendar(calendarId)`, `getByDateRange(start, end)`, `getRef()`
+
+Events without a valid `calendarId` are rejected with a console error: `add()` and `update()` return `null`, and `set()` leaves them out.
 
 ### `CalendarsService`
 

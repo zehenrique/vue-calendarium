@@ -12,7 +12,7 @@ Users create an event by clicking the grid. What is prefilled depends on where t
 | The all-day row (week or day view) | An all-day event on that date |
 | A day (month view) | 09:00 to 10:00 on that date |
 
-The create dialog has a title, a date, start and end times, an **All day** checkbox, a repeat link ([Recurring events](./RECURRING_EVENTS.md)) and a calendar dropdown. The end time list only offers times after the start time, so an event made in the dialog ends on the day it starts. Choosing a calendar sets the event's colour to that calendar's colour.
+The create dialog, titled **New event** (**Edit event** when editing), has a title, a date, start and end times, an **All day** checkbox, a repeat menu ([Recurring events](./RECURRING_EVENTS.md#the-repeat-menu)) and a calendar dropdown. The end time list only offers times after the start time, so an event made in the dialog ends on the day it starts. Choosing a calendar sets the event's colour to that calendar's colour.
 
 While the dialog is open, a semi-transparent preview of the new event is drawn on the grid, so users see where it will land. This is a [ghost event](./GHOST_EVENTS.md).
 
@@ -22,7 +22,7 @@ Saving needs a title: the **Save** button stays disabled until one is entered.
 
 Clicking an event opens a details dialog with its title, colour, date and time, a description of its repeat rule, and the calendar name. From there users can **edit** it (the same dialog as for creating), **delete** it, or close the dialog.
 
-Deleting always asks for confirmation. For a repeating event the confirmation asks whether to delete **this event** or **all events in the series**. See [Recurring events](./RECURRING_EVENTS.md#deleting-repeating-events).
+Deleting always asks for confirmation. For a repeating event, editing, deleting and dragging ask whether the change applies to **this event**, **this and following events** or **all events**. See [Recurring events](./RECURRING_EVENTS.md#changing-one-occurrence-or-many).
 
 On a phone, the create, details and delete dialogs open as bottom sheets. See [Mobile layout](./MOBILE.md#dialogs-and-bottom-sheets).
 
@@ -35,7 +35,7 @@ On a phone, the create, details and delete dialogs open as bottom sheets. See [M
   start:       string,            // '2026-03-14T10:00:00'
   end:         string,            // '2026-03-14T11:00:00'
   allDay:      boolean,
-  calendarId:  string,
+  calendarId:  string,            // required: the id of an existing calendar
   color:       string,            // hex colour, overrides the calendar's colour
   rrule:       string,            // repeat rule, see Recurring events
   description: string,
@@ -66,7 +66,9 @@ const calendarApp = createCalendar({
 calendarApp.calendarsService.toggleVisibility('personal');   // show it
 ```
 
-Events whose calendar is hidden are not drawn in any view. An event whose `calendarId` does not match any calendar, or that has none, is always shown, in its own `color`. On mobile, the sidebar lists every calendar with a checkbox, and it calls `toggleVisibility` for you.
+Every event must belong to a calendar: `calendarId` is required and must be the id of a calendar you created. An event without one, or with an unknown one, is rejected: `eventsService.add()` returns `null`, `set()` and the initial `events` leave it out, and a console error names the event. Create the calendars before the events.
+
+Events whose calendar is hidden are not drawn in any view. On mobile, the sidebar lists every calendar with a checkbox, and it calls `toggleVisibility` for you.
 
 ## Callbacks
 
@@ -94,9 +96,9 @@ The calendar updates its own state first and then calls your callback, so you do
 
 `onEventClick` is also called when the built-in dialogs are enabled, so you can track clicks while the calendar shows its own details dialog. For an occurrence of a repeating event it receives the occurrence, with `recurringEventId` set to the series' id. See [Recurring events](./RECURRING_EVENTS.md#how-occurrences-are-shown).
 
-### Deleting one occurrence
+### Repeating events
 
-Deleting a single occurrence of a repeating event does not call `onEventDelete`, because the series still exists. The calendar adds an exception date (`EXDATE`) to the series' `rrule` and calls `onEventUpdate` with the updated series. Store that event as you would any other update. See [Recurring events](./RECURRING_EVENTS.md#deleting-repeating-events).
+Changing part of a repeating event can change several stored events at once, for example ending a series and starting a new one. Each is reported with its own callback, so `onEventUpdate`, `onEventCreate` and `onEventDelete` together keep your data in step. Deleting one occurrence, for instance, calls `onEventUpdate` with the series, which gains an `EXDATE`. See [Recurring events](./RECURRING_EVENTS.md#callbacks).
 
 ## Using your own dialogs
 

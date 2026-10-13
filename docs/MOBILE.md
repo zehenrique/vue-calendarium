@@ -45,7 +45,7 @@ const calendarApp = createCalendar({
 
 ## Dialogs and bottom sheets
 
-The create, details, delete and repeat dialogs open as **bottom sheets** that slide up from the bottom, instead of centred dialogs.
+The create, details, delete and repeat dialogs open as **bottom sheets** that slide up from the bottom, instead of centred dialogs. The create sheet has the same fields as the desktop dialog, with **Cancel**, the title and **Save** at the top. As on desktop, **All day** and the repeat link share a row, and the repeat link moves to its own line when the chosen rule is too long to fit.
 
 Dialogs use Vuetify's own `mobile` flag, which is based on a Vuetify breakpoint and **not** on the 768px window width above. In Vuetify 4 the sheets appear in windows narrower than 1145px by default (1280px with the Vuetify 3 breakpoints, see [Upgrading](./UPGRADING.md#4-check-your-vuetify-breakpoints)). So on a small laptop window, you can get the desktop calendar layout with bottom sheets.
 

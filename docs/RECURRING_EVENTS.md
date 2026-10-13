@@ -8,6 +8,7 @@ calendarApp.eventsService.add({
   title: 'Weekly Standup',
   start: '2026-01-05T09:00:00',
   end:   '2026-01-05T09:15:00',
+  calendarId: 'work',
   rrule: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR'
 });
 ```
@@ -35,58 +36,119 @@ rrule: 'RRULE:FREQ=WEEKLY\nEXDATE:20260112T090000Z,20260119T090000Z'
 
 Times in a rule (`UNTIL`, `EXDATE`) are the same wall-clock times as the event's: `T090000Z` means 09:00 on the calendar, whatever the viewer's time zone. The series always starts at the event's `start`, so a `DTSTART` line in the rule is ignored.
 
-## The repeat picker
+## The repeat menu
 
-In the create and edit dialogs, the repeat link under the time ("Does not repeat") opens the **Custom...** dialog, where users choose:
+In the create and edit dialogs, the repeat link next to **All day** ("Does not repeat") opens a menu, as in Google Calendar. Its choices follow the event's date; for Wednesday 15 January:
+
+| Choice | Rule |
+| --- | --- |
+| Does not repeat | `''` |
+| Daily | `FREQ=DAILY` |
+| Weekly on Wednesday | `FREQ=WEEKLY;BYDAY=WE` |
+| Monthly on the third Wednesday | `FREQ=MONTHLY;BYDAY=3WE` |
+| Annually on January 15 | `FREQ=YEARLY` |
+| Every weekday (Monday to Friday) | `FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR` |
+| Custom... | Opens the custom repeat dialog |
+
+- **Does not repeat** removes the rule. On an occurrence of a series, saving then asks **This and following events** or **All events**, and the event stops repeating from there.
+- When the date changes, a choice from the menu follows it: "Weekly on Wednesday" becomes "Weekly on Thursday".
+- A rule the menu does not list, such as one set in code or with the custom dialog, is shown at the top of the menu with its description, for example "Every 2 weeks, 6 times".
+
+The **Custom...** dialog lets users choose:
 
 - **Repeat frequency:** daily, weekly, monthly or yearly.
 - **Repeat every:** the interval, for example every 2 weeks.
 - **Repeat on** (weekly): the days of the week.
-- **Monthly on** (monthly): either the same day of the month, or the same weekday of the month, such as the second Tuesday. Both are based on the event's start date.
+- **Monthly on** (monthly): either the same day of the month ("Monthly on day 15"), or the same weekday of the month ("Monthly on the third Wednesday"). Both are based on the event's start date.
 - **Ends:** never, on a date (that day included), or after a number of occurrences.
 
-The link shows "Daily", "Weekly", "Monthly" or "Yearly" for the plain rules, and "Custom" for anything else. The event details dialog describes the rule in the calendar's language, for example "Weekly on Monday, Wednesday" or "Semanalmente, 6 vezes".
+The event details dialog describes the rule in the calendar's language, for example "Weekly on Monday, Wednesday" or "Semanalmente, 6 vezes".
 
-The dialog covers the common cases. Rules it cannot build, such as `BYSETPOS`, still work when you set them in code. Changing the rule in the dialog keeps the occurrences that were deleted from the series.
+The dialog covers the common cases. Rules it cannot build, such as `BYSETPOS`, still work when you set them in code. Changing the rule in the menu or the dialog keeps the occurrences that were deleted from the series.
 
 ## How occurrences are shown
 
 The calendar expands each rule for the dates on screen only, so rules without an end are fine: nothing is created in advance.
 
-Each occurrence is a copy of the event with its own `start` and `end`, and two extra fields:
+Each occurrence is a copy of the event with its own `start` and `end`, and these fields:
 
 - `id`: `'<series id>@<start>'`, for example `'standup@2026-01-12T09:00:00'`.
 - `recurringEventId`: the id of the series.
+- `originalStart`: the occurrence's start in the series.
 
-This is what `onEventClick` receives when a user clicks an occurrence. Use `recurringEventId` to find the series in your data. Occurrences are not stored, so store the series, with its `rrule`.
+This is what `onEventClick` receives when a user clicks an occurrence. Occurrences are not stored, so store the series, with its `rrule`.
 
-## Editing repeating events
+## Changing one occurrence or many
 
-Editing an occurrence edits the **whole series**. The edit dialog opens with the series' first occurrence, whichever occurrence the user clicked, so changes to the title, time, calendar or rule apply to every occurrence and the series keeps its start date. Saving calls `onEventUpdate` with the series.
+Editing, dragging or deleting an occurrence asks which events the change applies to, as in Google Calendar:
 
-Single occurrences cannot be changed on their own. To move one occurrence, delete it from the series and create a separate event.
+| Choice | Edit or drag | Delete |
+| --- | --- | --- |
+| **This event** | Only this occurrence changes. It is stored as a changed occurrence that takes its place, and the series stays as it is. | Only this occurrence is removed: the series leaves it out (`EXDATE`). |
+| **This and following events** | The series ends before this occurrence (`UNTIL`), and a new series with the changes starts at it. | The series ends before this occurrence. |
+| **All events** | The whole series changes. A new time applies to every occurrence: moving Wednesday 10:00 to 14:00 moves them all to 14:00, and moving it to Thursday makes the series repeat on Thursdays. | The series and its changed occurrences are removed. |
 
-## Deleting repeating events
+- The edit dialog opens on the occurrence the user clicked, with its own date and the series' repeat rule. The choice appears after **Save**.
+- After a drag and drop, the choice appears when the event is dropped. **Cancel** leaves the event where it was.
+- When the edit changes the repeat rule itself, **This event** is not offered, because a single event cannot repeat differently from its series.
+- "This and following events" on the first occurrence is the same as "All events".
+- Moving a series to another day also moves the days it repeats on (`BYDAY`, `BYMONTHDAY`), its end date (`UNTIL`) and its deleted occurrences (`EXDATE`).
 
-Deleting a repeating event asks what to delete:
+### Changed occurrences
 
-- **This event** adds the occurrence to the series' `EXDATE` list and calls `onEventUpdate` with the updated series. Store the new `rrule`.
-- **All events in the series** removes the series and calls `onEventDelete` with it.
+"This event" stores a changed occurrence: an event without an `rrule`, with the occurrence's id and two fields that link it to its series:
+
+- `recurringEventId`: the series' id.
+- `originalStart`: the start the occurrence has in the series. It does not change when the occurrence is moved.
 
 ```js
-onEventUpdate: (event) => {
-  // event.rrule now has an EXDATE line when one occurrence was deleted
-  api.saveEvent(event);
+{
+  id: 'standup@2026-01-14T09:00:00',   // the occurrence's id
+  title: 'Standup with the design team',
+  start: '2026-01-15T11:00:00',        // moved to Thursday 11:00
+  end:   '2026-01-15T11:15:00',
+  calendarId: 'work',
+  rrule: '',
+  recurringEventId: 'standup',
+  originalStart: '2026-01-14T09:00:00'
 }
 ```
 
-Both work for any series id, including the generated UUIDs.
+The calendar shows it instead of the series' occurrence at `originalStart`, so the series itself does not change. This is how Google Calendar stores changed occurrences, and how iCalendar writes them (a `VEVENT` with the series' `UID` and a `RECURRENCE-ID`).
 
-## Drag and drop
+A changed occurrence is still part of its series, so editing, dragging or deleting it asks the same question:
 
-Occurrences of a repeating event cannot be dragged. Change a series' time in the edit dialog. See [Drag and drop](./DRAG_AND_DROP.md).
+- **This event** changes it, or deletes it (and the series leaves its date out).
+- **This and following events** and **All events** change the series from it, as from any other occurrence.
+
+When the series changes, its changed occurrences follow, as in Google Calendar:
+
+- The fields that the edit changed (title, calendar, color and so on) are copied to them. The fields they changed themselves and the edit did not touch stay as they are.
+- A changed occurrence that was moved keeps its own time. One that was not moved takes the series' new time.
+- "This and following events" moves the changed occurrences from that date on to the new series.
+- A changed occurrence that no longer differs from the series becomes an ordinary occurrence again, and is removed.
+- When the repeat rule changes, changed occurrences whose date the new rule no longer has are removed.
+
+### Callbacks
+
+Each choice is reported with the usual callbacks, one call per stored event that changes:
+
+| | `onEventUpdate` | `onEventCreate` | `onEventDelete` |
+| --- | --- | --- | --- |
+| Edit, this event | The changed occurrence, if it already existed | The changed occurrence, the first time | |
+| Edit, this and following | The series (new `UNTIL`) and its changed occurrences from then on | The new series | Changed occurrences that are removed |
+| Edit, all events | The series and its changed occurrences | | Changed occurrences that are removed |
+| Delete, this event | The series (new `EXDATE`) | | The changed occurrence, if it was one |
+| Delete, this and following | The series (new `UNTIL`) | | Its changed occurrences from then on |
+| Delete, all events | | | The series and its changed occurrences |
+
+A drag and drop also calls `onEventDrop` with the user's choice in `scope` (`'this'`, `'following'` or `'all'`).
+
+## Without the built-in dialogs
+
+With `enableModals: false` the calendar cannot ask. Dropping an occurrence then changes nothing and only calls `onEventDrop({ event, originalEvent, dropTarget })`, so your app can ask and apply the change.
 
 ## Limitations
 
-- **No per-occurrence changes.** An occurrence can be deleted, but not edited or moved on its own.
-- **Deleted occurrences are tied to their time.** If you change the time of day of a series, occurrences deleted before the change come back, because their `EXDATE` times no longer match. Delete them again after changing the time.
+- **Time zone of rule times.** `UNTIL` and `EXDATE` are stored as wall-clock times with a `Z` suffix. Other calendar tools read that `Z` as UTC, so convert them if you hand rules to another tool yourself.
+- **Where a series ends.** "This and following events" ends the series one second before the chosen occurrence. Google Calendar ends it at the end of the previous day; for daily, weekly, monthly and yearly rules the result is the same.

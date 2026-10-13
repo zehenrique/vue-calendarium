@@ -76,8 +76,8 @@ export function createCalendar(config = {}) {
   }
 
   // Create services
-  const eventsService = createEventsService(events);
   const calendarsService = createCalendarsService(calendars);
+  const eventsService = createEventsService(events, { calendarExists: id => Boolean(calendarsService.get(id)) });
 
   // Reactive state
   const currentView = ref(defaultView);
@@ -99,11 +99,10 @@ export function createCalendar(config = {}) {
 
   // Computed properties
   const visibleEvents = computed(() => {
-    // Only events of a hidden calendar are left out; events whose calendar does not exist are shown
-    const hiddenCalendarIds = calendarsService.getAll().filter(c => !c.visible).map(c => c.id);
+    const visibleCalendarIds = calendarsService.getVisible().map(c => c.id);
     // Directly access the reactive ref array and map to objects
     const allEvents = eventsService._events.value.map(e => e.toObject());
-    return allEvents.filter(e => !hiddenCalendarIds.includes(e.calendarId));
+    return allEvents.filter(e => visibleCalendarIds.includes(e.calendarId));
   });
 
   // Methods

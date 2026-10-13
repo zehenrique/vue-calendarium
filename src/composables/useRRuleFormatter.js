@@ -16,15 +16,9 @@ const UNIT_KEYS = {
   YEARLY: 'years'
 };
 
-const WEEKDAY_KEYS = {
-  SU: 'sunday',
-  MO: 'monday',
-  TU: 'tuesday',
-  WE: 'wednesday',
-  TH: 'thursday',
-  FR: 'friday',
-  SA: 'saturday'
-};
+// A Monday, for naming the days of the week in the calendar's language
+const A_MONDAY = Temporal.PlainDate.from('2024-01-01');
+const WEEKDAY_OFFSETS = { MO: 0, TU: 1, WE: 2, TH: 3, FR: 4, SA: 5, SU: 6 };
 
 /**
  * Composable to format RRULE strings into human-readable text
@@ -50,9 +44,10 @@ export function useRRuleFormatter() {
       ? (FREQUENCY_KEYS[freq] ? t(FREQUENCY_KEYS[freq]) : freq)
       : t('repeatEveryCount', { count: interval, unit: UNIT_KEYS[freq] ? t(UNIT_KEYS[freq]) : freq.toLowerCase() });
 
-    // Weekdays of a weekly rule; BYDAY values like '2TU' (monthly) are left out
+    // Weekdays of a weekly rule, written out ("Monday, Wednesday"); BYDAY values like '2TU' (monthly) are left out
     if (freq === 'WEEKLY' && parts.BYDAY) {
-      const days = parts.BYDAY.split(',').map(day => (WEEKDAY_KEYS[day] ? t(WEEKDAY_KEYS[day]) : day)).join(', ');
+      const dayName = (day) => A_MONDAY.add({ days: WEEKDAY_OFFSETS[day] }).toLocaleString(locale.value, { weekday: 'long' });
+      const days = parts.BYDAY.split(',').map(day => (day in WEEKDAY_OFFSETS ? dayName(day) : day)).join(', ');
       description = t('repeatOnDays', { rule: description, days });
     }
 

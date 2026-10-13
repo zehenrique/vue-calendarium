@@ -10,8 +10,9 @@
         <div v-if="isRecurring" class="mb-4">
           <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
-            <v-radio :label="t('deleteThisEvent')" value="single"></v-radio>
-            <v-radio :label="t('deleteAllEvents')" value="all"></v-radio>
+            <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
+            <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
+            <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
         <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
@@ -39,8 +40,9 @@
         <div v-if="isRecurring" class="mb-4">
           <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
-            <v-radio :label="t('deleteThisEvent')" value="single"></v-radio>
-            <v-radio :label="t('deleteAllEvents')" value="all"></v-radio>
+            <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
+            <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
+            <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
         <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
@@ -79,7 +81,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const { mobile } = useDisplay();
-    const deleteOption = ref('single');
+    const deleteOption = ref('this');
 
     const isRecurring = ref(false);
 
@@ -88,7 +90,7 @@ export default {
       if (newEvent) {
         // Check if event has RRULE or if it's an occurrence of a recurring event
         isRecurring.value = !!(newEvent.rrule || newEvent.recurringEventId);
-        deleteOption.value = 'single'; // Default to single
+        deleteOption.value = 'this';
       } else {
         isRecurring.value = false;
       }
@@ -99,9 +101,8 @@ export default {
     };
 
     const handleConfirm = () => {
-      emit('confirm', {
-        deleteAll: isRecurring.value && deleteOption.value === 'all'
-      });
+      // Which events of a repeating series to delete: 'this', 'following' or 'all'
+      emit('confirm', { scope: isRecurring.value ? deleteOption.value : 'all' });
       emit('update:modelValue', false);
     };
 

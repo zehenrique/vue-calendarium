@@ -15,53 +15,266 @@ async function loadWeekView(page) {
   await expect(page.locator('.week-view')).toBeVisible();
 }
 
+const nextWeek = (page) => page.getByRole('button', { name: 'Next' }).first().click();
+const previousWeek = (page) => page.getByRole('button', { name: 'Previous' }).first().click();
+const eventsTitled = (page, title) => page.locator('.week-event').filter({ hasText: title });
+const scopeModal = (page) => page.getByTestId('recurrence-scope-modal');
+
 const standupEvents = (page) => page.evaluate(() =>
-  window.calendarApp.eventsService.getAll().filter(event => /Standup/.test(event.title))
+  window.calendarApp.eventsService.getAll().filter(event => /Standup|Moved Sync|Late Sync|Sync All/.test(event.title))
 );
 
-const standupInView = (page) => page.locator('.week-event').filter({ hasText: 'Standup' });
+// Open the occurrence of the current week, rename it and save; the scope dialog opens
+async function renameOccurrence(page, title) {
+  await eventsTitled(page, 'Standup').first().click();
+  await page.getByRole('button', { name: 'Edit', exact: true }).click();
+  await page.getByPlaceholder(/Event title/i).fill(title);
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(scopeModal(page)).toBeVisible();
+}
 
-test.describe('Recurring events', () => {
-  test('editing a later occurrence edits the series without moving or duplicating it', async ({ page }) => {
+async function chooseScope(page, label) {
+  await scopeModal(page).getByRole('radio', { name: label, exact: true }).check();
+  await scopeModal(page).getByRole('button', { name: 'OK' }).click();
+  await expect(scopeModal(page)).toBeHidden();
+}
+
+test.describe('Editing a repeating event', () => {
+  test('the dialog opens on the occurrence that was clicked', async ({ page }) => {
     await loadWeekView(page);
-    await page.getByRole('button', { name: 'Next' }).first().click();
-    await standupInView(page).first().click();
-    await page.getByRole('button', { name: 'Edit' }).click();
+    await nextWeek(page);
+    await eventsTitled(page, 'Standup').first().click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await expect(page.locator('[data-testid="event-modal"] .date-input input')).toHaveValue('22/01/2025');
+    await expect(page.getByTestId('event-modal').getByRole('heading', { name: 'Edit event' })).toBeVisible();
+  });
 
-    // The dialog shows the series, which starts on 15 January
-    await expect(page.locator('[data-testid="event-modal"] .date-input input')).toHaveValue('15/01/2025');
+  test('"This event" changes only that occurrence', async ({ page }) => {
+    await loadWeekView(page);
+    await nextWeek(page);
+    await renameOccurrence(page, 'Moved Sync');
+    await chooseScope(page, 'This event');
 
-    await page.getByPlaceholder(/Event title/i).fill('Daily Sync');
+    await expect(eventsTitled(page, 'Moved Sync')).toHaveCount(1);
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(0);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Weekly Standup')).toHaveCount(1);
+    await nextWeek(page);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Weekly Standup')).toHaveCount(1);
+
+    const events = await standupEvents(page);
+    const exception = events.find(event => event.title === 'Moved Sync');
+    // As in Google Calendar, the changed occurrence keeps the occurrence's id and replaces it; the series does not change
+    expect(exception).toMatchObject({ id: `${SERIES_ID}@2025-01-22T10:00:00`, recurringEventId: SERIES_ID, originalStart: '2025-01-22T10:00:00', rrule: '' });
+    expect(events.find(event => event.id === SERIES_ID).rrule).not.toContain('EXDATE');
+  });
+
+  test('"This and following events" changes the occurrence and the ones after it', async ({ page }) => {
+    await loadWeekView(page);
+    await nextWeek(page);
+    await nextWeek(page);
+    await renameOccurrence(page, 'Late Sync');
+    await chooseScope(page, 'This and following events');
+
+    await expect(eventsTitled(page, 'Late Sync')).toHaveCount(1);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Late Sync')).toHaveCount(1);
+    await previousWeek(page);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Weekly Standup')).toHaveCount(1);
+    expect(await standupEvents(page)).toHaveLength(2);
+  });
+
+  test('"All events" changes the whole series and keeps its start', async ({ page }) => {
+    await loadWeekView(page);
+    await nextWeek(page);
+    await renameOccurrence(page, 'Team Sync All');
+    await chooseScope(page, 'All events');
+
+    await expect(eventsTitled(page, 'Team Sync All')).toHaveCount(1);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Team Sync All')).toHaveCount(1);
+
+    const events = await standupEvents(page);
+    expect(events.filter(event => event.title === 'Team Sync All')).toEqual([
+      expect.objectContaining({ id: SERIES_ID, start: '2025-01-15T10:00:00' })
+    ]);
+  });
+
+  test('this and following, then this event, then this and following from that event', async ({ page }) => {
+    // Three full edits: allow more than the default 15s when the suite runs in parallel
+    test.slow();
+    await loadWeekView(page);
+    // Week of 29 January: "B" from there on
+    await nextWeek(page);
+    await nextWeek(page);
+    await renameOccurrence(page, 'B Sync');
+    await chooseScope(page, 'This and following events');
+
+    // Week of 5 February: only this one becomes "E"
+    await nextWeek(page);
+    await eventsTitled(page, 'B Sync').first().click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await page.getByPlaceholder(/Event title/i).fill('E Sync');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
-    await expect(page.getByTestId('event-modal')).toBeHidden();
+    await chooseScope(page, 'This event');
+    await expect(eventsTitled(page, 'E Sync')).toHaveCount(1);
 
-    const events = await page.evaluate(() => window.calendarApp.eventsService.getAll().filter(event => /Standup|Daily Sync/.test(event.title)));
-    expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({ id: SERIES_ID, title: 'Daily Sync', start: '2025-01-15T10:00:00' });
-    await expect(page.locator('.week-event').filter({ hasText: 'Daily Sync' })).toHaveCount(1);
+    // The same event, this and following: it and the later ones become "C"
+    await eventsTitled(page, 'E Sync').first().click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await page.getByPlaceholder(/Event title/i).fill('C Sync');
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await chooseScope(page, 'This and following events');
+
+    await expect(eventsTitled(page, 'C Sync')).toHaveCount(1);
+    await expect(eventsTitled(page, 'E Sync')).toHaveCount(0);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'C Sync')).toHaveCount(1);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'C Sync')).toHaveCount(1);
+    await previousWeek(page);
+    await previousWeek(page);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'B Sync')).toHaveCount(1);
   });
 
-  test('deleting one occurrence keeps the rest of the series', async ({ page }) => {
+  test('cancelling the choice changes nothing', async ({ page }) => {
     await loadWeekView(page);
-    await page.getByRole('button', { name: 'Next' }).first().click();
-    await standupInView(page).first().click();
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.getByRole('radio', { name: 'This event' }).check();
-    await page.getByRole('button', { name: 'Yes' }).click();
+    await renameOccurrence(page, 'Never saved');
+    await scopeModal(page).getByRole('button', { name: 'Cancel' }).click();
 
-    await expect(standupInView(page)).toHaveCount(0);
-    const [series] = await standupEvents(page);
-    expect(series.rrule).toContain('EXDATE:20250122T100000Z');
-
-    // The occurrences before and after are still there
-    await page.getByRole('button', { name: 'Previous' }).first().click();
-    await expect(standupInView(page)).toHaveCount(1);
-    await page.getByRole('button', { name: 'Next' }).first().click();
-    await page.getByRole('button', { name: 'Next' }).first().click();
-    await expect(standupInView(page)).toHaveCount(1);
+    await expect(eventsTitled(page, 'Weekly Standup')).toHaveCount(1);
+    expect((await standupEvents(page)).map(event => event.title)).toEqual(['Weekly Standup (Recurring)']);
   });
 
-  test('deleting one occurrence works when the series id contains hyphens', async ({ page }) => {
+  test('changing the repeat rule does not offer "This event"', async ({ page }) => {
+    await loadWeekView(page);
+    await eventsTitled(page, 'Standup').first().click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
+    await page.getByTestId('repeat-select').click();
+    await page.getByTestId('repeat-menu').getByText('Daily', { exact: true }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+
+    await expect(scopeModal(page)).toBeVisible();
+    await expect(scopeModal(page).getByRole('radio')).toHaveCount(2);
+    await expect(scopeModal(page).getByRole('radio', { name: 'This event', exact: true })).toHaveCount(0);
+  });
+});
+
+test.describe('Dragging a repeating event', () => {
+  async function dragStandupDownTwoHours(page) {
+    const occurrence = eventsTitled(page, 'Standup').first();
+    const box = await occurrence.boundingBox();
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.waitForTimeout(600);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 108, { steps: 10 });
+    await page.waitForTimeout(100);
+    await page.mouse.up();
+  }
+
+  test('asks first, then moves only that occurrence', async ({ page }) => {
+    await loadWeekView(page);
+    await dragStandupDownTwoHours(page);
+    await expect(scopeModal(page)).toBeVisible();
+    await chooseScope(page, 'This event');
+
+    const events = await standupEvents(page);
+    const moved = events.find(event => event.recurringEventId === SERIES_ID);
+    expect(moved).toMatchObject({ start: '2025-01-15T12:00:00', end: '2025-01-15T12:30:00', originalStart: '2025-01-15T10:00:00' });
+
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveAttribute('aria-label', /10:00 – 10:30/);
+  });
+
+  test('"All events" moves the whole series', async ({ page }) => {
+    await loadWeekView(page);
+    await dragStandupDownTwoHours(page);
+    await chooseScope(page, 'All events');
+
+    const [series] = await standupEvents(page);
+    expect(series).toMatchObject({ id: SERIES_ID, start: '2025-01-15T12:00:00', end: '2025-01-15T12:30:00' });
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveAttribute('aria-label', /12:00 – 12:30/);
+  });
+
+  test('a moved occurrence keeps its time when the series changes, and takes the changes', async ({ page }) => {
+    test.slow();
+    await loadWeekView(page);
+    await dragStandupDownTwoHours(page);
+    await chooseScope(page, 'This event');
+
+    // Rename the series from next week's occurrence
+    await nextWeek(page);
+    await renameOccurrence(page, 'Sync All');
+    await chooseScope(page, 'All events');
+
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Sync All')).toHaveAttribute('aria-label', /12:00 – 12:30/);
+    const moved = (await standupEvents(page)).find(event => event.recurringEventId === SERIES_ID);
+    expect(moved).toMatchObject({ title: 'Sync All', start: '2025-01-15T12:00:00', originalStart: '2025-01-15T10:00:00' });
+  });
+
+  test('cancelling leaves the event where it was', async ({ page }) => {
+    await loadWeekView(page);
+    await dragStandupDownTwoHours(page);
+    await scopeModal(page).getByRole('button', { name: 'Cancel' }).click();
+
+    const [series] = await standupEvents(page);
+    expect(series.start).toBe('2025-01-15T10:00:00');
+    await expect(eventsTitled(page, 'Standup')).toHaveAttribute('aria-label', /10:00 – 10:30/);
+  });
+});
+
+test.describe('Deleting a repeating event', () => {
+  async function deleteOccurrence(page, occurrence, label) {
+    await occurrence.click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
+    await page.getByRole('radio', { name: label, exact: true }).check();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
+  }
+
+  test('"This event" keeps the rest of the series', async ({ page }) => {
+    await loadWeekView(page);
+    await nextWeek(page);
+    await deleteOccurrence(page, eventsTitled(page, 'Standup').first(), 'This event');
+
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(0);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(1);
+    await nextWeek(page);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(1);
+  });
+
+  test('"This and following events" ends the series', async ({ page }) => {
+    await loadWeekView(page);
+    await nextWeek(page);
+    await deleteOccurrence(page, eventsTitled(page, 'Standup').first(), 'This and following events');
+
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(0);
+    await nextWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(0);
+    await previousWeek(page);
+    await previousWeek(page);
+    await expect(eventsTitled(page, 'Standup')).toHaveCount(1);
+  });
+
+  test('"All events" removes the series and reports it', async ({ page }) => {
+    await loadWeekView(page);
+    await page.evaluate(() => {
+      window.__deleted = [];
+      window.calendarApp.callbacks.onEventDelete = (event) => window.__deleted.push(event.id);
+    });
+    await deleteOccurrence(page, eventsTitled(page, 'Standup').first(), 'All events');
+
+    expect(await standupEvents(page)).toHaveLength(0);
+    expect(await page.evaluate(() => window.__deleted)).toEqual([SERIES_ID]);
+  });
+
+  test('works when the series id contains hyphens', async ({ page }) => {
     await loadWeekView(page);
     await page.evaluate(() => window.calendarApp.eventsService.add({
       title: 'Hyphen Series',
@@ -70,48 +283,10 @@ test.describe('Recurring events', () => {
       calendarId: 'work',
       rrule: 'FREQ=DAILY;COUNT=5'
     }));
-    const seriesId = await page.evaluate(() => window.calendarApp.eventsService.getAll().find(event => event.title === 'Hyphen Series').id);
-    expect(seriesId).toContain('-');
-
-    const occurrences = page.locator('.week-event').filter({ hasText: 'Hyphen Series' });
+    const occurrences = eventsTitled(page, 'Hyphen Series');
     await expect(occurrences).toHaveCount(5);
-    await occurrences.nth(2).click();
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.getByRole('radio', { name: 'This event' }).check();
-    await page.getByRole('button', { name: 'Yes' }).click();
-
+    await deleteOccurrence(page, occurrences.nth(2), 'This event');
     await expect(occurrences).toHaveCount(4);
-  });
-
-  test('deleting all events removes the series and reports it', async ({ page }) => {
-    await loadWeekView(page);
-    await page.evaluate(() => {
-      window.__deleted = [];
-      window.calendarApp.callbacks.onEventDelete = (event) => window.__deleted.push(event.id);
-    });
-    await standupInView(page).first().click();
-    await page.getByRole('button', { name: 'Delete' }).click();
-    await page.getByRole('radio', { name: 'All events in the series' }).check();
-    await page.getByRole('button', { name: 'Yes' }).click();
-
-    expect(await standupEvents(page)).toHaveLength(0);
-    expect(await page.evaluate(() => window.__deleted)).toEqual([SERIES_ID]);
-  });
-
-  test('occurrences cannot be dragged', async ({ page }) => {
-    await loadWeekView(page);
-    const occurrence = standupInView(page).first();
-    await expect(occurrence).not.toHaveClass(/draggable/);
-
-    const box = await occurrence.boundingBox();
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.down();
-    await page.waitForTimeout(600);
-    await page.mouse.move(box.x + box.width / 2, box.y + 150, { steps: 5 });
-    await page.mouse.up();
-
-    const [series] = await standupEvents(page);
-    expect(series.start).toBe('2025-01-15T10:00:00');
   });
 });
 
@@ -122,9 +297,7 @@ test.describe('Recurring events in other time zones', () => {
 
       test('occurrences keep their time of day', async ({ page }) => {
         await loadWeekView(page);
-        const occurrence = standupInView(page).first();
-        await expect(occurrence).toBeVisible();
-        await expect(occurrence).toHaveAttribute('aria-label', /10:00 – 10:30/);
+        await expect(eventsTitled(page, 'Standup').first()).toHaveAttribute('aria-label', /10:00 – 10:30/);
       });
     });
   }

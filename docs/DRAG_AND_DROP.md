@@ -28,7 +28,7 @@ If you move the pointer more than a few pixels before the half second has passed
 - The new start time is the **start of the hour** you dropped it on, so events snap to full hours (15:00, not 15:20). The original minutes are not kept.
 - The date changes when you drop on another day's column in the week view.
 - Dropping outside the time grid changes nothing. There is no key to cancel a drag, so to cancel it, drop the event outside the grid.
-- The calendar updates the event itself, then calls `onEventUpdate` with the updated event and `onEventDrop` with the details.
+- The calendar updates the event itself, then calls `onEventUpdate` with the updated event and `onEventDrop` with the details. For a repeating event it first asks which events to move, and reports each stored change as described in [Recurring events](./RECURRING_EVENTS.md#callbacks).
 
 ## `onEventDrop`
 
@@ -41,6 +41,7 @@ onEventDrop: ({ event, originalEvent, dropTarget }) => { /* ... */ }
 | `event` | object | The event after the move, with its new `start` and `end` |
 | `originalEvent` | object | The event before the move |
 | `dropTarget` | `{ date, hour }` | The slot it was dropped on: a `Temporal.PlainDate` and an hour from 0 to 23 |
+| `scope` | `'this'`, `'following'` or `'all'` | For an occurrence of a repeating event, the user's choice. Not set for other events. |
 
 Use `onEventUpdate` if you only need to save the result. Use `onEventDrop` when you also need to know where it came from, for example to show an "Undo" message.
 
@@ -48,7 +49,7 @@ Use `onEventUpdate` if you only need to save the result. Use `onEventDrop` when 
 
 - **Week and day views.** Events in the month view and in the all-day row cannot be dragged.
 - **Mouse only.** Dragging needs a mouse (or a pen that acts as one). On touch screens a finger drag swipes between periods instead. See [Touch gestures](./GESTURES.md).
-- **Not for repeating events.** Occurrences of a repeating event cannot be dragged. A press and hold on one does nothing, and a click opens its details as usual. Change a series' time in the edit dialog. See [Recurring events](./RECURRING_EVENTS.md#editing-repeating-events).
+- **Repeating events.** Dropping an occurrence of a repeating event asks whether to move this event, this and the following events, or all events, before anything changes. **Cancel** leaves it where it was. `onEventDrop` then receives the choice in `scope`. See [Recurring events](./RECURRING_EVENTS.md#changing-one-occurrence-or-many).
 
 ## Styling
 
