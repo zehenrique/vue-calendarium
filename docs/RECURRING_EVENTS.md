@@ -36,6 +36,8 @@ rrule: 'RRULE:FREQ=WEEKLY\nEXDATE:20260112T090000Z,20260119T090000Z'
 
 Times in a rule (`UNTIL`, `EXDATE`) are the same wall-clock times as the event's: `T090000Z` means 09:00 on the calendar, whatever the viewer's time zone. The series always starts at the event's `start`, so a `DTSTART` line in the rule is ignored.
 
+Rules written by other tools are read the same way. When a rule has a `DTSTART` line with a time zone (`DTSTART;TZID=Europe/Lisbon:...`, or a UTC time `DTSTART:...Z` as the [rrule](https://github.com/jkbrzt/rrule) library writes it in the browser), its UTC times are exact moments: the calendar converts them to wall-clock times in that zone (the viewer's zone for a UTC `DTSTART`), so daylight saving time is taken into account. An end at midnight, or a date without a time, includes that whole day. For example, rrule.js saves "ends 6 August" in Lisbon as `UNTIL=20260805T230000Z` (local midnight, 23:00 UTC in summer); the calendar reads it as the end of 6 August and keeps the occurrence on that day. Rules the calendar writes back are plain, without `DTSTART`.
+
 ## The repeat menu
 
 In the create and edit dialogs, the repeat link next to **All day** ("Does not repeat") opens a menu, as in Google Calendar. Its choices follow the event's date; for Wednesday 15 January:
@@ -148,6 +150,56 @@ A drag and drop also calls `onEventDrop` with the user's choice in `scope` (`'th
 ## Without the built-in dialogs
 
 With `enableModals: false` the calendar cannot ask. Dropping an occurrence then changes nothing and only calls `onEventDrop({ event, originalEvent, dropTarget })`, so your app can ask and apply the change.
+
+## In your own UI
+
+The logic behind the built-in dialogs is exported as plain functions, with no Vue or Vuetify, so an app with its own dialogs (PrimeVue, Quasar, plain HTML) can use it:
+
+| Function | What it does |
+| --- | --- |
+| `ruleToForm(rrule, startDate)`, `formToRule(form, startDate)` | A rule as the fields of the custom repeat dialog (`frequency`, `interval`, `weekdays`, `monthlyType`, `endType`, `untilDate`, `count`) and back. With no rule, weekly on the event's weekday. |
+| `getRepeatOptions(startDate, { locale })` | The repeat menu's choices for a date: "Daily", "Weekly on Wednesday", "Monthly on the third Wednesday", "Annually on January 15", "Every weekday", with their rules. |
+| `getMonthlyOptions(startDate, { locale })` | "Monthly on day 15" and "Monthly on the third Wednesday", as `monthlyType` values. |
+| `describeRule(rrule, { locale })` | A rule in words: "Weekly on Monday, Wednesday", "Semanalmente (quarta-feira)". |
+| `planRecurringEdit(...)`, `planRecurringDelete(...)`, `changesRule(...)` | The "this event / this and following / all events" changes, as events to update, add and remove. They use this calendar's model: a series with a rule, and changed occurrences stored in its place. |
+| `expandRecurrence`, `getRuleParts`, `isSameRule`, `addExceptionDate`, `endRuleBefore`, `continueRuleFrom`, `moveRule`, ... | Rules and occurrences. See [the API reference](./API.md#repeating-events). |
+
+```js
+import { describeRule, formToRule, getRepeatOptions, ruleToForm } from 'vue-calendarium';
+
+// The repeat dropdown of your own event form
+const choices = getRepeatOptions('2026-01-14', { locale: 'pt-PT' });
+// [{ value: 'FREQ=DAILY', title: 'Diariamente' }, { value: 'FREQ=WEEKLY;BYDAY=WE', title: 'Semanalmente (quarta-feira)' }, ...]
+
+// Your own custom repeat dialog
+const form = ruleToForm(event.rrule, '2026-01-14'); // fill its fields
+form.interval = 2;
+form.weekdays = ['MO', 'WE'];
+const rrule = formToRule(form, '2026-01-14');        // 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE'
+
+describeRule(rrule, { locale: 'pt-PT' });            // 'A cada 2 semanas (segunda-feira, quarta-feira)'
+```
+
+### The repeat components
+
+For an app with its own **Vuetify** event dialog (`enableModals: false`), the calendar's repeat controls are exported too:
+
+| Component | Props and events |
+| --- | --- |
+| `RepeatSelect` | The repeat link and menu ("Does not repeat", "Weekly on Wednesday", ..., "Custom..."). `v-model`: the rule. `start-date`: `'YYYY-MM-DD'`. `link-class`: a class for the link, instead of its own style. |
+| `RecurrencePickerModal` | The **Custom recurrence** dialog (a bottom sheet on mobile). `v-model`: open. `rrule`, `start-date`. `@save(rrule)`. |
+| `RecurrenceScopeModal` | **This event / This and following events / All events**. `v-model`: open. `allow-this-event`. `@confirm(scope)`, `@cancel`. |
+
+```vue
+<RepeatSelect v-model="form.rrule" :start-date="form.startDate"/>
+<RecurrenceScopeModal v-model="askScope" :allow-this-event="!changesRule(series, form, occurrence)" @confirm="save"/>
+```
+
+They need Vuetify and the calendar's translations in your vue-i18n instance, as the calendar does. Outside the calendar they follow your app's Vuetify settings (button shapes, language) rather than the calendar's.
+
+The text functions use the calendar's translations. Pass vue-i18n's `t` as `{ t }` to use your app's own wording (see [Languages](./I18N.md#changing-the-wording)).
+
+The rules are plain RRULEs (`UNTIL` at the end of the chosen day, `Z` suffix, no `DTSTART`), so a server can expand them too. The events and rules are wall-clock times: see *Time zone of rule times* below.
 
 ## Limitations
 

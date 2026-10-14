@@ -40,7 +40,7 @@ On desktop, as in Google Calendar, a sidebar on the left has:
 - **A small month.** Choosing a day shows it in the calendar, in the current view. Its arrows change the small month without moving the calendar, and it follows the calendar when the calendar moves to another month. Today is shown in a filled circle and the selected date in a lighter one.
 - **The calendars**, each with a checkbox that shows or hides its events.
 
-The menu button in the header hides and shows it: the sidebar slides out to the left and the views take its room (without the animation when the device asks for reduced motion). The sidebar has the header's background (`--calendar-header-bg`), and its width is the `--calendar-sidebar-width` theme variable (256px); see [Styling](./STYLING.md).
+The menu button in the header hides and shows it: the sidebar slides out to the left and the views take its room (without the animation when the device asks for reduced motion). The sidebar has the header's background (`--calendar-header-bg`), and its width is the `--calendar-sidebar-width` theme variable (256px); see [Theme variables](./THEME_REFERENCE.md#sidebar).
 
 A calendar narrower than 1024px starts with the sidebar closed. To choose, or to open and close it from your app:
 
@@ -52,7 +52,14 @@ calendarApp.toggleSidebar();
 calendarApp.sidebarOpen.value; // true or false
 ```
 
-Set `enableDesktopSidebar: false` to remove the sidebar and its menu button.
+Set `enableDesktopSidebar: false` to remove the sidebar and its menu button. Its parts are exported for an app's own sidebar or layout:
+
+```vue
+<MiniMonth :selected-date="calendarApp.currentDate.value" :today="today" locale="pt-PT" @select="calendarApp.setDate"/>
+<CalendarVisibilityList :calendars="calendars" v-model:visible-calendars="visibleIds"/>
+```
+
+`MiniMonth` emits `select` with the chosen `Temporal.PlainDate`, and `CalendarVisibilityList` emits `update:visibleCalendars` with the ids of the calendars to show; apply them with `calendarApp.calendarsService.toggleVisibility(id)`.
 
 On mobile the same controls are in the slide-out sidebar. See [Mobile layout](./MOBILE.md).
 
@@ -72,7 +79,7 @@ On mobile the same controls are in the slide-out sidebar. See [Mobile layout](./
 - Clicking an hour slot opens the create dialog with a one-hour event starting at that hour.
 - Clicking in the all-day row creates an all-day event for that date.
 - Events are positioned by their start and end time. Overlapping events share the width of the column, as described below.
-- On mobile you can zoom the grid with a pinch. See [Touch gestures](./GESTURES.md#pinch-to-zoom).
+- On mobile you can zoom the grid with a pinch. See [Pinch to zoom](./MOBILE.md#pinch-to-zoom).
 
 ## Day view
 

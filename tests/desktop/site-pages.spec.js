@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import pkg from '../../package.json' with { type: 'json' };
 
 const majorVersion = pkg.version.split('.')[0];
-const DOC_PAGES = ['overview', 'usage', 'upgrade', 'views', 'events', 'recurring-events', 'drag-and-drop', 'mobile', 'gestures', 'languages', 'accessibility', 'troubleshooting', 'api', 'ghost-events', 'styling', 'theme-reference', 'theme-examples', 'colors', 'changelog', 'contributing', 'code-of-conduct'];
+const DOC_PAGES = ['overview', 'upgrade', 'views', 'events', 'recurring-events', 'drag-and-drop', 'mobile', 'theming', 'languages', 'accessibility', 'troubleshooting', 'api', 'theme-reference', 'changelog', 'contributing', 'code-of-conduct'];
 
 test.describe('Website pages', () => {
   test('demo page links to the documentation', async ({ page }) => {
@@ -39,7 +39,7 @@ test.describe('Website pages', () => {
 
     // Links to other documentation go to their website page; other repository files go to GitHub
     await expect(page.locator('.doc a', { hasText: 'upgrade guide' }).first()).toHaveAttribute('href', './docs.html?page=upgrade');
-    await expect(page.locator('.doc a', { hasText: 'docs/STYLING.md' })).toHaveAttribute('href', './docs.html?page=styling#vuetify-4');
+    await expect(page.locator('.doc a', { hasText: 'docs/THEMING.md' })).toHaveAttribute('href', './docs.html?page=theming#vuetify-4');
   });
 
   test('upgrade guide section links work', async ({ page }) => {

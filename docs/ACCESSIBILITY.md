@@ -16,7 +16,7 @@ This page describes what the calendar does for keyboard and screen reader users 
 - **Period changes are announced.** The title in the header ("January 2026") is a polite live region, so screen readers read it when the user moves to another month, week or day. It is also the page's `<h1>`.
 - **Reduced motion.** When the device asks for reduced motion, swiping changes the page without the slide animation.
 - **Languages.** All text and labels come from the translations. See [Languages](./I18N.md).
-- **Colour contrast.** The `highContrast` theme preset uses black borders and text on white. See [Styling](./STYLING.md).
+- **Colour contrast.** The `highContrast` theme preset uses black borders and text on white. See [Theming](./THEMING.md#presets).
 
 ```js
 import { THEME_PRESETS } from 'vue-calendarium';
@@ -38,7 +38,7 @@ Everything the calendar does is also available from code, so you can add control
 <v-btn @click="calendarApp.setView('month')">Month</v-btn>
 ```
 
-For a fully custom flow, turn off the built-in dialogs with `enableModals: false` and open your own form. See [Ghost events](./GHOST_EVENTS.md) for the pattern. To list events as text, read them from `calendarApp.eventsService.getAll()`.
+For a fully custom flow, turn off the built-in dialogs with `enableModals: false` and open your own form. See [Using your own dialogs](./EVENTS.md#using-your-own-dialogs) for the pattern. To list events as text, read them from `calendarApp.eventsService.getAll()`.
 
 ## Testing
 

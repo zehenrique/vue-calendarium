@@ -1,7 +1,7 @@
 # vue-calendarium - Makefile
 
 # Phony targets
-.PHONY: all install dev build preview test test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration lint format clean update open setup help
+.PHONY: all install dev build preview test test-package test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration lint format clean update open setup help
 
 # Variables
 NODE_VERSION := 20
@@ -30,6 +30,10 @@ preview: build
 # Run tests
 test: install
 	$(NPM) run test
+
+# Build the npm package and check it can be imported in plain Node (server-side rendering)
+test-package: install
+	$(NPM) run test:package
 
 # Run Playwright tests (headless)
 test-ui: install
@@ -100,6 +104,7 @@ help:
 	@echo "  build              - Build for production"
 	@echo "  preview            - Preview production build"
 	@echo "  test               - Run tests"
+	@echo "  test-package       - Build the package and check it imports in plain Node"
 	@echo "  test-ui            - Run Playwright UI tests (headless)"
 	@echo "  test-ui-headed     - Run Playwright UI tests (visible browser)"
 	@echo "  test-ui-debug      - Debug Playwright tests"

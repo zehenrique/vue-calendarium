@@ -1,6 +1,6 @@
 # Events and dialogs
 
-This page explains what users can do with events in the built-in interface and which callbacks tell your app about it. For the data format and the services, see the [API reference](./API.md). To replace the dialogs with your own, see [Ghost events](./GHOST_EVENTS.md).
+This page explains what users can do with events in the built-in interface and which callbacks tell your app about it. For the data format and the services, see the [API reference](./API.md). To replace the dialogs with your own, see [Using your own dialogs](#using-your-own-dialogs).
 
 ## Creating events
 
@@ -14,7 +14,7 @@ Users create an event by clicking the grid. What is prefilled depends on where t
 
 The create dialog, titled **New event** (**Edit event** when editing), has a title, a date, start and end times, an **All day** checkbox, a repeat menu ([Recurring events](./RECURRING_EVENTS.md#the-repeat-menu)) and a calendar dropdown. The end time list only offers times after the start time, so an event made in the dialog ends on the day it starts. Choosing a calendar sets the event's colour to that calendar's colour.
 
-While the dialog is open, a semi-transparent preview of the new event is drawn on the grid, so users see where it will land. This is a [ghost event](./GHOST_EVENTS.md).
+While the dialog is open, a semi-transparent preview of the new event is drawn on the grid, so users see where it will land. This is a [ghost event](./API.md#ghost-events).
 
 Saving needs a title: the **Save** button stays disabled until one is entered.
 
@@ -44,11 +44,11 @@ On a phone, the create, details and delete dialogs open as bottom sheets. See [M
 }
 ```
 
-Dates are wall-clock date-times without a time zone, so an event at `10:00` is shown at 10:00 for every user. A value with `Z` or an offset, such as `'2026-03-14T10:00:00Z'`, is an exact moment: the calendar converts it to the viewer's time zone when the event is added. Events without an `end` last one hour.
+Dates are wall-clock date-times without a time zone, so an event at `10:00` is shown at 10:00 for every user. A value with `Z` or an offset, such as `'2026-03-14T10:00:00Z'`, is an exact moment: the calendar converts it to the viewer's time zone when the event is added. Events without an `end` last one hour. To show such a value the way the calendar would, for example in your own form, use `toPlainDateTimeString('2026-03-14T10:00:00Z')`: it returns the calendar's wall-clock form for the viewer's time zone.
 
 ### Colours
 
-Give an event a `color` to override its calendar's colour. Use the 12 colours from the palette, or any hex colour. See [Colors](./COLORS.md).
+Give an event a `color` to override its calendar's colour. Any six-digit hex colour works. See [Event colours](./THEMING.md#event-colours).
 
 ## Calendars
 
@@ -102,6 +102,63 @@ Changing part of a repeating event can change several stored events at once, for
 
 ## Using your own dialogs
 
-Set `enableModals: false` to turn off the built-in dialogs. Clicking the grid then calls `onEventCreateRequest({ draft, context })`, where `context.source` is `'time-slot'`, `'all-day'` or `'month-day'`. Open your own dialog there and use ghost events for the preview. See [Ghost events](./GHOST_EVENTS.md) for a complete example.
+Set `enableModals: false` to turn off the built-in dialogs. Clicking the grid then draws a [ghost event](./API.md#ghost-events), a preview of the new event, and calls `onEventCreateRequest({ draft, context })`:
 
-With dialogs off, clicking an event only calls `onEventClick`.
+- `draft` holds the prefilled form fields: `title`, `startDate`, `startTime`, `endDate`, `endTime` (`'10:00'`), `allDay`, `calendarId`, `color` and `rrule`.
+- `context.source` says where the user clicked: `'time-slot'`, `'all-day'` or `'month-day'`. `context.date` is the date clicked.
+- The preview, `calendarApp.ghostEvent.value`, has the same event as ready-to-save `start` and `end` values.
+
+Open your dialog there, keep the preview in step while the user edits, and hide it when the dialog closes:
+
+```js
+const form = ref(null);
+
+const calendarApp = createCalendar({
+  views: [createViewWeek()],
+  calendars: [{ id: 'work', name: 'Work', color: '#1967D2' }],
+  enableModals: false,
+  onEventCreateRequest: () => {
+    const { id, isGhost, ...event } = calendarApp.ghostEvent.value;
+    form.value = event;   // title, start, end, allDay, calendarId, color, rrule
+    openMyDialog();
+  },
+  onEventClick: (event) => openMyDetails(event)
+});
+
+// The preview follows the form
+watch(form, (changes) => changes && calendarApp.updateGhostEvent(changes), { deep: true });
+
+function save() {
+  calendarApp.eventsService.add(form.value);
+  close();
+}
+
+function close() {
+  calendarApp.hideGhostEvent();
+  form.value = null;
+}
+```
+
+Events you add with `eventsService` do not call `onEventCreate`; that callback reports what users do in the built-in dialogs. With dialogs off, clicking an event only calls `onEventClick`.
+
+For repeating events, the calendar's repeat menu, custom repeat dialog and "this / following / all events" dialog are exported as components, and their logic as plain functions. See [Recurring events](./RECURRING_EVENTS.md#in-your-own-ui).
+
+## iCalendar files
+
+`parseICal` reads the events of an `.ics` file, such as an export from Google Calendar or Outlook, and `serializeICal` writes events to one:
+
+```js
+import { parseICal, serializeICal } from 'vue-calendarium';
+
+// Import: give the calendar the events belong to (events need one)
+const events = parseICal(icsText, { calendarId: 'work' });
+calendarApp.eventsService.set([...calendarApp.eventsService.getAll(), ...events]);
+
+// Export: all stored events, with times in Lisbon time (without tzid, times are floating)
+const icsText = serializeICal(calendarApp.eventsService.getAll(), { tzid: 'Europe/Lisbon' });
+```
+
+- **Repeating events** are written as Google Calendar exports them, and read the same way: a series with `RRULE` and `EXDATE` (deleted occurrences), and each changed occurrence as an event with the series' `UID` and a `RECURRENCE-ID`. Read back, a changed occurrence gets `recurringEventId` and `originalStart`.
+- **Times.** A UTC time (`Z`) is converted to the viewer's time zone. A time with a `TZID`, or without a zone, keeps its wall-clock time, as the calendar does for dates with a time zone.
+- **All-day events** are written as dates. In iCalendar their `DTEND` is the day after the last day; the calendar's `end` is the last day itself, and the functions convert between the two.
+- **Fields:** title (`SUMMARY`), start, end, all day, repeat rule, description and location. Colours and calendars are not part of the file.

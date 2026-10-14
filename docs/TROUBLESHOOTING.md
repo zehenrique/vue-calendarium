@@ -50,7 +50,7 @@ See [Languages](./I18N.md).
 - **You are testing pinch on a computer.** It needs two touch points. Use DevTools device emulation or a real device.
 - **Hammer.js did not load.** The calendar loads it on demand and logs "Failed to load hammerjs; touch gestures are disabled" if that fails. Check that your bundler can resolve the `hammerjs` package, which comes with the calendar.
 
-See [Touch gestures](./GESTURES.md).
+See [Touch gestures](./MOBILE.md#touch-gestures).
 
 ## The zoom level is stuck
 

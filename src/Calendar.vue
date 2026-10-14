@@ -1,6 +1,6 @@
 <template>
-  <!-- Buttons look the same whatever the app's Vuetify defaults -->
   <v-defaults-provider :defaults="CALENDAR_DEFAULTS">
+  <v-locale-provider :locale="vuetifyLocaleCode" :messages="VUETIFY_MESSAGES">
   <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile, 'has-desktop-sidebar': desktopSidebarVisible }" :style="{ '--calendar-topbar-height': `${topBarHeight}px` }">
     <CalendarHeader
       :current-title="currentTitle"
@@ -21,6 +21,8 @@
       :next-week-days="currentView === 'week' ? nextWeekViewDays : null"
       :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
+      :locale="calendarLocale"
+      :today="todayDate"
       @toggle-sidebar="toggleSidebar"
       @previous="previousPeriod"
       @next="nextPeriod"
@@ -249,6 +251,7 @@
       @update:visible-calendars="handleVisibleCalendarsUpdate"
       @view-change="handleViewChange"/>
   </div>
+  </v-locale-provider>
   </v-defaults-provider>
 </template>
 
@@ -256,7 +259,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
-import { useLocale } from 'vuetify';
+import { en as vuetifyEn, pt as vuetifyPt } from 'vuetify/locale';
 import { DEFAULT_COLOR } from './config/colors.js';
 import { mergeTheme, applyTheme } from './config/theme.js';
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
@@ -306,7 +309,8 @@ defineEmits([]);
 defineOptions({ name: 'Calendar' });
 
 const { t, locale: i18nLocale } = useI18n();
-const { current: vuetifyLocale } = useLocale();
+const VUETIFY_MESSAGES = { en: vuetifyEn, pt: vuetifyPt };
+const vuetifyLocaleCode = ref('en');
 
 // Reactive data sources from calendar app
 const events = computed(() => props.calendarApp.visibleEvents.value);
@@ -426,7 +430,7 @@ watch(
   (newLocale) => {
     const mappedLocale = localeCodeMap[newLocale] || 'en';
     i18nLocale.value = mappedLocale;
-    vuetifyLocale.value = mappedLocale;
+    vuetifyLocaleCode.value = mappedLocale;
   },
   { immediate: true }
 );
@@ -545,7 +549,10 @@ const nextDayEvents = computed(() => nextDayEventSummary.value.timedEvents);
 const nextDayAllDayEvents = computed(() => nextDayEventSummary.value.allDayEvents);
 
 const currentTitle = computed(() =>
-  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value)
+  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value, {
+    // On mobile, the day view's date badge and a view dropdown in the header leave little room
+    compact: currentView.value === 'day' && mobileViewSelectorPlacement.value === 'header'
+  })
 );
 
 const currentTimePosition = computed(() => {
@@ -1443,5 +1450,15 @@ watch(showModal, (isOpen) => {
   .vue-calendarium {
     height: 100%;
   }
+}
+</style>
+
+<style>
+/* Vuetify 4 keeps its CSS in cascade layers, so an app's unlayered CSS reset (CoreUI's or
+   Bootstrap's reboot: button { border-radius: 0 }) beats Vuetify's button shapes. revert-layer
+   gives the shape back to Vuetify in the calendar and in its dialogs, menus and date pickers,
+   which open outside it. :where() keeps this weaker than the calendar's own button styles. */
+:where(.vue-calendarium, .calendar-font-scope, .calendar-select-menu) .v-btn {
+  border-radius: revert-layer;
 }
 </style>

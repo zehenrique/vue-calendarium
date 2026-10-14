@@ -48,7 +48,7 @@ Use `onEventUpdate` if you only need to save the result. Use `onEventDrop` when 
 ## Where it works
 
 - **Week and day views.** Events in the month view and in the all-day row cannot be dragged.
-- **Mouse only.** Dragging needs a mouse (or a pen that acts as one). On touch screens a finger drag swipes between periods instead. See [Touch gestures](./GESTURES.md).
+- **Mouse only.** Dragging needs a mouse (or a pen that acts as one). On touch screens a finger drag swipes between periods instead. See [Touch gestures](./MOBILE.md#touch-gestures).
 - **Repeating events.** Dropping an occurrence of a repeating event asks whether to move this event, this and the following events, or all events, before anything changes. **Cancel** leaves it where it was. `onEventDrop` then receives the choice in `scope`. See [Recurring events](./RECURRING_EVENTS.md#changing-one-occurrence-or-many).
 
 ## Styling

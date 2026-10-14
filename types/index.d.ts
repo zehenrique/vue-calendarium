@@ -275,6 +275,71 @@ export const Calendar: DefineComponent<{
   theme?: CalendarTheme | null;
 }>;
 
+/**
+ * The repeat link and menu of the calendar's event dialog ("Does not repeat", "Weekly on
+ * Wednesday", ..., "Custom..."), for an app's own Vuetify event dialog. v-model is the rule.
+ */
+export const RepeatSelect: DefineComponent<{
+  /** The rule (RRULE), '' when the event does not repeat */
+  modelValue?: string;
+  /** The event's start date, 'YYYY-MM-DD' */
+  startDate?: string;
+  /** A class for the link, instead of its own style */
+  linkClass?: string;
+  'onUpdate:modelValue'?: (rrule: string) => void;
+}>;
+
+/** The "Custom recurrence" dialog (a bottom sheet on mobile). v-model opens it; `save` gives the rule. */
+export const RecurrencePickerModal: DefineComponent<{
+  modelValue: boolean;
+  /** The rule to start from, '' for none */
+  rrule?: string;
+  /** The event's start date, 'YYYY-MM-DD' */
+  startDate?: string;
+  'onUpdate:modelValue'?: (open: boolean) => void;
+  onSave?: (rrule: string) => void;
+}>;
+
+/** The sidebar's small month: choosing a day emits `select` with it. Monday first, keyboard navigable. */
+export const MiniMonth: DefineComponent<{
+  /** The date shown as selected; the month follows it */
+  selectedDate: Temporal.PlainDate;
+  /** Today, highlighted */
+  today: Temporal.PlainDate;
+  locale?: CalendarLocale;
+  onSelect?: (date: Temporal.PlainDate) => void;
+}>;
+
+/** The calendars with a checkbox each, to show or hide their events. */
+export const CalendarVisibilityList: DefineComponent<{
+  calendars: CalendarData[];
+  /** Ids of the calendars whose events are shown */
+  visibleCalendars: string[];
+  'onUpdate:visibleCalendars'?: (calendarIds: string[]) => void;
+}>;
+
+/** Read the events of an iCalendar (.ics) file. Give the calendar they belong to: events need one. */
+export function parseICal(icsText: string, options?: { calendarId?: string }): CalendarEventInput[];
+/** Write events to an iCalendar (.ics) file; repeating events as Google Calendar exports them (RRULE, EXDATE, RECURRENCE-ID). */
+export function serializeICal(events: CalendarEventInput[], options?: { prodId?: string; tzid?: string }): string;
+/**
+ * A date from an API as the calendar's wall-clock date-time ('2026-03-02T09:00:00'): a time with
+ * Z or an offset is converted to the viewer's time zone, a zoned string keeps its own time.
+ */
+export function toPlainDateTimeString<T extends string | object | null | undefined>(value: T): T extends string | object ? string : T;
+/** The colours the calendar gives an event: its colour as background, and white text (black, lighter, when past). */
+export function getEventColorStyle(hexColor?: string, isPast?: boolean): { backgroundColor: string; color: string; opacity: number };
+
+/** "This event / This and following events / All events". v-model opens it; `confirm` gives the choice. */
+export const RecurrenceScopeModal: DefineComponent<{
+  modelValue: boolean;
+  /** Offer "This event" (not when the change is to how the series repeats) */
+  allowThisEvent?: boolean;
+  'onUpdate:modelValue'?: (open: boolean) => void;
+  onConfirm?: (scope: RecurrenceScope) => void;
+  onCancel?: () => void;
+}>;
+
 // ---------------------------------------------------------------------------
 // Colors, theme and translations
 // ---------------------------------------------------------------------------
@@ -309,6 +374,93 @@ export const translations: {
   pt: Record<string, unknown>;
 };
 
+// ---------------------------------------------------------------------------
+// Repeating events: plain functions for apps with their own UI
+// ---------------------------------------------------------------------------
+
+/** A date-time 'YYYY-MM-DDTHH:mm:ss' or a Temporal.PlainDateTime */
+type DateTimeLike = string | Temporal.PlainDateTime;
+/** A date 'YYYY-MM-DD' or a Temporal.PlainDate */
+type DateLike = string | Temporal.PlainDate;
+/** vue-i18n's translate function, or one from createTranslator() */
+export type Translate = (key: string, values?: Record<string, unknown> | number) => string;
+
+/** Stored events to add, change and remove, from planRecurringEdit and planRecurringDelete */
+export interface RecurrenceChangePlan {
+  update: CalendarEventData[];
+  add: CalendarEventData[];
+  remove: CalendarEventData[];
+}
+
+/** The occurrences of a repeating event between two wall-clock times; changed occurrences (exceptions) replace theirs */
+export function expandRecurrence(event: CalendarEventInput, rangeStart: string, rangeEnd: string, options?: { exceptions?: CalendarEventInput[] }): CalendarEventOccurrence[];
+/** The id of an occurrence: '<series id>@<original start>' */
+export function getOccurrenceId(seriesId: string | number, originalStart: DateTimeLike): string;
+/** The parts of a rule's RRULE line, e.g. { FREQ: 'WEEKLY', COUNT: '6' } */
+export function getRuleParts(rrule: string): Record<string, string>;
+/** The deleted occurrences (EXDATE) of a rule */
+export function getExceptionDates(rrule: string): Temporal.PlainDateTime[];
+/** The series' rule with one occurrence deleted (EXDATE) */
+export function addExceptionDate(event: CalendarEventInput, occurrenceStart: DateTimeLike): string;
+/** A new rule with the deleted occurrences of the previous one */
+export function keepExceptionDates(newRule: string, previousRule: string): string;
+/** Whether two rules repeat the same way (deleted occurrences are not compared) */
+export function isSameRule(a: string, b: string): boolean;
+/** Whether a series has an occurrence at a time, deleted ones included */
+export function hasOccurrenceAt(event: CalendarEventInput, dateTime: DateTimeLike): boolean;
+/** The series' rule ending just before an occurrence (UNTIL) */
+export function endRuleBefore(event: CalendarEventInput, dateTime: DateTimeLike): string;
+/** The rule for the rest of a series from an occurrence on (COUNT reduced) */
+export function continueRuleFrom(event: CalendarEventInput, dateTime: DateTimeLike): string;
+/** A rule moved with its series to another time or day (BYDAY, BYMONTHDAY, UNTIL and EXDATE move with it) */
+export function moveRule(rrule: string, from: DateTimeLike, to: DateTimeLike): string;
+
+/** Plan an edit of one occurrence: "this event", "this and following events" or "all events" */
+export function planRecurringEdit(params: {
+  series: CalendarEventData;
+  exceptions?: CalendarEventData[];
+  instance: CalendarEventOccurrence;
+  changes: Partial<CalendarEventData> & { start: string; end?: string };
+  scope: RecurrenceScope;
+}): RecurrenceChangePlan;
+/** Plan deleting one occurrence, it and the following ones, or the whole series */
+export function planRecurringDelete(params: {
+  series: CalendarEventData;
+  exceptions?: CalendarEventData[];
+  instance: CalendarEventOccurrence;
+  scope: RecurrenceScope;
+}): RecurrenceChangePlan;
+/** Whether an edit changes how the series repeats ("this event" is then not offered) */
+export function changesRule(series: CalendarEventData, changes: Partial<CalendarEventData>, instance?: CalendarEventOccurrence | null): boolean;
+
+/** RRULE weekday codes, Monday first */
+export const WEEKDAYS: readonly ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
+/** The fields of the custom repeat dialog */
+export interface RecurrenceForm {
+  frequency: 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+  interval: number;
+  /** RRULE weekday codes, e.g. ['MO', 'WE'] */
+  weekdays: string[];
+  monthlyType: 'bymonthday' | 'byweekday';
+  endType: 'never' | 'until' | 'count';
+  /** 'YYYY-MM-DD', included */
+  untilDate: string;
+  count: number;
+}
+/** A rule as the dialog's fields; with no rule, weekly on the event's weekday */
+export function ruleToForm(rrule: string, startDate: DateLike): RecurrenceForm;
+/** The dialog's fields as a rule, e.g. 'FREQ=WEEKLY;INTERVAL=2;BYDAY=MO,WE;COUNT=5' */
+export function formToRule(form: RecurrenceForm, startDate: DateLike): string;
+
+/** A translate function for the calendar's messages, for apps without vue-i18n */
+export function createTranslator(locale?: CalendarLocale): Translate;
+/** A rule in words, e.g. "Weekly on Monday, Wednesday" or "Semanalmente (quarta-feira)" */
+export function describeRule(rrule: string, options?: { locale?: CalendarLocale; t?: Translate }): string;
+/** The repeat menu's usual rules for an event's date: daily, weekly on its weekday, monthly, yearly, every weekday */
+export function getRepeatOptions(startDate: DateLike, options?: { locale?: CalendarLocale; t?: Translate }): { value: string; title: string }[];
+/** "Monthly on day 15" and "Monthly on the third Wednesday" for an event's date */
+export function getMonthlyOptions(startDate: DateLike, options?: { locale?: CalendarLocale; t?: Translate }): { value: 'bymonthday' | 'byweekday'; title: string }[];
+
 declare const VueCalendarium: {
   createCalendar: typeof createCalendar;
   createViewDay: typeof createViewDay;
@@ -321,6 +473,15 @@ declare const VueCalendarium: {
   createCalendarsService: typeof createCalendarsService;
   CalendarsService: typeof CalendarsService;
   Calendar: typeof Calendar;
+  RepeatSelect: typeof RepeatSelect;
+  RecurrencePickerModal: typeof RecurrencePickerModal;
+  RecurrenceScopeModal: typeof RecurrenceScopeModal;
+  MiniMonth: typeof MiniMonth;
+  CalendarVisibilityList: typeof CalendarVisibilityList;
+  parseICal: typeof parseICal;
+  serializeICal: typeof serializeICal;
+  toPlainDateTimeString: typeof toPlainDateTimeString;
+  getEventColorStyle: typeof getEventColorStyle;
   CALENDAR_COLORS: typeof CALENDAR_COLORS;
   DEFAULT_COLOR: typeof DEFAULT_COLOR;
   isValidColor: typeof isValidColor;
@@ -333,6 +494,27 @@ declare const VueCalendarium: {
   mergeTheme: typeof mergeTheme;
   generateThemeCSS: typeof generateThemeCSS;
   translations: typeof translations;
+  expandRecurrence: typeof expandRecurrence;
+  getOccurrenceId: typeof getOccurrenceId;
+  getRuleParts: typeof getRuleParts;
+  getExceptionDates: typeof getExceptionDates;
+  addExceptionDate: typeof addExceptionDate;
+  keepExceptionDates: typeof keepExceptionDates;
+  isSameRule: typeof isSameRule;
+  hasOccurrenceAt: typeof hasOccurrenceAt;
+  endRuleBefore: typeof endRuleBefore;
+  continueRuleFrom: typeof continueRuleFrom;
+  moveRule: typeof moveRule;
+  planRecurringEdit: typeof planRecurringEdit;
+  planRecurringDelete: typeof planRecurringDelete;
+  changesRule: typeof changesRule;
+  WEEKDAYS: typeof WEEKDAYS;
+  ruleToForm: typeof ruleToForm;
+  formToRule: typeof formToRule;
+  createTranslator: typeof createTranslator;
+  describeRule: typeof describeRule;
+  getRepeatOptions: typeof getRepeatOptions;
+  getMonthlyOptions: typeof getMonthlyOptions;
 };
 
 export default VueCalendarium;

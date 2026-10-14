@@ -14,7 +14,9 @@ const starts = (occurrences) => occurrences.map(occurrence => occurrence.start);
 describe('expandRecurrence', () => {
   const originalTimeZone = process.env.TZ;
   afterEach(() => {
-    process.env.TZ = originalTimeZone;
+    // Assigning undefined would set the string 'undefined', an unknown time zone
+    if (originalTimeZone === undefined) delete process.env.TZ;
+    else process.env.TZ = originalTimeZone;
   });
 
   it('returns a non-repeating event unchanged', () => {

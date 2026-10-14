@@ -1,6 +1,6 @@
 # API
 
-This document describes the public API exported by the package.
+Everything the package exports. For how to use it, start with the [README](../README.md#quick-start) and the guides; this page is the complete list.
 
 ## Exports
 
@@ -16,7 +16,27 @@ import {
   EventsService,
   CalendarsService,
   THEME_PRESETS,
-  translations
+  translations,
+  // Repeating events, for apps with their own UI (see below)
+  RepeatSelect,
+  RecurrencePickerModal,
+  RecurrenceScopeModal,
+  describeRule,
+  // Sidebar parts, iCalendar files, dates and colours (see below)
+  MiniMonth,
+  CalendarVisibilityList,
+  parseICal,
+  serializeICal,
+  toPlainDateTimeString,
+  getEventColorStyle,
+  ruleToForm,
+  formToRule,
+  // Colours and themes (see below)
+  CALENDAR_COLORS,
+  DEFAULT_COLOR,
+  getColorById,
+  DEFAULT_THEME,
+  mergeTheme
 } from 'vue-calendarium';
 ```
 
@@ -35,7 +55,7 @@ const calendarApp: CalendarApp = createCalendar({
 
 ### Styles
 
-The component's CSS is imported by the package entry automatically. If your setup needs it as a separate import, it is also exported as `vue-calendarium/style.css`.
+The component's CSS is imported by the package entry automatically when a bundler (Vite, webpack) builds your app. In plain Node, including the server side of server-side rendering, the package resolves to the same code without the CSS import (the `node` export condition), so it can be imported there. To have the styles in server-rendered pages, or if your setup needs them as a separate import, use `import 'vue-calendarium/style.css'`.
 
 ## `Calendar` (Vue component)
 
@@ -50,9 +70,9 @@ The component's CSS is imported by the package entry automatically. If your setu
 
 - Type: `Record<string, string> | null`
 - Default: `null`
-- Theme overrides (CSS custom properties).
+- Theme overrides (CSS custom properties), merged with the default theme.
 
-See [STYLING.md](./STYLING.md) for the full theme reference.
+See [Theming](./THEMING.md) and the list of [theme variables](./THEME_REFERENCE.md).
 
 ### Vue emits
 
@@ -84,7 +104,7 @@ const calendarApp = createCalendar({
 - `defaultView`: `'day' | 'week' | 'month'`.
 - `selectedDate`: `Temporal.PlainDate` (defaults to “today”).
 - `locale`: `'en-US' | 'pt-PT'`.
-- `locale` also syncs to Vuetify's locale so `VDatePicker` matches the app language.
+- `locale` also sets Vuetify's language inside the calendar (its date pickers and their labels), with Vuetify's own translations. Your app's Vuetify language is not changed, and you do not need to register Vuetify's `pt` messages.
 - `events`: array of event objects (wrapped internally as `CalendarEvent`).
 - `calendars`: array of calendar objects (wrapped internally as `CalendarModel`).
 
@@ -134,9 +154,80 @@ Sidebar methods (desktop):
 
 - `setSidebarOpen(open)`, `toggleSidebar()`: open or close the sidebar, as the header's menu button does
 
-Ghost event methods:
+### Ghost events
 
-- `showGhostEvent(eventData)`, `updateGhostEvent(eventData)`, `hideGhostEvent()`
+A ghost event is a semi-transparent preview drawn on the grid (half opacity, dashed border). It is not stored in `eventsService`. The calendar shows one while its create dialog is open; with `enableModals: false`, it shows one when the user clicks the grid, just before calling `onEventCreateRequest`, and your app updates and hides it. See [Using your own dialogs](./EVENTS.md#using-your-own-dialogs).
+
+- `showGhostEvent(event)`: shows `event` (same fields as an event) as the preview, replacing any current one. Only one ghost event is shown at a time.
+- `updateGhostEvent(changes)`: merges `changes` into the current preview, for example a new `title` or `end`. Does nothing when no preview is shown.
+- `hideGhostEvent()`: removes the preview. Call it when your dialog saves or closes.
+- `ghostEvent`: computed ref with the current preview (with `isGhost: true`), or `null`.
+
+## Repeating events
+
+Plain functions, with no Vue or Vuetify, for apps that build their own UI around the calendar's repeat rules. See [Recurring events](./RECURRING_EVENTS.md#in-your-own-ui) for an example.
+
+Rules and occurrences:
+
+- `expandRecurrence(event, rangeStart, rangeEnd, { exceptions })`: the occurrences between two times, with changed occurrences in place of theirs.
+- `getOccurrenceId(seriesId, originalStart)`: `'<series id>@<original start>'`.
+- `getRuleParts(rrule)`: `{ FREQ: 'WEEKLY', COUNT: '6' }`.
+- `getExceptionDates(rrule)`, `addExceptionDate(event, start)`, `keepExceptionDates(newRule, previousRule)`: deleted occurrences (`EXDATE`).
+- `isSameRule(a, b)`, `hasOccurrenceAt(event, dateTime)`.
+- `endRuleBefore(event, dateTime)`, `continueRuleFrom(event, dateTime)`: split a series in two.
+- `moveRule(rrule, from, to)`: move a rule with its series to another time or day.
+
+Changing one occurrence or many (`'this' | 'following' | 'all'`), returning `{ update, add, remove }`:
+
+- `planRecurringEdit({ series, exceptions, instance, changes, scope })`
+- `planRecurringDelete({ series, exceptions, instance, scope })`
+- `changesRule(series, changes, instance)`: whether "this event" can be offered.
+
+The repeat dialog and menu:
+
+- `WEEKDAYS`: `['MO', ..., 'SU']`.
+- `ruleToForm(rrule, startDate)`, `formToRule(form, startDate)`.
+- `getRepeatOptions(startDate, { locale, t })`, `getMonthlyOptions(startDate, { locale, t })`.
+- `describeRule(rrule, { locale, t })`.
+- `createTranslator(locale)`: a `t` for the calendar's messages, for apps without vue-i18n.
+
+Components, for an app's own Vuetify event dialog (see [Recurring events](./RECURRING_EVENTS.md#the-repeat-components)):
+
+- `RepeatSelect`: `v-model` (rule), `start-date`, `link-class`.
+- `RecurrencePickerModal`: `v-model` (open), `rrule`, `start-date`, `@save(rrule)`.
+- `RecurrenceScopeModal`: `v-model` (open), `allow-this-event`, `@confirm(scope)`, `@cancel`.
+
+## Other exports
+
+Sidebar parts, for an app's own sidebar (see [Views](./VIEWS.md#sidebar)):
+
+- `MiniMonth`: `selected-date`, `today` (`Temporal.PlainDate`), `locale`, `@select(date)`.
+- `CalendarVisibilityList`: `calendars`, `v-model:visible-calendars` (ids).
+
+iCalendar files (see [Events](./EVENTS.md#icalendar-files)):
+
+- `parseICal(icsText, { calendarId })`: the file's events.
+- `serializeICal(events, { prodId, tzid })`: the file's text.
+
+Dates:
+
+- `toPlainDateTimeString(value)`: a date from an API in the calendar's wall-clock form (`Z` and offsets converted to the viewer's time zone).
+
+### Colours and themes
+
+See [Theming](./THEMING.md) for the palette and how events are coloured.
+
+- `CALENDAR_COLORS`: the 12-colour palette, `[{ id: 'tomato', name: 'Tomato', hex: '#D50000' }, ...]`.
+- `DEFAULT_COLOR`: `'#1967D2'` (Cobalt), used for missing or invalid colours.
+- `getColorById(id)`: the hex of a palette colour, or `DEFAULT_COLOR`.
+- `getColorIdByHex(hex)`: the palette id of a hex colour, or `null`.
+- `isValidColor(hex)`: whether the hex colour is in the palette.
+- `getClosestColor(hex)`: the hex itself when it is in the palette, otherwise `DEFAULT_COLOR`.
+- `getEventColorStyle(hex, isPast)`: `{ backgroundColor, color, opacity }`, the colours the calendar gives an event.
+- `DEFAULT_THEME`, `THEME_PRESETS` (`default`, `dark`, `compact`, `highContrast`): theme objects of CSS variables.
+- `mergeTheme(theme)`: `theme` on top of `DEFAULT_THEME`.
+- `applyTheme(element, theme)`: sets the variables on an element.
+- `generateThemeCSS(theme)`: the theme as a `.vue-calendarium { ... }` CSS rule.
 
 ## Data models
 
@@ -158,6 +249,8 @@ Common fields:
 
 - `recurringEventId: string | null` and `originalStart: string | null`: set on an instance of a repeating event, meaning an occurrence generated from the rule (with the id `'<series id>@<start>'`) or a changed occurrence: a stored event that takes the place of one occurrence and keeps its id. See [Recurring events](./RECURRING_EVENTS.md#changed-occurrences).
 
+Methods: `CalendarEvent.from(data)`, `toObject()`, `clone()`, `update(changes)`, `isAllDay()`, `isRecurring()`, `getDurationMinutes()`.
+
 ### `CalendarModel`
 
 Common fields:
@@ -168,6 +261,8 @@ Common fields:
 - `visible: boolean`
 - `description: string`
 - `custom: Record<string, unknown>`
+
+Methods: `CalendarModel.from(data)`, `toObject()`, `clone()`, `update(changes)`, `toggleVisibility()`.
 
 ## Services
 
@@ -193,6 +288,4 @@ const views = [createViewDay(), createViewWeek(), createViewMonth()];
 
 ## i18n
 
-The component uses `vue-i18n` internally. Register the exported `translations` in your app.
-
-See [USAGE.md](./USAGE.md) for a complete integration example.
+The component uses `vue-i18n`. Register the exported `translations` in your app, as in the [quick start](../README.md#quick-start). See [Languages and formats](./I18N.md).

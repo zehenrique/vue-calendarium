@@ -44,7 +44,7 @@ The package now ships a compiled ES module instead of raw `.vue` source files:
 - Your bundler no longer needs to compile the calendar's `.vue` files.
 - The calendar's styles load automatically with the JavaScript. If your setup needs to import them explicitly, use `import 'vue-calendarium/style.css'`.
 - TypeScript type definitions are included.
-- The package can be imported during server-side rendering.
+- The package can be imported in plain Node and during server-side rendering. With server-side rendering, import `vue-calendarium/style.css` in your app's entry so server-rendered pages have the styles.
 
 ## 3. Remove the Hammer.js setup
 

@@ -6,7 +6,7 @@
 // fields ("floating" times, as the rrule documentation recommends). Occurrences then keep
 // their time of day in every time zone.
 import { Temporal } from '@js-temporal/polyfill';
-import { rrulestr } from 'rrule';
+import { rrulestr } from './rruleLib.js';
 
 /**
  * @param {string|Temporal.PlainDateTime} dateTime
@@ -50,9 +50,65 @@ function fromRRuleDateString(value) {
 
 const compareDateTimes = (a, b) => Temporal.PlainDateTime.compare(Temporal.PlainDateTime.from(a), Temporal.PlainDateTime.from(b));
 
-// Rule lines without a name ('FREQ=WEEKLY') are RRULE lines
+// Rule lines without a name ('FREQ=WEEKLY') are RRULE lines. Rules from other tools are read
+// as wall-clock rules, like the calendar's own (see toWallClockLines).
 function toRuleLines(rrule) {
-  return rrule.trim().split(/\r?\n/).map(line => (/^[A-Z-]+[:;]/.test(line) ? line : `RRULE:${line}`));
+  const lines = rrule.trim().split(/\r?\n/).map(line => (/^[A-Z-]+[:;]/.test(line) ? line : `RRULE:${line}`));
+  return toWallClockLines(lines);
+}
+
+// The time zone of a rule's DTSTART line: its TZID, or the viewer's for a UTC time ('...Z'),
+// as for the calendar's other exact times. null for a rule without one (wall-clock times).
+function ruleTimeZone(lines) {
+  const dtstart = lines.find(line => line.startsWith('DTSTART'));
+  if (!dtstart) return null;
+  const tzid = dtstart.match(/TZID=([^;:]+)/)?.[1];
+  if (tzid) return tzid;
+  return /T\d{6}Z$/.test(dtstart) ? viewerTimeZone() : null;
+}
+
+function viewerTimeZone() {
+  try {
+    return Temporal.Now.timeZoneId();
+  } catch {
+    // An environment whose time zone cannot be read
+    return 'UTC';
+  }
+}
+
+// A UTC rule time ('20260805T230000Z') as the wall-clock time in a time zone
+function utcToWallClock(value, timeZone) {
+  return Temporal.Instant.from(`${fromRRuleDateString(value)}Z`).toZonedDateTimeISO(timeZone).toPlainDateTime();
+}
+
+// The calendar keeps rule times as wall-clock times. Rules written by other tools (rrule.js,
+// Outlook, Google) can start with a DTSTART in a time zone; their UTC times (UNTIL, EXDATE) are
+// then exact moments, converted here to wall-clock times in that zone. rrule.js, for example,
+// writes an end date as local midnight in UTC, which in summer is 23:00 the day before.
+// An end at midnight, or a date without a time, includes that whole day, as a date picker means.
+function toWallClockLines(lines) {
+  const timeZone = ruleTimeZone(lines);
+  const toWallClock = (value) => (timeZone && value.endsWith('Z') ? utcToWallClock(value, timeZone) : fromRRuleDateString(value));
+  const wholeDay = (dateTime) => (dateTime.hour === 0 && dateTime.minute === 0 && dateTime.second === 0
+    ? dateTime.with({ hour: 23, minute: 59, second: 59 })
+    : dateTime);
+
+  return lines
+    .filter(line => !(timeZone && line.startsWith('DTSTART')))
+    .map((line) => {
+      if (line.startsWith('RRULE')) {
+        return line.replace(/UNTIL=(\d{8}(?:T\d{6}Z?)?)/, (match, value) => {
+          const isDateOnly = value.length === 8;
+          if (!timeZone && !isDateOnly) return match;
+          return `UNTIL=${toRRuleDateString(wholeDay(toWallClock(value)))}`;
+        });
+      }
+      if (timeZone && line.startsWith('EXDATE')) {
+        const values = line.slice(line.indexOf(':') + 1).split(',').filter(Boolean);
+        return `EXDATE:${values.map(value => toRRuleDateString(toWallClock(value))).join(',')}`;
+      }
+      return line;
+    });
 }
 
 // The series always starts at the event's start. A DTSTART line in the rule is replaced,

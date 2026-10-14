@@ -236,6 +236,16 @@ const props = defineProps({
     type: Array,
     default: null
   },
+  // The calendar's language, for dates
+  locale: {
+    type: String,
+    default: 'en-US'
+  },
+  // Today (Temporal.PlainDate), to highlight it
+  today: {
+    type: Object,
+    default: null
+  },
   currentDate: {
     type: Object,
     default: null
@@ -280,14 +290,9 @@ const handleDatePickerChange = (date) => {
 };
 
 const goToTodayFromPicker = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  const dateString = `${year}-${month}-${day}`;
-  
-  emit('date-change', dateString);
-  
+  // Today from the calendar's clock (Temporal), as the header's Today button
+  emit('today');
+
   // Close the menu
   if (datePickerMenu.value) {
     datePickerMenu.value.isActive = false;
@@ -339,15 +344,16 @@ const weekStripTrackStyle = computed(() => {
   };
 });
 
+// Translation keys of the short weekday names, Monday first (Temporal's dayOfWeek 1–7)
+const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 const dayInfo = computed(() => {
   if (props.currentView !== 'day' || !props.currentDate) return null;
   
-  const today = props.currentDate.toString().slice(0, 10);
-  const now = new Date().toISOString().slice(0, 10);
-  const isToday = today === now;
-  
-  // Get abbreviated weekday (e.g., "Mon", "Tue")
-  const weekday = props.currentDate.toLocaleString('en-US', { weekday: 'short' }).toUpperCase();
+  const isToday = Boolean(props.today) && props.currentDate.equals(props.today);
+
+  // The calendar's short weekday names, as in the week view ("WED", "QUA")
+  const weekday = props.t(WEEKDAY_KEYS[props.currentDate.dayOfWeek - 1]);
   const dayNumber = props.currentDate.day;
   
   return {
@@ -413,8 +419,8 @@ const dayInfo = computed(() => {
 }
 
 .mobile-view-select {
-  min-width: 120px;
-  max-width: 120px;
+  min-width: 104px;
+  max-width: 104px;
 }
 
 .header-outlined-control {
@@ -504,8 +510,9 @@ const dayInfo = computed(() => {
   margin-top: var(--calendar-day-view-number-margin-top, 2px);
 }
 
+/* Today's colour, as the other today markers */
 .day-view-number.today {
-  color: var(--calendar-primary-color, #1a73e8);
+  color: var(--calendar-today-bg, #1a73e8);
   font-weight: var(--calendar-font-weight-medium, 500);
 }
 

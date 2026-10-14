@@ -1,7 +1,7 @@
 <template>
   <v-menu v-model="menuOpen" content-class="calendar-font-scope calendar-select-menu">
     <template v-slot:activator="{ props: activatorProps }">
-      <a href="#" :class="linkClass" data-testid="repeat-select" v-bind="activatorProps" @click.prevent>{{ selectedLabel }}</a>
+      <a href="#" :class="linkClass || 'repeat-select-link'" data-testid="repeat-select" v-bind="activatorProps" @click.prevent>{{ selectedLabel }}</a>
     </template>
     <v-list density="compact" class="repeat-menu" data-testid="repeat-menu">
       <v-list-item v-for="option in options" :key="option.value" :title="option.title" :active="option.value === selectedValue" color="primary" @click="choose(option)"></v-list-item>
@@ -20,6 +20,7 @@ import { useI18n } from 'vue-i18n';
 import { Temporal } from '@js-temporal/polyfill';
 import RecurrencePickerModal from './RecurrencePickerModal.vue';
 import { isSameRule, keepExceptionDates } from '../core/recurrence.js';
+import { getRepeatOptions } from '../core/recurrenceText.js';
 import { useRRuleFormatter } from '../composables/useRRuleFormatter.js';
 
 const props = defineProps({
@@ -27,6 +28,7 @@ const props = defineProps({
   modelValue: { type: String, default: '' },
   // The event's start date, 'YYYY-MM-DD'
   startDate: { type: String, default: '' },
+  // A class for the link; without one it has its own style (used outside the calendar's dialog)
   linkClass: { type: String, default: '' }
 });
 
@@ -35,7 +37,6 @@ const emit = defineEmits(['update:modelValue']);
 const { t, locale } = useI18n();
 const { formatRRule } = useRRuleFormatter();
 
-const WEEKDAYS = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU'];
 const CUSTOM = 'custom';
 
 const menuOpen = ref(false);
@@ -50,26 +51,7 @@ function toDate(value) {
 }
 
 // The usual rules for an event on a date
-function presetsFor(date) {
-  if (!date) {
-    return [
-      { value: 'FREQ=DAILY', title: t('repeatDaily') },
-      { value: 'FREQ=WEEKLY', title: t('repeatWeekly') },
-      { value: 'FREQ=MONTHLY', title: t('repeatMonthly') },
-      { value: 'FREQ=YEARLY', title: t('repeatYearly') }
-    ];
-  }
-  const weekdayCode = WEEKDAYS[date.dayOfWeek - 1];
-  const weekday = date.toLocaleString(locale.value, { weekday: 'long' });
-  const week = Math.ceil(date.day / 7);
-  return [
-    { value: 'FREQ=DAILY', title: t('repeatDaily') },
-    { value: `FREQ=WEEKLY;BYDAY=${weekdayCode}`, title: t('repeatWeeklyOn', { weekday }) },
-    { value: `FREQ=MONTHLY;BYDAY=${week}${weekdayCode}`, title: t('repeatMonthlyByWeekday', { nth: t(`ordinal${week}`), weekday }) },
-    { value: 'FREQ=YEARLY', title: t('repeatAnnuallyOn', { date: date.toLocaleString(locale.value, { month: 'long', day: 'numeric' }) }) },
-    { value: 'FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR', title: t('repeatEveryWeekday') }
-  ];
-}
+const presetsFor = (date) => getRepeatOptions(date, { locale: locale.value, t });
 
 const presets = computed(() => presetsFor(toDate(props.startDate)));
 const matchingPreset = computed(() => presets.value.find(preset => isSameRule(preset.value, props.modelValue)));
@@ -130,5 +112,16 @@ watch(() => [props.startDate, props.modelValue], ([startDate, rule], [previousSt
 
 .repeat-menu .v-list-item-title {
   white-space: normal;
+}
+
+/* The link's own style, when the component is used without a linkClass */
+.repeat-select-link {
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+
+.repeat-select-link:hover {
+  text-decoration: underline;
 }
 </style>
