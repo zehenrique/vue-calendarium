@@ -10,9 +10,9 @@ const TEST_NOW = '2025-01-15T09:00:00';
 
 const repeatLabels = {
   daily: 'Daily',
-  weekly: 'Weekly',
-  monthly: 'Monthly',
-  yearly: 'Yearly'
+  weekly: 'Weekly on',
+  monthly: 'Monthly on',
+  yearly: 'Annually on'
 };
 
 async function switchToView(page, view) {
@@ -59,7 +59,7 @@ async function selectRepeat(page, repeat) {
 async function saveEvent(page, title) {
   const titleInput = page.getByPlaceholder(/Event title|Add title/i);
   await titleInput.fill(title);
-  await page.getByRole('button', { name: /Save/i }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.locator(EVENT_MODAL)).not.toBeVisible({ timeout: 4000 });
 }
 
@@ -73,7 +73,7 @@ async function createEvent(page, { slot, title, repeat } = {}) {
 
 async function confirmDeletion(page) {
   await expect(page.locator(DELETE_CONFIRM_MODAL)).toBeVisible({ timeout: 2000 });
-  await page.getByRole('button', { name: /Yes/i }).click();
+  await page.getByRole('button', { name: 'Yes', exact: true }).click();
   await expect(page.locator(DELETE_CONFIRM_MODAL)).not.toBeVisible({ timeout: 2000 });
 }
 
@@ -127,7 +127,7 @@ test.describe('Event Persistence - CRUD Operations', () => {
     await createEvent(page, { slot: 8, title: 'Original Title' });
 
     await openEventDetail(page, 'Original Title');
-    await page.getByRole('button', { name: /Edit/i }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await expect(page.locator(EVENT_MODAL)).toBeVisible();
 
     await saveEvent(page, 'Updated Title');
@@ -141,7 +141,7 @@ test.describe('Event Persistence - CRUD Operations', () => {
     await createEvent(page, { slot: 12, title: eventTitle });
 
     await openEventDetail(page, eventTitle);
-    await page.getByRole('button', { name: /Delete/i }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await confirmDeletion(page);
 
     await expect(page.locator(`${EVENT_SELECTOR}:has-text("${eventTitle}")`)).not.toBeVisible();
@@ -201,6 +201,8 @@ test.describe('Event Persistence - Calendar State Management', () => {
   });
 
   test('should handle rapid event operations', async ({ page }) => {
+    // Five full create-event flows: allow more than the default 15s when the suite runs in parallel
+    test.slow();
     await switchToWeekView(page);
 
     for (let i = 0; i < 5; i++) {

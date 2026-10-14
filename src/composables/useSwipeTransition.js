@@ -1,4 +1,5 @@
 import { ref } from 'vue';
+import { loadHammer } from '../core/hammer.js';
 
 export function createSwipeTransitionController(targetSelector, { isEnabled, onPanStart, onPanMove, onPanEnd } = {}) {
   const hammerInstance = ref(null);
@@ -20,8 +21,9 @@ export function createSwipeTransitionController(targetSelector, { isEnabled, onP
     }
   }
 
-  function initializeSwipeTransitionGestures(isMobile) {
-    if (typeof window === 'undefined' || !window.Hammer || !isMobile) {
+  async function initializeSwipeTransitionGestures(isMobile) {
+    const Hammer = isMobile ? await loadHammer() : null;
+    if (!Hammer) {
       destroySwipeTransitionGestures();
       return false;
     }
@@ -33,11 +35,11 @@ export function createSwipeTransitionController(targetSelector, { isEnabled, onP
 
     try {
       // Use a Manager so we can explicitly configure pan/swipe and keep vertical scrolling.
-      const hammer = new window.Hammer.Manager(target, {
+      const hammer = new Hammer.Manager(target, {
         touchAction: 'pan-y',
         recognizers: [
-          [window.Hammer.Pan, { direction: window.Hammer.DIRECTION_HORIZONTAL, threshold: 8 }],
-          [window.Hammer.Swipe, { direction: window.Hammer.DIRECTION_HORIZONTAL, threshold: 10, velocity: 0.3 }]
+          [Hammer.Pan, { direction: Hammer.DIRECTION_HORIZONTAL, threshold: 8 }],
+          [Hammer.Swipe, { direction: Hammer.DIRECTION_HORIZONTAL, threshold: 10, velocity: 0.3 }]
         ]
       });
 

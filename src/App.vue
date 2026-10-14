@@ -34,6 +34,8 @@ const enableModalsFromUrl = modalsParam !== 'off';
 const viewSelectorParam = urlParams.get('viewSelector');
 const mobileViewSelectorPlacementFromUrl = viewSelectorParam === 'header' ? 'header' : 'sidebar';
 
+const enableSwipeGesturesFromUrl = urlParams.get('swipe') !== 'off';
+
 // Generate sample events
 function generateSampleEvents() {
   const now = getCurrentDate();
@@ -202,8 +204,8 @@ const calendarApp = createCalendar({
   // Mobile view selector placement (can be changed via ?viewSelector=header|sidebar URL parameter)
   mobileViewSelectorPlacement: mobileViewSelectorPlacementFromUrl,
 
-  // Mobile interaction toggles
-  enableSwipeGestures: true,
+  // Mobile interaction toggles (swipe can be turned off with ?swipe=off)
+  enableSwipeGestures: enableSwipeGesturesFromUrl,
   enablePinchToZoom: true,
   enableCurrentTimeIndicator: true,
 

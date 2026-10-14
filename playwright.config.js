@@ -1,14 +1,22 @@
 import { defineConfig, devices } from '@playwright/test';
 
+// Dev server port for the tests; set TEST_PORT when 3000 is used by another app
+const PORT = process.env.TEST_PORT || 3000;
+const BASE_URL = `http://localhost:${PORT}`;
+
 /**
  * Playwright configuration for vue-calendarium
  * @see https://playwright.dev/docs/test-configuration
  */
 export default defineConfig({
   testDir: './tests',
-  
-  // Maximum time one test can run (reduced from 30s to 15s)
-  timeout: 15 * 1000,
+
+  // Load the app once so the dev server has compiled it before parallel tests start
+  globalSetup: './tests/global-setup.js',
+
+  // Maximum time one test can run. Some tests go through several dialogs, and with 8 workers
+  // sharing one dev server they can take three times as long as when run alone.
+  timeout: 30 * 1000,
   
   // Run tests in files in parallel
   fullyParallel: true,
@@ -34,7 +42,7 @@ export default defineConfig({
   // Shared settings for all the projects below
   use: {
     // Base URL to use in actions like `await page.goto('/')`
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     
     // Collect trace when retrying the failed test
     trace: 'on-first-retry',
@@ -45,8 +53,8 @@ export default defineConfig({
     // Reduce action timeout for faster failures (5s instead of default 30s)
     actionTimeout: 5000,
     
-    // Faster navigation timeout
-    navigationTimeout: 10000,
+    // Page loads are slow while 8 workers share the dev server
+    navigationTimeout: 30 * 1000,
   },
 
   // Configure projects for major browsers
@@ -106,8 +114,8 @@ export default defineConfig({
 
   // Run your local dev server before starting the tests
   webServer: {
-    command: 'npm run dev',
-    url: 'http://localhost:3000',
+    command: `npm run dev -- --port ${PORT} --strictPort`,
+    url: BASE_URL,
     reuseExistingServer: true, // Always reuse existing server for speed
     timeout: 60 * 1000, // Reduced from 120s to 60s
   },

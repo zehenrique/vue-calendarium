@@ -2,26 +2,27 @@
   <!-- Desktop Dialog -->
   <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="handleCancel" max-width="520" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="delete-confirm-modal">
     <v-card class="pa-0" rounded="xl">
-      <v-card-title class="px-6 pt-6 pb-4">
+      <v-card-title class="d-flex align-center px-6 pt-6 pb-4">
         <v-icon color="error" size="24" class="mr-3">mdi-alert-circle-outline</v-icon>
-        <span class="text-h6 font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
+        <span class="text-title-large font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-6 pb-6">
         <div v-if="isRecurring" class="mb-4">
-          <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
+          <div class="text-body-large mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
-            <v-radio :label="t('deleteThisEvent')" value="single"></v-radio>
-            <v-radio :label="t('deleteAllEvents')" value="all"></v-radio>
+            <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
+            <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
+            <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
-        <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
+        <div v-else class="text-body-large">{{ t('confirmDelete') }}</div>
       </v-card-text>
       <v-card-actions class="px-6 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn variant="text" @click="handleCancel" class="mr-2">
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">
           {{ t('no') }}
         </v-btn>
-        <v-btn color="error" variant="flat" @click="handleConfirm">
+        <v-btn color="error" variant="flat" :slim="false" class="px-6" @click="handleConfirm">
           {{ t('yes') }}
         </v-btn>
       </v-card-actions>
@@ -31,26 +32,27 @@
   <!-- Mobile Bottom Sheet -->
   <v-bottom-sheet v-if="mobile" :model-value="modelValue" @update:model-value="handleCancel" content-class="calendar-font-scope" persistent scrim="rgba(0, 0, 0, 0.5)" data-testid="delete-confirm-modal-mobile">
     <v-card class="mobile-delete-sheet" rounded="t-xl">
-      <v-card-title class="px-4 pt-5 pb-3">
+      <v-card-title class="d-flex align-center px-4 pt-5 pb-3">
         <v-icon color="error" size="24" class="mr-3">mdi-alert-circle-outline</v-icon>
-        <span class="text-h6 font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
+        <span class="text-title-large font-weight-medium">{{ t('confirmDeleteTitle') }}</span>
       </v-card-title>
       <v-card-text class="px-4 pb-4">
         <div v-if="isRecurring" class="mb-4">
-          <div class="text-body-1 mb-3">{{ t('confirmDeleteRecurring') }}</div>
+          <div class="text-body-large mb-3">{{ t('confirmDeleteRecurring') }}</div>
           <v-radio-group v-model="deleteOption">
-            <v-radio :label="t('deleteThisEvent')" value="single"></v-radio>
-            <v-radio :label="t('deleteAllEvents')" value="all"></v-radio>
+            <v-radio :label="t('scopeThisEvent')" value="this"></v-radio>
+            <v-radio :label="t('scopeFollowingEvents')" value="following"></v-radio>
+            <v-radio :label="t('scopeAllEvents')" value="all"></v-radio>
           </v-radio-group>
         </div>
-        <div v-else class="text-body-1">{{ t('confirmDelete') }}</div>
+        <div v-else class="text-body-large">{{ t('confirmDelete') }}</div>
       </v-card-text>
       <v-card-actions class="px-4 pb-6 pt-0">
         <v-spacer></v-spacer>
-        <v-btn variant="text" @click="handleCancel" class="mr-2">
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleCancel">
           {{ t('no') }}
         </v-btn>
-        <v-btn color="error" variant="flat" @click="handleConfirm">
+        <v-btn color="error" variant="flat" :slim="false" class="px-6" @click="handleConfirm">
           {{ t('yes') }}
         </v-btn>
       </v-card-actions>
@@ -79,7 +81,7 @@ export default {
   setup(props, { emit }) {
     const { t } = useI18n();
     const { mobile } = useDisplay();
-    const deleteOption = ref('single');
+    const deleteOption = ref('this');
 
     const isRecurring = ref(false);
 
@@ -88,7 +90,7 @@ export default {
       if (newEvent) {
         // Check if event has RRULE or if it's an occurrence of a recurring event
         isRecurring.value = !!(newEvent.rrule || newEvent.recurringEventId);
-        deleteOption.value = 'single'; // Default to single
+        deleteOption.value = 'this';
       } else {
         isRecurring.value = false;
       }
@@ -99,9 +101,8 @@ export default {
     };
 
     const handleConfirm = () => {
-      emit('confirm', {
-        deleteAll: isRecurring.value && deleteOption.value === 'all'
-      });
+      // Which events of a repeating series to delete: 'this', 'following' or 'all'
+      emit('confirm', { scope: isRecurring.value ? deleteOption.value : 'all' });
       emit('update:modelValue', false);
     };
 

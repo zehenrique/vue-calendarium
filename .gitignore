@@ -1,5 +1,7 @@
 node_modules
 dist
+# Library build output (npm run build:lib)
+/lib
 .DS_Store
 *.log
 .vscode
@@ -9,6 +11,7 @@ dist
 /test-results
 /playwright-report
 /playwright/.cache
+.playwright-mcp
 *.mp4
 *.webm
 modal-debug.json

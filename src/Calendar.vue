@@ -1,5 +1,7 @@
 <template>
-  <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile }">
+  <v-defaults-provider :defaults="CALENDAR_DEFAULTS">
+  <v-locale-provider :locale="vuetifyLocaleCode" :messages="VUETIFY_MESSAGES">
+  <div ref="calendarRoot" class="vue-calendarium" :class="{ 'is-mobile': isMobile, 'has-desktop-sidebar': desktopSidebarVisible }" :style="{ '--calendar-topbar-height': `${topBarHeight}px` }">
     <CalendarHeader
       :current-title="currentTitle"
       :current-view="currentView"
@@ -7,6 +9,9 @@
       :views="views"
       :is-mobile="isMobile"
       :show-mobile-menu="mobileSidebarEnabled"
+      :show-desktop-menu="desktopSidebarEnabled"
+      :menu-expanded="isMobile ? showMobileSidebar : desktopSidebarVisible"
+      :show-mobile-navigation="!swipeGesturesEnabled"
       :mobile-view-selector-placement="mobileViewSelectorPlacement"
       :swipe-enabled="swipeDeckEnabled"
       :swipe-render-neighbors="swipeRenderNeighbors"
@@ -16,7 +21,9 @@
       :next-week-days="currentView === 'week' ? nextWeekViewDays : null"
       :week-days="currentView === 'week' ? weekViewDays : null"
       :t="t"
-      @toggle-sidebar="toggleMobileSidebar"
+      :locale="calendarLocale"
+      :today="todayDate"
+      @toggle-sidebar="toggleSidebar"
       @previous="previousPeriod"
       @next="nextPeriod"
       @today="goToToday"
@@ -26,6 +33,9 @@
       @day-number-click="onAllDaySlotClick"
       @date-change="handleDateChange"
     />
+
+    <!-- Desktop: Google Calendar's sidebar, under the top bar -->
+    <DesktopSidebar v-if="desktopSidebarShown" :open="desktopSidebarVisible" :selected-date="currentDate" :today="todayDate" :locale="calendarLocale" :calendars="calendars" :visible-calendars="visibleCalendarIds" @date-select="handleMiniMonthSelect" @update:visible-calendars="handleVisibleCalendarsUpdate"/>
 
     <div ref="swipeDeck" class="swipe-deck" :class="{ 'is-active': swipeDeckEnabled, 'is-animating': swipeIsAnimating, 'is-panning': swipeIsPanning }">
       <div class="swipe-track" :class="{ 'is-single': !swipeRenderNeighbors }" :style="swipeTrackStyle">
@@ -208,6 +218,7 @@
     <EventModal
       v-if="modalsEnabled"
       v-model="showModal"
+      :is-editing="isEditingEvent"
       :event="newEvent"
       :calendars="calendars"
       @save="saveEvent"/>
@@ -227,6 +238,8 @@
       :event="selectedEvent"
       @confirm="confirmDelete"/>
 
+    <RecurrenceScopeModal v-if="modalsEnabled" v-model="showScopeChoice" :allow-this-event="pendingRecurringChange?.allowThisEvent ?? true" @confirm="applyRecurringChange" @cancel="pendingRecurringChange = null"/>
+
     <MobileSidebar
       v-if="mobileSidebarEnabled"
       v-model="showMobileSidebar"
@@ -238,13 +251,15 @@
       @update:visible-calendars="handleVisibleCalendarsUpdate"
       @view-change="handleViewChange"/>
   </div>
+  </v-locale-provider>
+  </v-defaults-provider>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue';
 import { Temporal } from '@js-temporal/polyfill';
 import { useI18n } from 'vue-i18n';
-import { useLocale } from 'vuetify';
+import { en as vuetifyEn, pt as vuetifyPt } from 'vuetify/locale';
 import { DEFAULT_COLOR } from './config/colors.js';
 import { mergeTheme, applyTheme } from './config/theme.js';
 import CalendarHeader from './components/calendar/CalendarHeader.vue';
@@ -254,7 +269,10 @@ import DayView from './components/calendar/DayView.vue';
 import EventModal from './components/EventModal.vue';
 import EventDetailModal from './components/EventDetailModal.vue';
 import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
+import RecurrenceScopeModal from './components/RecurrenceScopeModal.vue';
 import MobileSidebar from './components/MobileSidebar.vue';
+import DesktopSidebar from './components/DesktopSidebar.vue';
+import { CALENDAR_DEFAULTS } from './config/vuetifyDefaults.js';
 import {
   createDefaultEventDraft,
   ensureDraftCalendar,
@@ -267,7 +285,8 @@ import {
   buildEventPayloadFromDraft
 } from './composables/useCalendarEventHelpers.js';
 import { getStartOfWeek, getEndOfWeek } from './composables/useCalendarUtils.js';
-import { expandRecurrence } from './composables/useCalendarInterop.js';
+import { expandRecurrence } from './core/recurrence.js';
+import { changesRule, planRecurringDelete, planRecurringEdit } from './core/recurringChanges.js';
 import { createSwipeTransitionController } from './composables/useSwipeTransition.js';
 import { createPinchToZoomController } from './composables/usePinchToZoom.js';
 import { useDragAndDrop } from './composables/useDragAndDrop.js';
@@ -290,14 +309,19 @@ defineEmits([]);
 defineOptions({ name: 'Calendar' });
 
 const { t, locale: i18nLocale } = useI18n();
-const { current: vuetifyLocale } = useLocale();
+const VUETIFY_MESSAGES = { en: vuetifyEn, pt: vuetifyPt };
+const vuetifyLocaleCode = ref('en');
 
 // Reactive data sources from calendar app
 const events = computed(() => props.calendarApp.visibleEvents.value);
+// Changed occurrences of repeating events, from every calendar: each replaces an occurrence
+// of its series even when its own calendar is hidden
+const storedExceptions = computed(() => props.calendarApp.eventsService.getAll().filter(event => event.recurringEventId));
 const calendars = computed(() => props.calendarApp.calendarsService.getAll());
 const calendarLocale = computed(() => props.calendarApp.locale.value);
 const modalsEnabled = computed(() => props.calendarApp.enableModals?.value ?? true);
 const mobileSidebarEnabled = computed(() => props.calendarApp.enableMobileSidebar?.value ?? true);
+const desktopSidebarEnabled = computed(() => props.calendarApp.enableDesktopSidebar?.value ?? true);
 const dragAndDropEnabled = computed(() => props.calendarApp.enableDragAndDrop?.value ?? false);
 
 const mobileViewSelectorPlacement = computed(() => {
@@ -368,6 +392,12 @@ const isMobile = ref(false);
 const showModal = ref(false);
 const showEventDetail = ref(false);
 const showDeleteConfirm = ref(false);
+// Repeating events: the instance being edited, and a change waiting for "this / following / all"
+const editingInstance = ref(null);
+// Whether the event dialog edits an existing event, for its title
+const isEditingEvent = ref(false);
+const pendingRecurringChange = ref(null);
+const showScopeChoice = ref(false);
 const showMobileSidebar = ref(false);
 const selectedEvent = ref(null);
 const currentTime = ref(getCurrentDateTime());
@@ -400,7 +430,7 @@ watch(
   (newLocale) => {
     const mappedLocale = localeCodeMap[newLocale] || 'en';
     i18nLocale.value = mappedLocale;
-    vuetifyLocale.value = mappedLocale;
+    vuetifyLocaleCode.value = mappedLocale;
   },
   { immediate: true }
 );
@@ -472,7 +502,7 @@ function buildDisplayEventsFor(view, date) {
 
   for (const e of events.value) {
     if (e && e.rrule) {
-      expanded.push(...expandRecurrence(e, range.start, range.end));
+      expanded.push(...expandRecurrence(e, range.start, range.end, { exceptions: storedExceptions.value }));
     } else {
       expanded.push(e);
     }
@@ -519,7 +549,10 @@ const nextDayEvents = computed(() => nextDayEventSummary.value.timedEvents);
 const nextDayAllDayEvents = computed(() => nextDayEventSummary.value.allDayEvents);
 
 const currentTitle = computed(() =>
-  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value)
+  formatCurrentTitle(currentView.value, currentDate.value, calendarLocale.value, isMobile.value, {
+    // On mobile, the day view's date badge and a view dropdown in the header leave little room
+    compact: currentView.value === 'day' && mobileViewSelectorPlacement.value === 'header'
+  })
 );
 
 const currentTimePosition = computed(() => {
@@ -646,8 +679,20 @@ function clearSwipeAnimationTimeout() {
   }
 }
 
+function prefersReducedMotion() {
+  return typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+}
+
 function animateSwipeTo(targetDeltaX, { onComplete } = {}) {
   clearSwipeAnimationTimeout();
+
+  // Users who ask for less motion get the result without the slide
+  if (prefersReducedMotion()) {
+    swipeDeltaX.value = targetDeltaX;
+    onComplete?.();
+    return;
+  }
+
   swipeIsAnimating.value = true;
   swipeDeltaX.value = targetDeltaX;
   swipeAnimationTimeoutId = setTimeout(() => {
@@ -907,9 +952,48 @@ watch(() => props.theme, (newTheme) => {
   }
 }, { deep: true });
 
-function toggleMobileSidebar() {
-  showMobileSidebar.value = !showMobileSidebar.value;
+// The header's menu button opens the slide-out sidebar on mobile, and shows or hides the
+// sidebar on desktop, as in Google Calendar. The app can also open or close it
+// (calendarApp.setSidebarOpen, toggleSidebar)
+const desktopSidebarOpen = props.calendarApp._refs.desktopSidebarOpen;
+// As in Google Calendar, a narrow calendar starts with the sidebar closed, unless the app chose
+const SIDEBAR_MIN_CALENDAR_WIDTH = 1024;
+onMounted(() => {
+  if (desktopSidebarOpen.value === null) {
+    desktopSidebarOpen.value = (calendarRoot.value?.offsetWidth ?? Infinity) >= SIDEBAR_MIN_CALENDAR_WIDTH;
+  }
+});
+const desktopSidebarShown = computed(() => !isMobile.value && desktopSidebarEnabled.value);
+const desktopSidebarVisible = computed(() => desktopSidebarShown.value && Boolean(desktopSidebarOpen.value));
+const todayDate = computed(() => currentTime.value.toPlainDate());
+
+function toggleSidebar() {
+  if (isMobile.value) {
+    showMobileSidebar.value = !showMobileSidebar.value;
+  } else {
+    props.calendarApp.toggleSidebar();
+  }
 }
+
+function handleMiniMonthSelect(date) {
+  currentDate.value = date;
+  props.calendarApp.callbacks.onDateChange?.(date);
+}
+
+// The sidebar sits under the header's top bar (its first row), whose height depends on the
+// font and on wrapping, so it is measured
+const topBarHeight = ref(0);
+let topBarObserver = null;
+function observeTopBar() {
+  const topBar = calendarRoot.value?.querySelector('.header-content');
+  if (!topBar || typeof ResizeObserver === 'undefined') return;
+  topBarObserver = new ResizeObserver(() => {
+    topBarHeight.value = topBar.offsetHeight;
+  });
+  topBarObserver.observe(topBar);
+}
+onMounted(observeTopBar);
+onBeforeUnmount(() => topBarObserver?.disconnect());
 
 function handleVisibleCalendarsUpdate(calendarIds) {
   // Update calendar visibility through calendarsService
@@ -1020,6 +1104,7 @@ function onAllDaySlotClick(date) {
 }
 
 function openCreateModal(overrides = {}, context = {}) {
+  isEditingEvent.value = false;
   const draft = createDefaultEventDraft(calendars.value, overrides);
   newEvent.value = draft;
 
@@ -1058,6 +1143,12 @@ function editSelectedEvent(event) {
   const target = event || selectedEvent.value;
   if (!target) return;
 
+  // An instance of a repeating event opens with its own date and the series' rule;
+  // saving then asks which events the change applies to
+  const series = getSeriesOf(target);
+  editingInstance.value = series ? target : null;
+  isEditingEvent.value = true;
+
   const start = Temporal.PlainDateTime.from(target.start);
   const end = target.end ? Temporal.PlainDateTime.from(target.end) : start.add({ hours: 1 });
 
@@ -1068,7 +1159,7 @@ function editSelectedEvent(event) {
     startTime: `${String(start.hour).padStart(2, '0')}:${String(start.minute).padStart(2, '0')}`,
     endDate: end.toPlainDate().toString(),
     endTime: `${String(end.hour).padStart(2, '0')}:${String(end.minute).padStart(2, '0')}`,
-    rrule: target.rrule || '',
+    rrule: series?.rrule ?? target.rrule ?? '',
     calendarId: target.calendarId || calendars.value[0]?.id || 'default',
     color: target.color || calendars.value[0]?.color || DEFAULT_COLOR,
     allDay: target.allDay || false
@@ -1093,74 +1184,65 @@ function deleteSelectedEvent(event) {
   }
 }
 
-function confirmDelete(options = {}) {
-  if (!selectedEvent.value) {
-    showDeleteConfirm.value = false;
-    showEventDetail.value = false;
-    return;
+function confirmDelete({ scope = 'all' } = {}) {
+  const instance = selectedEvent.value;
+  const series = getSeriesOf(instance);
+
+  if (series) {
+    applyChangePlan(planRecurringDelete({ series, exceptions: getExceptionsOf(series), instance, scope }));
+  } else if (instance) {
+    applyChangePlan({ remove: [instance] });
   }
 
-  const { deleteAll = false } = options;
-  
-  // If deleting all events in the series, or if not a recurring event
-  if (deleteAll || (!selectedEvent.value.rrule && !selectedEvent.value.recurringEventId)) {
-    props.calendarApp.eventsService.remove(selectedEvent.value.id);
-    props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
-  } else {
-    // Deleting single occurrence - find the base event and add EXDATE
-    const selectedId = selectedEvent.value.id.toString();
-    const baseEventId = selectedId.includes('-') ? selectedId.split('-')[0] : selectedId;
-    
-    // Find the base event from events (not the expanded displayEvents)
-    const baseEvent = events.value.find(e => e.id.toString() === baseEventId);
-    
-    if (!baseEvent || !baseEvent.rrule) {
-      // Fallback: if we can't find base event or it doesn't have rrule, delete normally
-      props.calendarApp.eventsService.remove(selectedEvent.value.id);
-      props.calendarApp.callbacks.onEventDelete?.(selectedEvent.value);
-      selectedEvent.value = null;
-      showDeleteConfirm.value = false;
-      showEventDetail.value = false;
-      return;
-    }
-    
-    // Create updated event with EXDATE
-    const eventToUpdate = { ...baseEvent };
-    const dateToExclude = selectedEvent.value.start;
-    
-    // Parse the ISO date to get formatted date for EXDATE (YYYYMMDDTHHMMSSZ format)
-    const excludeDate = new Date(dateToExclude);
-    const exdateFormatted = excludeDate.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    
-    // Parse existing RRULE
-    let rruleString = eventToUpdate.rrule || '';
-    
-    // Check if EXDATE already exists in the RRULE
-    if (rruleString.includes('\nEXDATE:')) {
-      // Append to existing EXDATE
-      rruleString = rruleString.replace(
-        /\nEXDATE:([^\n]+)/,
-        (match, dates) => `\nEXDATE:${dates},${exdateFormatted}`
-      );
-    } else {
-      // Add new EXDATE line
-      // Ensure RRULE has proper format (DTSTART\nRRULE:...)
-      if (!rruleString.includes('DTSTART:')) {
-        // Use the base event's start for DTSTART, not the occurrence's start
-        const dtstart = new Date(baseEvent.start).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-        rruleString = `DTSTART:${dtstart}\nRRULE:${rruleString.replace(/^RRULE:/, '')}`;
-      }
-      rruleString += `\nEXDATE:${exdateFormatted}`;
-    }
-    
-    eventToUpdate.rrule = rruleString;
-    props.calendarApp.eventsService.update(eventToUpdate);
-    props.calendarApp.callbacks.onEventUpdate?.(eventToUpdate);
-  }
-  
   selectedEvent.value = null;
   showDeleteConfirm.value = false;
   showEventDetail.value = false;
+}
+
+// Repeating events. An instance is an occurrence generated from a series' rule, or an
+// exception: an event stored in place of one occurrence. Both carry `recurringEventId`.
+function getSeriesOf(event) {
+  if (!event?.recurringEventId) return null;
+  const series = props.calendarApp.eventsService.get(event.recurringEventId);
+  return series?.rrule ? series : null;
+}
+
+function getExceptionsOf(series) {
+  return props.calendarApp.eventsService.getAll().filter(event => event.recurringEventId === series.id);
+}
+
+// Store a set of changes and report each one through the callbacks
+function applyChangePlan({ update = [], add = [], remove = [] }) {
+  const { eventsService, callbacks } = props.calendarApp;
+  update.forEach((event) => {
+    const updated = eventsService.update(event);
+    if (updated) callbacks.onEventUpdate?.(updated);
+  });
+  remove.forEach((event) => {
+    const removed = eventsService.remove(event.id);
+    if (removed) callbacks.onEventDelete?.(removed);
+  });
+  const added = add.map(event => eventsService.add(event)).filter(Boolean);
+  if (added.length) callbacks.onEventCreate?.(added);
+}
+
+// Ask "this event / this and following / all events" before changing a repeating event
+function askRecurringScope(change) {
+  pendingRecurringChange.value = change;
+  showScopeChoice.value = true;
+}
+
+function applyRecurringChange(scope) {
+  const change = pendingRecurringChange.value;
+  pendingRecurringChange.value = null;
+  if (!change) return;
+
+  const { series, instance, changes, dropTarget } = change;
+  applyChangePlan(planRecurringEdit({ series, exceptions: getExceptionsOf(series), instance, changes, scope }));
+
+  if (dropTarget) {
+    props.calendarApp.callbacks.onEventDrop?.({ event: changes, originalEvent: instance, dropTarget, scope });
+  }
 }
 
 // Drag and drop handlers
@@ -1201,8 +1283,20 @@ function handleEventDragEnd() {
       end: newEnd.toString()
     };
     
-    // Update in service
-    props.calendarApp.eventsService.update(updatedEvent);
+    // A repeating event asks which events to move first
+    const series = getSeriesOf(event);
+    if (series) {
+      if (modalsEnabled.value) {
+        askRecurringScope({ series, instance: event, changes: updatedEvent, allowThisEvent: true, dropTarget: target });
+      } else {
+        // Without the built-in dialogs the app decides what to change
+        props.calendarApp.callbacks.onEventDrop?.({ event: updatedEvent, originalEvent: event, dropTarget: target });
+      }
+      return;
+    }
+
+    // Update in service; nothing to report if the event no longer exists
+    if (!props.calendarApp.eventsService.update(updatedEvent)) return;
     
     // Call callback if provided
     props.calendarApp.callbacks.onEventDrop?.({
@@ -1238,18 +1332,19 @@ function saveEvent(eventDataFromModal) {
   const normalizedDraft = ensureDraftCalendar(eventToSave, calendars.value);
   const eventPayload = buildEventPayloadFromDraft(normalizedDraft, calendars.value);
 
-  // Check if event exists in the service (not just if it has an ID)
-  const existingEvent = eventPayload.id ? props.calendarApp.eventsService.get(eventPayload.id) : null;
-  
-  if (existingEvent) {
-    // Update existing event
-    props.calendarApp.eventsService.update(eventPayload);
-    props.calendarApp.callbacks.onEventUpdate?.(eventPayload);
+  const instance = editingInstance.value;
+  editingInstance.value = null;
+  const series = getSeriesOf(instance);
+
+  if (series) {
+    // An instance of a repeating event: ask which events the change applies to
+    askRecurringScope({ series, instance, changes: eventPayload, allowThisEvent: !changesRule(series, eventPayload, instance) });
+  } else if (eventPayload.id && props.calendarApp.eventsService.get(eventPayload.id)) {
+    applyChangePlan({ update: [eventPayload] });
   } else {
     // Add new event (remove any auto-generated ID first)
     delete eventPayload.id;
-    props.calendarApp.eventsService.add(eventPayload);
-    props.calendarApp.callbacks.onEventCreate?.([eventPayload]);
+    applyChangePlan({ add: [eventPayload] });
   }
 
   // Clear ghost event after saving
@@ -1259,6 +1354,9 @@ function saveEvent(eventDataFromModal) {
 
 // Watch for modal close to clear ghost event if cancelled
 watch(showModal, (isOpen) => {
+  if (!isOpen) {
+    editingInstance.value = null;
+  }
   if (!isOpen && ghostEvent.value) {
     // Modal was closed without saving, clear ghost event
     props.calendarApp.hideGhostEvent();
@@ -1301,6 +1399,25 @@ watch(showModal, (isOpen) => {
   overflow: hidden;
 }
 
+/* Desktop sidebar: the week's day headers and the views move right to make room for it,
+   sliding with the sidebar */
+.swipe-deck,
+.vue-calendarium :deep(.week-strip) {
+  transition: margin-left var(--calendar-transition-fast, 0.2s) ease;
+}
+
+.has-desktop-sidebar .swipe-deck,
+.has-desktop-sidebar :deep(.week-strip) {
+  margin-left: var(--calendar-sidebar-width, 256px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swipe-deck,
+  .vue-calendarium :deep(.week-strip) {
+    transition: none;
+  }
+}
+
 .swipe-track {
   position: absolute;
   top: 0;
@@ -1333,5 +1450,15 @@ watch(showModal, (isOpen) => {
   .vue-calendarium {
     height: 100%;
   }
+}
+</style>
+
+<style>
+/* Vuetify 4 keeps its CSS in cascade layers, so an app's unlayered CSS reset (CoreUI's or
+   Bootstrap's reboot: button { border-radius: 0 }) beats Vuetify's button shapes. revert-layer
+   gives the shape back to Vuetify in the calendar and in its dialogs, menus and date pickers,
+   which open outside it. :where() keeps this weaker than the calendar's own button styles. */
+:where(.vue-calendarium, .calendar-font-scope, .calendar-select-menu) .v-btn {
+  border-radius: revert-layer;
 }
 </style>

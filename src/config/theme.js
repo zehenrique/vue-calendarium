@@ -80,6 +80,7 @@ export const DEFAULT_THEME = {
   
   // Time column
   '--calendar-time-column-width': '60px',
+  '--calendar-sidebar-width': '256px',
   '--calendar-time-column-width-mobile': '50px',
   
   // Day numbers

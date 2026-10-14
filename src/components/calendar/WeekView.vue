@@ -1,5 +1,5 @@
 <template>
-  <div ref="scrollContainer" class="calendar-body week-view">
+  <div ref="scrollContainer" class="calendar-body week-view" :class="{ 'event-drag-active': isDragging }">
     <div class="week-grid">
       <div class="time-column no-border">
         <div class="time-header"></div>
@@ -9,16 +9,8 @@
       </div>
       <div class="week-days-container">
         <div class="week-day-columns">
-          <div v-for="day in days" :key="day.key" class="week-day-column">
-            <div
-              v-for="hour in 24"
-              :key="hour"
-              class="hour-slot"
-              :class="{ 'drop-target': isDropTarget(day.date, hour - 1) }"
-              @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })"
-              @mouseenter="handleSlotHover(day.date, hour - 1)"
-              @mouseleave="handleSlotLeave"
-            ></div>
+          <div v-for="(day, dayIndex) in days" :key="day.key" class="week-day-column">
+            <div v-for="hour in 24" :key="hour" class="hour-slot" :class="{ 'drop-target': isDropTarget(day.date, hour - 1) }" role="button" :tabindex="isActiveSlot(dayIndex, hour - 1) ? 0 : -1" :data-slot="`${dayIndex}-${hour - 1}`" :aria-label="getSlotLabel(dayLabels[dayIndex], hour - 1, t)" @click="$emit('hour-slot-select', { date: day.date, hour: hour - 1 })" @keydown="handleSlotKeydown($event, dayIndex, hour - 1)" @mouseenter="handleSlotHover(day.date, hour - 1)" @mouseleave="handleSlotLeave"></div>
             <div
               v-if="showCurrentTimeIndicator && day.isToday"
               class="current-time-indicator"
@@ -40,8 +32,13 @@
                 ...getEventColorStyle(event.color, isEventPast(event)),
                 ...(isDraggingEvent(event.id) ? { transform: dragTransform, opacity: 0.5, zIndex: 1000, pointerEvents: 'none' } : {})
               }"
+              role="button"
+              :tabindex="event.isGhost ? -1 : 0"
+              :aria-label="getEventLabel(event, locale, t)"
               @mousedown.stop="handleEventMouseDown(event, $event)"
-              @click.stop="handleEventClick(event)">
+              @click.stop="handleEventClick(event)"
+              @keydown.enter.prevent="handleEventClick(event)"
+              @keydown.space.prevent="handleEventClick(event)">
               <div class="event-title">{{ event.title || t('untitled') }}</div>
             </div>
           </div>
@@ -54,6 +51,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onBeforeUnmount, ref, toRefs, watch } from 'vue';
 import { formatHour, getEventColorStyle, getEventStyle, isEventPast } from '../../composables/useCalendarUtils.js';
+import { formatDayLabel, getEventLabel, getSlotLabel, useTimeGridKeyboard } from '../../composables/useTimeGridKeyboard.js';
 
 const props = defineProps({
   days: {
@@ -118,6 +116,10 @@ const emit = defineEmits([
   'slot-drag-over',
   'slot-drag-leave'
 ]);
+
+// Keyboard: arrow keys move between hour slots, Enter or Space opens the create dialog
+const { isActiveSlot, handleSlotKeydown } = useTimeGridKeyboard(days, slot => emit('hour-slot-select', slot));
+const dayLabels = computed(() => days.value.map(day => formatDayLabel(day.date, props.locale)));
 
 // Drag and drop helper methods
 const isDraggingEvent = (eventId) => {
@@ -393,6 +395,19 @@ watch(showCurrentTimeIndicator, value => {
 .hour-slot.drop-target {
   background-color: var(--calendar-drop-target-bg, rgba(26, 115, 232, 0.1));
   border: 2px dashed var(--calendar-primary-color, #1a73e8);
+}
+
+/* While an event is dragged, other events let the pointer through so the hour
+   slot underneath becomes the drop target (otherwise hovering an event clears it) */
+.event-drag-active .week-event {
+  pointer-events: none;
+}
+
+/* Keyboard focus on hour slots and events */
+.hour-slot:focus-visible,
+.week-event:focus-visible {
+  outline: 2px solid var(--calendar-primary-color, #1a73e8);
+  outline-offset: -2px;
 }
 
 .week-event {

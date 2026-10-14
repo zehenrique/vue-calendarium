@@ -1,95 +1,19 @@
 import { useI18n } from 'vue-i18n';
+import { describeRule } from '../core/recurrenceText.js';
 
 /**
- * Composable to format RRULE strings into human-readable text
+ * Composable to format RRULE strings into human-readable text, in the calendar's language
  */
 export function useRRuleFormatter() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
 
   /**
-   * Convert RRULE string to human-readable description
-   * @param {string} rruleStr - RRULE string (with or without RRULE: prefix)
+   * Convert an RRULE string to a human-readable description in the current language,
+   * for example "Weekly on Monday, Wednesday" or "Every 2 weeks, 6 times".
+   * @param {string} rruleStr - RRULE string, with or without the RRULE: prefix and other lines
    * @returns {string} Human-readable recurrence description
    */
-  const formatRRule = (rruleStr) => {
-    if (!rruleStr || rruleStr === '') {
-      return t('repeatNone');
-    }
-
-    // Remove RRULE: prefix if present
-    const str = rruleStr.startsWith('RRULE:') ? rruleStr.substring(6) : rruleStr;
-    const parts = {};
-    
-    // Parse RRULE parts
-    str.split(';').forEach(part => {
-      const [key, value] = part.split('=');
-      parts[key] = value;
-    });
-
-    const freq = parts.FREQ;
-    const interval = parseInt(parts.INTERVAL || '1', 10);
-    const count = parts.COUNT ? parseInt(parts.COUNT, 10) : null;
-    const until = parts.UNTIL;
-    const byday = parts.BYDAY;
-
-    let description;
-
-    // Base frequency
-    if (interval === 1) {
-      switch (freq) {
-        case 'DAILY':
-          description = t('repeatDaily');
-          break;
-        case 'WEEKLY':
-          description = t('repeatWeekly');
-          break;
-        case 'MONTHLY':
-          description = t('repeatMonthly');
-          break;
-        case 'YEARLY':
-          description = t('repeatYearly');
-          break;
-        default:
-          description = freq;
-      }
-    } else {
-      // Custom interval
-      const unitMap = {
-        DAILY: t('days'),
-        WEEKLY: t('weeks'),
-        MONTHLY: t('months'),
-        YEARLY: t('years')
-      };
-      description = `Every ${interval} ${unitMap[freq] || freq.toLowerCase()}`;
-    }
-
-    // Add BYDAY details for weekly
-    if (freq === 'WEEKLY' && byday) {
-      const dayMap = {
-        SU: t('sunday'),
-        MO: t('monday'),
-        TU: t('tuesday'),
-        WE: t('wednesday'),
-        TH: t('thursday'),
-        FR: t('friday'),
-        SA: t('saturday')
-      };
-      const days = byday.split(',').map(d => dayMap[d] || d).join(', ');
-      description += ` on ${days}`;
-    }
-
-    // Add end condition
-    if (count) {
-      description += `, ${count} times`;
-    } else if (until) {
-      // Format UNTIL date
-      const dateStr = until.replace(/T.*/, '');
-      const formatted = `${dateStr.slice(0, 4)}-${dateStr.slice(4, 6)}-${dateStr.slice(6, 8)}`;
-      description += `, until ${formatted}`;
-    }
-
-    return description;
-  };
+  const formatRRule = (rruleStr) => describeRule(rruleStr, { locale: locale.value, t });
 
   return {
     formatRRule

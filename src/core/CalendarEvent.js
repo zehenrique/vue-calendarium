@@ -1,33 +1,39 @@
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
+import { toPlainDateTimeString } from './dateTime.js';
+
+/**
+ * Generate a unique event id
+ * @returns {string}
+ */
+export function generateEventId() {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+  return `event-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
 
 /**
  * CalendarEvent class represents a single event in the calendar
  */
 export class CalendarEvent {
   constructor(data = {}) {
-    this.id = data.id || this._generateId();
+    this.id = data.id || generateEventId();
     this.title = data.title || '';
-    this.start = data.start || null;
-    this.end = data.end || null;
+    this.start = toPlainDateTimeString(data.start) || null;
+    this.end = toPlainDateTimeString(data.end) || null;
     this.allDay = data.allDay || false;
-    this.calendarId = data.calendarId || data.calendar || 'default';
+    this.calendarId = data.calendarId || data.calendar || null;
     this.color = data.color || DEFAULT_COLOR;
     this.rrule = data.rrule || '';
     this.description = data.description || '';
     this.location = data.location || '';
     this.custom = data.custom || {};
+    // Set on an event that replaces one occurrence of a repeating event: the series' id,
+    // and the start that occurrence has in the series
+    this.recurringEventId = data.recurringEventId ?? null;
+    this.originalStart = toPlainDateTimeString(data.originalStart) ?? null;
     
     // Internal properties
     this._options = data._options || {};
-  }
-
-  /**
-   * Generate a unique ID for the event
-   */
-  _generateId() {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-    return `event-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
   }
 
   /**
@@ -46,6 +52,8 @@ export class CalendarEvent {
       description: this.description,
       location: this.location,
       custom: { ...this.custom },
+      recurringEventId: this.recurringEventId,
+      originalStart: this.originalStart,
       _options: { ...this._options }
     };
   }
@@ -71,6 +79,8 @@ export class CalendarEvent {
     Object.keys(data).forEach(key => {
       if (key === 'custom') {
         this.custom = { ...this.custom, ...data.custom };
+      } else if (key === 'start' || key === 'end' || key === 'originalStart') {
+        this[key] = toPlainDateTimeString(data[key]) || null;
       } else if (key !== 'id') {
         this[key] = data[key];
       }

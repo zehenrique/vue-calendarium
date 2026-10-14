@@ -1,10 +1,8 @@
 import { Temporal } from '@js-temporal/polyfill';
-import { rrulestr } from 'rrule';
 import { getStartOfWeek, getEndOfWeek, calculateEventColumns } from './useCalendarUtils.js';
 import { DEFAULT_COLOR } from '../config/colors.js';
 
 const DEFAULT_EVENT_COLOR = DEFAULT_COLOR;
-const MAX_RECURRING_OCCURRENCES = 52;
 const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 
 function resolvePrimaryCalendar(calendars) {
@@ -142,7 +140,16 @@ export function createWeekdayLabels(currentDate, locale, isMobile, t) {
   });
 }
 
-export function formatCurrentTitle(view, currentDate, locale, isMobile = false) {
+/**
+ * The header title: the month and year, or on desktop in the day view the full date.
+ * @param {string} view
+ * @param {Temporal.PlainDate} currentDate
+ * @param {string} locale
+ * @param {boolean} [isMobile]
+ * @param {object} [options]
+ * @param {boolean} [options.compact] - Short month name ("set. 2026"), for a crowded mobile header
+ */
+export function formatCurrentTitle(view, currentDate, locale, isMobile = false, { compact = false } = {}) {
   if (view === 'month') {
     const monthName = currentDate.toLocaleString(locale, { month: 'long' });
     return `${monthName} ${currentDate.year}`;
@@ -158,15 +165,11 @@ export function formatCurrentTitle(view, currentDate, locale, isMobile = false) 
   // - Mobile: Show only month and year (day name is shown separately in header badge)
   // - Desktop: Show full date with weekday
   if (isMobile) {
-    const monthName = currentDate.toLocaleString(locale, { month: 'long' });
+    const monthName = currentDate.toLocaleString(locale, { month: compact ? 'short' : 'long' });
     return `${monthName} ${currentDate.year}`;
-  } else {
-    const weekday = currentDate.toLocaleString(locale, { weekday: 'long' });
-    const monthName = currentDate.toLocaleString(locale, { month: 'long' });
-    const day = currentDate.day;
-    const year = currentDate.year;
-    return `${weekday}, ${monthName} ${day}, ${year}`;
   }
+  // In the language's own order: "Wednesday, January 15, 2025", "quarta-feira, 15 de janeiro de 2025"
+  return currentDate.toLocaleString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 }
 
 export function shouldDisplayCurrentTimeIndicator(view, currentDate) {
@@ -215,35 +218,3 @@ export function buildEventPayloadFromDraft(draft, calendars) {
   };
 }
 
-export function generateRecurringEvents(baseEvent, maxOccurrences = MAX_RECURRING_OCCURRENCES) {
-  const dtstart = new Date(baseEvent.start);
-  const baseStart = Temporal.PlainDateTime.from(baseEvent.start);
-  const baseEnd = Temporal.PlainDateTime.from(baseEvent.end || baseEvent.start);
-  const dur = baseEnd.since(baseStart);
-
-  const rruleText = baseEvent.rrule;
-  if (!rruleText || rruleText.trim() === '') {
-    return [baseEvent];
-  }
-
-  const rule = rrulestr(rruleText.startsWith('RRULE:') ? rruleText : `RRULE:${rruleText}`, {
-    dtstart
-  });
-
-  const dates = [];
-  rule.all((date, i) => {
-    if (i >= maxOccurrences) return false;
-    dates.push(date);
-    return true;
-  });
-
-  return dates.map((jsDate, idx) => {
-    const t = Temporal.PlainDateTime.from(jsDate.toISOString().slice(0, 19));
-    return {
-      ...baseEvent,
-      id: idx === 0 ? baseEvent.id : `${baseEvent.id}-${idx}`,
-      start: t.toString(),
-      end: t.add(dur).toString()
-    };
-  });
-}

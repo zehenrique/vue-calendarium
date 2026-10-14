@@ -82,7 +82,7 @@ test.describe('Mobile View Selector', () => {
     
     // Get initial view value
     const viewSelector = page.locator('.header-right [data-testid="view-toggle"]');
-    const initialValue = await viewSelector.locator('input').inputValue();
+    const initialValue = await viewSelector.locator('input[type="text"]').inputValue();
     
     // Switch to a different view
     await viewSelector.click();
@@ -94,7 +94,7 @@ test.describe('Mobile View Selector', () => {
     await page.waitForTimeout(500);
     
     // Check that the value changed
-    const newValue = await viewSelector.locator('input').inputValue();
+    const newValue = await viewSelector.locator('input[type="text"]').inputValue();
     expect(newValue).not.toBe(initialValue);
   });
 });

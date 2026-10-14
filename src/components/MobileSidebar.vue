@@ -4,7 +4,7 @@
       <v-list class="py-2">
         <v-list-item class="px-4 py-3">
           <template v-slot:prepend>
-            <span class="text-h6 font-weight-medium">{{ t('menu') }}</span>
+            <span class="text-title-large font-weight-medium">{{ t('menu') }}</span>
           </template>
           <template v-slot:append>
             <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')">
@@ -18,14 +18,14 @@
 
       <!-- Views -->
       <template v-if="shouldShowViewSelector">
-        <v-list-subheader class="px-4 py-2 text-caption font-weight-medium">{{ t('views') }}</v-list-subheader>
+        <v-list-subheader class="px-4 py-2 text-body-small font-weight-medium">{{ t('views') }}</v-list-subheader>
         <v-list density="comfortable" class="py-0">
           <v-list-item v-for="view in views" :key="view" :data-testid="`sidebar-view-${view}`" class="px-4 my-1" rounded="lg" @click="selectView(view)">
             <template v-slot:prepend>
               <v-icon size="18">{{ getViewIcon(view) }}</v-icon>
             </template>
             <template v-slot:default>
-              <v-list-item-title class="text-body-2">{{ t(view) }}</v-list-item-title>
+              <v-list-item-title class="text-body-medium">{{ t(view) }}</v-list-item-title>
             </template>
             <template v-slot:append>
               <v-icon v-if="currentView === view" size="18">mdi-check</v-icon>
@@ -37,27 +37,16 @@
       </template>
 
       <!-- Calendars -->
-      <v-list-subheader class="px-4 py-2 text-caption font-weight-medium">{{ t('calendars') }}</v-list-subheader>
-      <v-list density="comfortable" class="py-0">
-        <v-list-item v-for="calendar in calendars" :key="calendar.id" @click="toggleCalendar(calendar.id)" class="px-4 my-1" rounded="lg">
-          <template v-slot:prepend>
-            <v-checkbox :model-value="isCalendarVisible(calendar.id)" :color="calendar.color" density="compact" hide-details class="calendar-checkbox" @click.stop="toggleCalendar(calendar.id)"></v-checkbox>
-          </template>
-          <template v-slot:default>
-            <div class="d-flex align-center">
-              <v-avatar :color="calendar.color" size="12" class="mr-3"></v-avatar>
-              <v-list-item-title class="text-body-2">{{ calendar.name }}</v-list-item-title>
-            </div>
-          </template>
-        </v-list-item>
-      </v-list>
+      <CalendarVisibilityList :calendars="calendars" :visible-calendars="visibleCalendars" @update:visible-calendars="$emit('update:visibleCalendars', $event)"/>
     </template>
   </v-navigation-drawer>
 </template>
 
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { loadHammer } from '../core/hammer.js';
+import CalendarVisibilityList from './CalendarVisibilityList.vue';
 
 defineOptions({ name: 'MobileSidebar' });
 
@@ -80,37 +69,10 @@ const emit = defineEmits(['update:modelValue', 'update:visibleCalendars', 'view-
 const { t } = useI18n();
 let hammer = null;
 
-const localVisibleCalendars = ref(props.visibleCalendars.length > 0 ? [...props.visibleCalendars] : props.calendars.map(c => c.id));
-
-watch(() => props.visibleCalendars, (newVal) => {
-  if (newVal.length > 0) {
-    localVisibleCalendars.value = [...newVal];
-  }
-});
-
-watch(() => props.calendars, (newCalendars) => {
-  if (props.visibleCalendars.length > 0) return;
-  localVisibleCalendars.value = newCalendars.map(c => c.id);
-}, { deep: true });
-
 const views = computed(() => props.views);
 
 function handleClose() {
   emit('update:modelValue', false);
-}
-
-function isCalendarVisible(calendarId) {
-  return localVisibleCalendars.value.includes(calendarId);
-}
-
-function toggleCalendar(calendarId) {
-  const index = localVisibleCalendars.value.indexOf(calendarId);
-  if (index > -1) {
-    localVisibleCalendars.value = localVisibleCalendars.value.filter(id => id !== calendarId);
-  } else {
-    localVisibleCalendars.value = [...localVisibleCalendars.value, calendarId];
-  }
-  emit('update:visibleCalendars', localVisibleCalendars.value);
 }
 
 function getViewIcon(view) {
@@ -131,23 +93,26 @@ function cleanupSwipe() {
   }
 }
 
-function initializeSwipeToClose() {
-  if (typeof window === 'undefined' || !window.Hammer || !props.modelValue) return;
+async function initializeSwipeToClose() {
+  if (!props.modelValue) return;
+  const Hammer = await loadHammer();
+  // The sidebar may have closed while Hammer was loading
+  if (!Hammer || !props.modelValue) return;
 
   cleanupSwipe();
   const sidebar = document.querySelector('.mobile-sidebar');
   if (!sidebar) return;
 
-  hammer = new window.Hammer(sidebar);
+  hammer = new Hammer(sidebar);
 
   hammer.get('swipe').set({
-    direction: window.Hammer.DIRECTION_HORIZONTAL,
+    direction: Hammer.DIRECTION_HORIZONTAL,
     threshold: 30,
     velocity: 0.3
   });
 
   hammer.get('pan').set({
-    direction: window.Hammer.DIRECTION_HORIZONTAL,
+    direction: Hammer.DIRECTION_HORIZONTAL,
     threshold: 10
   });
 
@@ -216,14 +181,6 @@ onBeforeUnmount(() => {
 <style scoped>
 .mobile-sidebar {
   background: #ffffff;
-}
-
-.calendar-checkbox {
-  margin-right: 8px;
-}
-
-.calendar-checkbox :deep(.v-selection-control) {
-  min-height: 32px;
 }
 
 .v-list-item {

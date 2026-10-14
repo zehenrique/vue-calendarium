@@ -8,7 +8,7 @@
       </div>
       <div class="calendar-days">
         <div
-          v-for="day in days"
+          v-for="(day, index) in days"
           :key="day.key"
           class="calendar-day"
           :class="{
@@ -17,7 +17,7 @@
           }"
           @click="$emit('day-select', day.date)"
         >
-          <div class="day-number">{{ day.day }}</div>
+          <div class="day-number" role="button" :tabindex="day.key === activeDayKey ? 0 : -1" :data-day-key="day.key" :aria-label="t('createEventOn', { date: formatDayLabel(day.date, locale) })" @keydown="handleDayKeydown($event, index)">{{ day.day }}</div>
           <div class="day-events">
             <button
               v-for="event in day.events.slice(0, maxVisibleEvents)"
@@ -27,17 +27,10 @@
               :class="{ 'ghost-event': event.isGhost }"
               :style="getEventColorStyle(event.color, isEventPast(event))"
               @click.stop="$emit('event-select', event)"
-              :aria-label="`${event.title || t('untitled')} ${formatEventTime(event, locale)}`">
+              :aria-label="`${event.title || t('untitled')} ${formatEventTime(event, locale, t('allDay'))}`">
               <span>{{ event.title || t('untitled') }}</span>
             </button>
-            <button
-              v-if="day.events.length > maxVisibleEvents"
-              type="button"
-              class="more-events"
-              @click.stop="$emit('day-select', day.date)"
-            >
-              +{{ day.events.length - maxVisibleEvents }}
-            </button>
+            <MoreEventsMenu v-if="day.events.length > maxVisibleEvents" :date="day.date" :events="day.events" :hidden-count="day.events.length - maxVisibleEvents" :locale="locale" :t="t" @event-select="$emit('event-select', $event)" />
           </div>
         </div>
       </div>
@@ -46,8 +39,10 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { formatEventTime, getEventColorStyle, isEventPast } from '../../composables/useCalendarUtils.js';
+import { formatDayLabel } from '../../composables/useTimeGridKeyboard.js';
+import MoreEventsMenu from './MoreEventsMenu.vue';
 
 const props = defineProps({
   days: {
@@ -72,7 +67,38 @@ const props = defineProps({
   }
 });
 
+const emit = defineEmits(['day-select', 'event-select']);
+
 const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
+
+// Keyboard: one day number is in the tab order; arrow keys move between days and
+// Enter or Space opens the create dialog for that day
+const activeDayKey = ref(null);
+
+watch(() => props.days, (days) => {
+  if (days.some(day => day.key === activeDayKey.value)) return;
+  const initialDay = days.find(day => day.isToday) ?? days.find(day => day.isCurrentMonth) ?? days[0];
+  activeDayKey.value = initialDay?.key ?? null;
+}, { immediate: true });
+
+const DAY_KEY_STEPS = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+
+function handleDayKeydown(event, index) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    emit('day-select', props.days[index].date);
+    return;
+  }
+
+  const step = DAY_KEY_STEPS[event.key];
+  const nextDay = step && props.days[index + step];
+  if (!nextDay) return;
+
+  event.preventDefault();
+  activeDayKey.value = nextDay.key;
+  const grid = event.currentTarget.closest('.calendar-days');
+  nextTick(() => grid?.querySelector(`[data-day-key="${nextDay.key}"]`)?.focus());
+}
 
 </script>
 
@@ -193,6 +219,7 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
 }
 
 .event {
+  border: none;
   font-size: var(--calendar-event-font-size, 11px);
   padding: var(--calendar-event-padding, 2px 6px);
   border-radius: var(--calendar-event-border-radius, 6px);
@@ -216,18 +243,15 @@ const maxVisibleEvents = computed(() => (props.isMobile ? 2 : 4));
   border: 2px dashed currentColor !important;
 }
 
-.more-events {
-  font-size: var(--calendar-event-font-size, 11px);
-  color: var(--calendar-text-disabled, #5f6368);
-  padding: var(--calendar-event-padding, 2px 6px);
-  background: none;
-  border: none;
-  cursor: pointer;
-  text-align: left;
+/* Keyboard focus on events and on the day number (the day's "create event" target) */
+.event:focus-visible,
+.day-number:focus-visible {
+  outline: 2px solid var(--calendar-primary-color, #1a73e8);
+  outline-offset: 1px;
 }
 
-.more-events:hover {
-  text-decoration: underline;
+.day-number:focus-visible {
+  border-radius: var(--calendar-border-radius-circle, 50%);
 }
 
 @media (max-width: 768px) {

@@ -1,8 +1,8 @@
 <template>
   <v-dialog v-if="!mobile" :model-value="modelValue" @update:model-value="$emit('update:modelValue', $event)" max-width="480" scrim="rgba(0, 0, 0, 0.5)" content-class="calendar-font-scope event-modal-positioning" data-testid="event-modal">
     <v-card class="pa-0 event-modal-card" rounded="xl">
-      <!-- Header with tabs and close button -->
       <div class="modal-header">
+        <h2 class="modal-title">{{ dialogTitle }}</h2>
         <v-btn icon variant="text" size="small" @click="handleClose" :aria-label="t('close')" class="ml-auto mr-2">
           <v-icon>mdi-close</v-icon>
         </v-btn>
@@ -12,7 +12,7 @@
         <v-container fluid class="pa-0">
           <v-form>
             <!-- Event title -->
-            <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="text-h5 mb-4 title-input" hide-details autofocus></v-text-field>
+            <v-text-field v-model="eventData.title" :placeholder="t('eventTitle')" variant="plain" class="text-headline-small mb-4 title-input" hide-details autofocus></v-text-field>
 
             <!-- Date and time row -->
             <div class="d-flex align-center mb-2">
@@ -21,7 +21,7 @@
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" hide-details density="compact" class="date-input mr-3" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>
-                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                <v-date-picker class="event-date-picker" :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal" hide-header show-adjacent-months>
                   <template v-slot:actions>
                     <v-btn variant="text" color="primary" @click="handleTodayClick">
                       {{ t('today') || 'Today' }}
@@ -29,10 +29,10 @@
                   </template>
                 </v-date-picker>
               </v-menu>
-              <v-select v-if="!eventData.allDay" v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select mr-2"></v-select>
+              <v-select v-if="!eventData.allDay" v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select mr-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, timeOptions, eventData.startTime)"></v-select>
               <span v-if="!eventData.allDay" class="time-separator">–</span>
-              <v-select v-if="!eventData.allDay" v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select ml-2">
-                <template v-slot:selection="{ item }">
+              <v-select v-if="!eventData.allDay" v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select ml-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, endTimeOptions, eventData.endTime)">
+                <template v-slot:selection="{ internalItem: item }">
                   {{ item.value }}
                 </template>
               </v-select>
@@ -42,12 +42,9 @@
             <div class="d-flex align-center mb-4">
               <div class="icon-spacer mr-4"></div>
               <div class="flex-grow-1">
-                <div class="text-body-2 d-flex align-center flex-wrap options-row">
+                <div class="text-body-medium d-flex align-center flex-wrap options-row">
                   <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
-                  <span class="separator">•</span>
-                  <a href="#" class="option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
-                    {{ repeatDisplayText }}
-                  </a>
+                  <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
                 </div>
               </div>
             </div>
@@ -56,14 +53,14 @@
             <div class="d-flex align-center">
               <v-icon class="mr-4" size="20">mdi-calendar-blank</v-icon>
               <div class="flex-grow-1">
-                <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="plain" hide-details density="compact" class="calendar-select" data-testid="calendar-select">
-                  <template v-slot:selection="{ item }">
+                <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="plain" hide-details density="compact" class="calendar-select" data-testid="calendar-select" :menu-props="{ contentClass: 'calendar-select-menu' }">
+                  <template v-slot:selection="{ internalItem: item }">
                     <div class="d-flex align-center">
                       <div class="color-dot mr-2" :style="{ backgroundColor: eventData.color }"></div>
                       <span>{{ item.title }}</span>
                     </div>
                   </template>
-                  <template v-slot:item="{ item, props }">
+                  <template v-slot:item="{ internalItem: item, props }">
                     <v-list-item v-bind="props">
                       <template v-slot:prepend>
                         <div class="color-dot mr-2" :style="{ backgroundColor: getCalendarColor(item.value) }"></div>
@@ -78,11 +75,11 @@
       </v-card-text>
 
       <v-card-actions class="px-8 pb-4 pt-0">
-        <v-btn variant="text" @click="handleClose">
+        <v-spacer></v-spacer>
+        <v-btn color="primary" variant="text" :slim="false" class="px-6" @click="handleClose">
           {{ t('cancel') }}
         </v-btn>
-        <v-spacer></v-spacer>
-        <v-btn color="primary" variant="flat" size="large" @click="handleSave" :disabled="!eventData.title" class="px-8">
+        <v-btn color="primary" variant="flat" :slim="false" class="px-6" @click="handleSave" :disabled="!eventData.title">
           {{ t('save') }}
         </v-btn>
       </v-card-actions>
@@ -97,6 +94,8 @@
         <v-btn variant="text" @click="handleClose">
           {{ t('cancel') }}
         </v-btn>
+        <v-spacer></v-spacer>
+        <h2 class="modal-title modal-title--mobile">{{ dialogTitle }}</h2>
         <v-spacer></v-spacer>
         <v-btn color="primary" variant="text" @click="handleSave" :disabled="!eventData.title">
           {{ t('save') }}
@@ -119,7 +118,7 @@
                 <template v-slot:activator="{ props }">
                   <v-text-field :model-value="startDateDisplay" variant="outlined" density="compact" hide-details class="flex-grow-1" placeholder="dd/mm/yyyy" readonly v-bind="props"></v-text-field>
                 </template>
-                <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" hide-header show-adjacent-months>
+                <v-date-picker class="event-date-picker" :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal" hide-header show-adjacent-months>
                   <template v-slot:actions>
                     <v-btn variant="text" color="primary" @click="handleTodayClick">
                       {{ t('today') || 'Today' }}
@@ -132,33 +131,24 @@
             <!-- Time pickers -->
             <div v-if="!eventData.allDay" class="d-flex align-center">
               <div class="icon-spacer mr-3"></div>
-              <v-select v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile mr-2"></v-select>
+              <v-select v-model="eventData.startTime" :items="timeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile mr-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, timeOptions, eventData.startTime)"></v-select>
               <span class="time-separator">–</span>
-              <v-select v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile ml-2">
-                <template v-slot:selection="{ item }">
+              <v-select v-model="eventData.endTime" :items="endTimeOptions" variant="outlined" hide-details density="compact" class="time-select-mobile ml-2" :menu-props="{ contentClass: 'calendar-select-menu' }" no-auto-scroll @update:menu="open => scrollSelectedOptionToTop(open, endTimeOptions, eventData.endTime)">
+                <template v-slot:selection="{ internalItem: item }">
                   {{ item.value }}
                 </template>
               </v-select>
             </div>
           </div>
 
-          <!-- All day toggle -->
-          <div class="mb-3">
-            <div class="d-flex align-center">
-              <div class="icon-spacer mr-3"></div>
-              <div class="flex-grow-1">
-                <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="mobile-checkbox"></v-checkbox>
-              </div>
-            </div>
-          </div>
-
-          <!-- Recurrence -->
+          <!-- All day and recurrence row: as on desktop, the repeat link wraps to a new line only when it does not fit -->
           <div class="mb-3 d-flex align-center">
-            <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-repeat</v-icon>
+            <div class="icon-spacer mr-3"></div>
             <div class="flex-grow-1">
-              <a href="#" class="mobile-option-link" data-testid="repeat-select" @click.prevent="toggleRepeatPicker">
-                {{ repeatDisplayText }}
-              </a>
+              <div class="text-body-medium d-flex align-center flex-wrap options-row">
+                <v-checkbox v-model="eventData.allDay" :label="t('allDay')" hide-details density="compact" class="all-day-checkbox"></v-checkbox>
+                <span class="repeat-option"><RepeatSelect v-model="eventData.rrule" :start-date="eventData.startDate" link-class="option-link"/></span>
+              </div>
             </div>
           </div>
 
@@ -166,18 +156,8 @@
           <div class="d-flex align-center">
             <v-icon size="20" class="mr-3 text-medium-emphasis">mdi-calendar-blank</v-icon>
             <div class="flex-grow-1">
-              <v-select
-                v-model="eventData.calendarId"
-                :items="calendars"
-                item-title="name"
-                item-value="id"
-                variant="outlined"
-                hide-details
-                density="compact"
-                class="mobile-calendar-select"
-                data-testid="calendar-select"
-              >
-                <template v-slot:selection="{ item }">
+              <v-select v-model="eventData.calendarId" :items="calendars" item-title="name" item-value="id" variant="outlined" hide-details density="compact" class="mobile-calendar-select" data-testid="calendar-select" :menu-props="{ contentClass: 'calendar-select-menu' }">
+                <template v-slot:selection="{ internalItem: item }">
                   <div class="d-flex align-center">
                     <div
                       class="color-dot mr-2"
@@ -186,7 +166,7 @@
                     <span>{{ item.title }}</span>
                   </div>
                 </template>
-                <template v-slot:item="{ item, props }">
+                <template v-slot:item="{ internalItem: item, props }">
                   <v-list-item v-bind="props">
                     <template v-slot:prepend>
                       <div
@@ -204,13 +184,6 @@
     </v-card>
   </v-bottom-sheet>
 
-  <!-- Custom recurrence picker - outside main dialog -->
-  <RecurrencePickerModal
-    v-model="showCustomRecurrence"
-    :rrule="eventData.rrule"
-    :start-date="eventData.startDate"
-    @save="handleCustomRecurrenceSave"
-  />
 </template>
 
 <script>
@@ -219,17 +192,23 @@ import { useI18n } from 'vue-i18n';
 import { useDisplay } from 'vuetify';
 import { Temporal } from '@js-temporal/polyfill';
 import { DEFAULT_COLOR } from '../config/colors.js';
-import RecurrencePickerModal from './RecurrencePickerModal.vue';
+import { scrollSelectedOptionToTop } from '../composables/useSelectMenuScroll.js';
+import RepeatSelect from './RepeatSelect.vue';
 
 export default {
   name: 'EventModal',
   components: {
-    RecurrencePickerModal
+    RepeatSelect
   },
   props: {
     modelValue: {
       type: Boolean,
       required: true
+    },
+    // Editing an existing event (the title says "Edit event" instead of "New event")
+    isEditing: {
+      type: Boolean,
+      default: false
     },
     event: {
       type: Object,
@@ -242,7 +221,7 @@ export default {
   },
   emits: ['update:modelValue', 'save'],
   setup(props, { emit }) {
-    const { t } = useI18n();
+    const { t, locale } = useI18n();
     const { mobile } = useDisplay();
     
     const eventData = ref({
@@ -257,8 +236,6 @@ export default {
       allDay: false
     });
 
-    const repeatSelection = ref('none');
-    const showCustomRecurrence = ref(false);
     const showDatePicker = ref(false);
 
     // Generate time options in 15-minute intervals
@@ -296,13 +273,13 @@ export default {
           
           if (durationMinutes < 60) {
             // Less than 1 hour - show minutes
-            durationLabel = ` (${durationMinutes} minutos)`;
+            durationLabel = ` (${t('durationMinutes', { count: durationMinutes })})`;
           } else if (minutes === 0) {
             // Exact hours
-            durationLabel = hours === 1 ? ' (1 hora)' : ` (${hours} horas)`;
+            durationLabel = ` (${hours === 1 ? t('durationOneHour') : t('durationHours', { count: hours })})`;
           } else if (minutes === 30) {
-            // Half hours
-            durationLabel = ` (${hours},5 horas)`;
+            // Half hours, with the language's decimal separator (1.5 or 1,5)
+            durationLabel = ` (${t('durationHours', { count: (hours + 0.5).toLocaleString(locale.value) })})`;
           } else {
             // Hours and minutes
             durationLabel = ` (${hours}h${String(minutes).padStart(2, '0')})`;
@@ -408,23 +385,7 @@ export default {
       }
     };
 
-    const repeatDisplayText = computed(() => {
-      if (!eventData.value.rrule || eventData.value.rrule === '') {
-        return t('doesNotRepeat') || 'Não se repete';
-      }
-      
-      if (eventData.value.rrule === 'FREQ=DAILY') {
-        return t('repeatDaily');
-      } else if (eventData.value.rrule === 'FREQ=WEEKLY') {
-        return t('repeatWeekly');
-      } else if (eventData.value.rrule === 'FREQ=MONTHLY') {
-        return t('repeatMonthly');
-      } else if (eventData.value.rrule === 'FREQ=YEARLY') {
-        return t('repeatYearly');
-      }
-      
-      return t('customRecurrence');
-    });
+    const dialogTitle = computed(() => (props.isEditing ? t('editEvent') : t('newEvent')));
 
     const getCalendarColor = (calendarId) => {
       const calendar = props.calendars.find(c => c.id === calendarId);
@@ -452,21 +413,6 @@ export default {
         if (calendar) {
           eventData.value.color = calendar.color;
         }
-        
-        // Set repeat selection based on RRULE
-        if (!newEvent.rrule || newEvent.rrule === '') {
-          repeatSelection.value = 'none';
-        } else if (newEvent.rrule === 'FREQ=DAILY') {
-          repeatSelection.value = 'daily';
-        } else if (newEvent.rrule === 'FREQ=WEEKLY') {
-          repeatSelection.value = 'weekly';
-        } else if (newEvent.rrule === 'FREQ=MONTHLY') {
-          repeatSelection.value = 'monthly';
-        } else if (newEvent.rrule === 'FREQ=YEARLY') {
-          repeatSelection.value = 'yearly';
-        } else {
-          repeatSelection.value = 'custom';
-        }
       }
     }, { immediate: true, deep: true });
 
@@ -484,40 +430,6 @@ export default {
         eventData.value.endDate = newDate;
       }
     });
-
-    const toggleRepeatPicker = () => {
-      showCustomRecurrence.value = true;
-    };
-
-    const handleRepeatChange = (val) => {
-      if (val === 'custom') {
-        showCustomRecurrence.value = true;
-        return;
-      }
-      
-      // Map simple repeats to RRULE
-      switch (val) {
-        case 'daily':
-          eventData.value.rrule = 'FREQ=DAILY';
-          break;
-        case 'weekly':
-          eventData.value.rrule = 'FREQ=WEEKLY';
-          break;
-        case 'monthly':
-          eventData.value.rrule = 'FREQ=MONTHLY';
-          break;
-        case 'yearly':
-          eventData.value.rrule = 'FREQ=YEARLY';
-          break;
-        default:
-          eventData.value.rrule = '';
-      }
-    };
-
-    const handleCustomRecurrenceSave = (rrule) => {
-      eventData.value.rrule = rrule;
-      repeatSelection.value = 'custom';
-    };
 
     const handleClose = () => {
       emit('update:modelValue', false);
@@ -537,9 +449,8 @@ export default {
     return {
       t,
       mobile,
+      scrollSelectedOptionToTop,
       eventData,
-      repeatSelection,
-      showCustomRecurrence,
       showDatePicker,
       timeOptions,
       endTimeOptions,
@@ -547,11 +458,8 @@ export default {
       datePickerValue,
       handleDatePickerChange,
       handleTodayClick,
-      repeatDisplayText,
+      dialogTitle,
       getCalendarColor,
-      toggleRepeatPicker,
-      handleRepeatChange,
-      handleCustomRecurrenceSave,
       handleClose,
       handleSave,
       handleDateChange
@@ -561,15 +469,22 @@ export default {
 </script>
 
 <style scoped>
-.event-modal-card {
-  border-radius: 8px;
-}
-
 .modal-header {
   display: flex;
   align-items: center;
-  padding: 8px 8px 8px 16px;
+  padding: 8px 8px 8px 32px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.modal-title {
+  margin: 0;
+  font-size: var(--calendar-font-size-title, 1.25rem);
+  font-weight: var(--calendar-font-weight-medium, 500);
+  line-height: 1.6;
+}
+
+.modal-title--mobile {
+  font-size: 1rem;
 }
 
 .title-input :deep(.v-field__input) {
@@ -637,6 +552,13 @@ export default {
   font-size: 0.875rem;
 }
 
+/* Drop the 2px row padding Vuetify 4 adds around the 40px day buttons, so the
+   picker fits below the event title in the dialog */
+.event-date-picker :deep(.v-date-picker-month__day) {
+  height: 40px;
+  padding: 0;
+}
+
 .date-input :deep(.v-field) {
   border-radius: 4px;
 }
@@ -650,14 +572,32 @@ export default {
   color: rgba(0, 0, 0, 0.6);
 }
 
+/* "All day • Does not repeat". The repeat link moves to a new line when it does not fit;
+   its dot then falls outside the row, which hides it. The padding and negative margin
+   keep the checkbox's focus ring visible. */
 .options-row {
-  gap: 8px;
-  margin-top: 4px;
+  row-gap: 4px;
+  margin: -4px -8px -8px;
+  padding: 8px 8px 8px;
+  overflow: hidden;
 }
 
-.separator {
+.all-day-checkbox {
+  flex: 0 0 auto;
+  margin-right: 29px;
+}
+
+.repeat-option {
+  display: inline-flex;
+  align-items: center;
+  margin-left: -29px;
+}
+
+.repeat-option::before {
+  content: '•' / '';
+  display: inline-block;
+  padding: 0 12px;
   color: rgba(0, 0, 0, 0.38);
-  padding: 0 4px;
 }
 
 .option-text {
@@ -665,13 +605,13 @@ export default {
   font-size: 0.875rem;
 }
 
-.option-link {
+:deep(.option-link) {
   color: #1967d2;
   text-decoration: none;
   font-size: 0.875rem;
 }
 
-.option-link:hover {
+:deep(.option-link:hover) {
   text-decoration: underline;
 }
 
@@ -680,15 +620,17 @@ export default {
   padding: 4px 0;
 }
 
+/* Centre the dropdown arrow on the selected calendar (Vuetify pads it for a label) */
+.calendar-select :deep(.v-field__append-inner) {
+  align-items: center;
+  padding-top: 0;
+}
+
 .color-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
-}
-
-.all-day-checkbox {
-  margin-right: 0;
 }
 
 .all-day-checkbox :deep(.v-label) {
@@ -724,37 +666,8 @@ export default {
   color: rgba(0, 0, 0, 0.38);
 }
 
-.mobile-option-link {
-  color: rgba(0, 0, 0, 0.87);
-  text-decoration: none;
-  font-size: 0.875rem;
-  display: block;
-  padding: 8px 0;
-}
-
-.mobile-option-link:hover {
-  text-decoration: underline;
-}
-
 .mobile-calendar-select :deep(.v-field__input) {
   font-size: 0.875rem;
-}
-
-.mobile-checkbox {
-  margin-right: 0;
-}
-
-.mobile-checkbox :deep(.v-label) {
-  font-size: 0.875rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.mobile-checkbox :deep(.v-selection-control) {
-  min-height: 24px;
-}
-
-.mobile-checkbox :deep(.v-selection-control__wrapper) {
-  height: 24px;
 }
 
 .time-field-mobile {

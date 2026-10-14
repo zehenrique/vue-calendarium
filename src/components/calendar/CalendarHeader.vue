@@ -7,12 +7,13 @@
     <div class="header-content">
       <div class="header-left">
         <v-btn
-          v-if="isMobile && showMobileMenu"
+          v-if="isMobile ? showMobileMenu : showDesktopMenu"
           style="margin-left: -10px;"
           icon
           variant="text"
           :aria-label="t('menu')"
-          data-testid="mobile-menu-button"
+          :data-testid="isMobile ? 'mobile-menu-button' : 'desktop-menu-button'"
+          :aria-expanded="menuExpanded"
           @click="$emit('toggle-sidebar')">
           <v-icon>mdi-menu</v-icon>
         </v-btn>
@@ -57,9 +58,19 @@
           </v-btn>
         </div>
         
-        <h1 class="calendar-title text-h6">{{ currentTitle }}</h1>
+        <h1 class="calendar-title" aria-live="polite">{{ currentTitle }}</h1>
       </div>
       <div class="header-right">
+        <!-- Mobile without swipe navigation: previous and next buttons -->
+        <template v-if="isMobile && showMobileNavigation">
+          <v-btn icon size="small" variant="text" :aria-label="t('previous')" data-testid="mobile-previous" @click="$emit('previous')">
+            <v-icon>mdi-chevron-left</v-icon>
+          </v-btn>
+          <v-btn icon size="small" variant="text" :aria-label="t('next')" data-testid="mobile-next" @click="$emit('next')">
+            <v-icon>mdi-chevron-right</v-icon>
+          </v-btn>
+        </template>
+
         <!-- Mobile: Icon button for Today -->
         <v-btn
           v-if="isMobile"
@@ -74,35 +85,10 @@
         </v-btn>
         
         <!-- View selector: Mobile compact dropdown -->
-        <v-select
-          v-if="isMobile && mobileViewSelectorPlacement === 'header'"
-          :items="viewItems"
-          item-title="title"
-          item-value="value"
-          :model-value="currentView"
-          variant="outlined"
-          density="compact"
-          hide-details
-          data-testid="view-toggle"
-          class="mobile-view-select"
-          @update:model-value="$emit('view-change', $event)"
-        ></v-select>
+        <v-select v-if="isMobile && mobileViewSelectorPlacement === 'header'" :items="viewItems" item-title="title" item-value="value" :model-value="currentView" variant="outlined" density="compact" hide-details data-testid="view-toggle" class="mobile-view-select" @update:model-value="$emit('view-change', $event)" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
         
         <!-- Desktop: compact dropdown for view selection -->
-        <v-select
-          v-if="!isMobile"
-          class="header-outlined-control"
-          :items="viewItems"
-          item-title="title"
-          item-value="value"
-          :model-value="currentView"
-          variant="outlined"
-          density="compact"
-          hide-details
-          data-testid="view-toggle"
-          style="min-width: 120px"
-          @update:model-value="$emit('view-change', $event)"
-        ></v-select>
+        <v-select v-if="!isMobile" class="header-outlined-control" :items="viewItems" item-title="title" item-value="value" :model-value="currentView" variant="outlined" density="compact" hide-details data-testid="view-toggle" style="min-width: 120px" @update:model-value="$emit('view-change', $event)" :menu-props="{ contentClass: 'calendar-select-menu' }"></v-select>
         
         <!-- Desktop: Date picker -->
         <v-menu v-if="!isMobile" content-class="calendar-font-scope" :close-on-content-click="false" ref="datePickerMenu">
@@ -123,9 +109,7 @@
               </template>
             </v-text-field>
           </template>
-          <v-date-picker
-            :model-value="datePickerValue"
-            @update:model-value="handleDatePickerChange">
+          <v-date-picker :model-value="datePickerValue" @update:model-value="handleDatePickerChange" control-variant="modal">
             <template v-slot:header>
               <div class="date-picker-header">
                 <v-btn variant="text" size="small" @click="goToTodayFromPicker">
@@ -197,9 +181,24 @@ const props = defineProps({
     type: Boolean,
     default: false
   },
+  // Desktop: the button that shows or hides the sidebar
+  showDesktopMenu: {
+    type: Boolean,
+    default: false
+  },
+  // Whether the sidebar the menu button controls is open
+  menuExpanded: {
+    type: Boolean,
+    default: false
+  },
   showMobileMenu: {
     type: Boolean,
     default: true
+  },
+  // Show previous and next buttons on mobile (when swiping between periods is turned off)
+  showMobileNavigation: {
+    type: Boolean,
+    default: false
   },
   mobileViewSelectorPlacement: {
     type: String,
@@ -235,6 +234,16 @@ const props = defineProps({
   },
   weekDays: {
     type: Array,
+    default: null
+  },
+  // The calendar's language, for dates
+  locale: {
+    type: String,
+    default: 'en-US'
+  },
+  // Today (Temporal.PlainDate), to highlight it
+  today: {
+    type: Object,
     default: null
   },
   currentDate: {
@@ -281,14 +290,9 @@ const handleDatePickerChange = (date) => {
 };
 
 const goToTodayFromPicker = () => {
-  const today = new Date();
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, '0');
-  const day = String(today.getDate()).padStart(2, '0');
-  const dateString = `${year}-${month}-${day}`;
-  
-  emit('date-change', dateString);
-  
+  // Today from the calendar's clock (Temporal), as the header's Today button
+  emit('today');
+
   // Close the menu
   if (datePickerMenu.value) {
     datePickerMenu.value.isActive = false;
@@ -340,15 +344,16 @@ const weekStripTrackStyle = computed(() => {
   };
 });
 
+// Translation keys of the short weekday names, Monday first (Temporal's dayOfWeek 1–7)
+const WEEKDAY_KEYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
 const dayInfo = computed(() => {
   if (props.currentView !== 'day' || !props.currentDate) return null;
   
-  const today = props.currentDate.toString().slice(0, 10);
-  const now = new Date().toISOString().slice(0, 10);
-  const isToday = today === now;
-  
-  // Get abbreviated weekday (e.g., "Mon", "Tue")
-  const weekday = props.currentDate.toLocaleString('en-US', { weekday: 'short' }).toUpperCase();
+  const isToday = Boolean(props.today) && props.currentDate.equals(props.today);
+
+  // The calendar's short weekday names, as in the week view ("WED", "QUA")
+  const weekday = props.t(WEEKDAY_KEYS[props.currentDate.dayOfWeek - 1]);
   const dayNumber = props.currentDate.day;
   
   return {
@@ -414,8 +419,8 @@ const dayInfo = computed(() => {
 }
 
 .mobile-view-select {
-  min-width: 120px;
-  max-width: 120px;
+  min-width: 104px;
+  max-width: 104px;
 }
 
 .header-outlined-control {
@@ -463,7 +468,10 @@ const dayInfo = computed(() => {
 
 .calendar-title {
   margin: 0;
+  font-size: var(--calendar-font-size-title, 1.25rem);
   font-weight: var(--calendar-font-weight-normal, 400);
+  line-height: 2rem;
+  letter-spacing: 0.0125em;
   color: var(--calendar-text-primary, #3c4043);
   flex-shrink: 1;
   min-width: 0;
@@ -502,8 +510,9 @@ const dayInfo = computed(() => {
   margin-top: var(--calendar-day-view-number-margin-top, 2px);
 }
 
+/* Today's colour, as the other today markers */
 .day-view-number.today {
-  color: var(--calendar-primary-color, #1a73e8);
+  color: var(--calendar-today-bg, #1a73e8);
   font-weight: var(--calendar-font-weight-medium, 500);
 }
 
@@ -656,10 +665,6 @@ const dayInfo = computed(() => {
   
   .header-right {
     gap: var(--calendar-spacing-sm, 4px);
-  }
-
-  .calendar-title {
-    font-size: 1rem;
   }
 
   .week-day-name {

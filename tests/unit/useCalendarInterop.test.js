@@ -40,6 +40,25 @@ describe('useCalendarInterop - iCalendar', () => {
   });
 });
 
+describe('useCalendarInterop - repeating events', () => {
+  const series = { id: 'standup', title: 'Standup', start: '2025-01-15T10:00:00', end: '2025-01-15T10:30:00', rrule: 'RRULE:FREQ=WEEKLY;COUNT=6\nEXDATE:20250205T100000Z' };
+  const moved = { id: 'standup@2025-01-22T10:00:00', title: 'Moved', start: '2025-01-23T15:00:00', end: '2025-01-23T15:30:00', recurringEventId: 'standup', originalStart: '2025-01-22T10:00:00' };
+
+  it('writes deleted occurrences as EXDATE and changed ones as RECURRENCE-ID, like Google Calendar', () => {
+    const ics = serializeICal([series, moved], { tzid: 'Europe/Lisbon' });
+    expect(ics).toContain('RRULE:FREQ=WEEKLY;COUNT=6');
+    expect(ics).toContain('EXDATE;TZID=Europe/Lisbon:20250205T100000');
+    expect(ics).toContain('RECURRENCE-ID;TZID=Europe/Lisbon:20250122T100000');
+    expect(ics.match(/UID:standup\r?\n/g)).toHaveLength(2);
+  });
+
+  it('reads them back', () => {
+    const [parsedSeries, parsedMoved] = parseICal(serializeICal([series, moved]));
+    expect(parsedSeries).toMatchObject({ id: 'standup', rrule: 'RRULE:FREQ=WEEKLY;COUNT=6\nEXDATE:20250205T100000Z' });
+    expect(parsedMoved).toMatchObject({ id: 'standup@2025-01-22T10:00:00', recurringEventId: 'standup', originalStart: '2025-01-22T10:00:00', start: '2025-01-23T15:00:00' });
+  });
+});
+
 describe('useCalendarInterop - expandRecurrence', () => {
   it('expands weekly RRULE within a range', () => {
     const base = {

@@ -30,3 +30,9 @@ jobs:
 
       - name: Build
         run: npm run build --if-present
+
+      - name: Build library
+        run: npm run build:lib
+
+      - name: Check the package imports in plain Node (server-side rendering)
+        run: node scripts/check-node-import.mjs

@@ -2,6 +2,7 @@ import { ref, computed } from 'vue';
 import { createEventsService } from '../services/EventsService.js';
 import { createCalendarsService } from '../services/CalendarsService.js';
 import { Temporal } from '@js-temporal/polyfill';
+import { toPlainDateTimeString } from './dateTime.js';
 
 /**
  * Create a calendar instance
@@ -15,6 +16,8 @@ import { Temporal } from '@js-temporal/polyfill';
  * @param {Object} config.selectedDate - Initial selected date (Temporal.PlainDate)
  * @param {Boolean} config.enableModals - Enable/disable modals (default: true)
  * @param {Boolean} config.enableMobileSidebar - Enable/disable mobile sidebar (default: true)
+ * @param {Boolean} config.enableDesktopSidebar - Enable/disable the desktop sidebar with the small month and the calendars (default: true)
+ * @param {Boolean} config.sidebarOpen - Whether the desktop sidebar starts open (default: open, unless the calendar is narrower than 1024px)
  * @param {'header'|'sidebar'} config.mobileViewSelectorPlacement - Where the view selector is shown on mobile (default: 'sidebar')
  * @param {Boolean} config.enableSwipeGestures - Enable/disable mobile swipe gestures (default: true)
  * @param {Boolean} config.enablePinchToZoom - Enable/disable pinch-to-zoom on mobile (default: true)
@@ -54,6 +57,8 @@ export function createCalendar(config = {}) {
     selectedDate,
     enableModals = true,
     enableMobileSidebar = true,
+    enableDesktopSidebar = true,
+    sidebarOpen,
     mobileViewSelectorPlacement = 'sidebar',
     enableSwipeGestures = true,
     enablePinchToZoom = true,
@@ -75,14 +80,17 @@ export function createCalendar(config = {}) {
   }
 
   // Create services
-  const eventsService = createEventsService(events);
   const calendarsService = createCalendarsService(calendars);
+  const eventsService = createEventsService(events, { calendarExists: id => Boolean(calendarsService.get(id)) });
 
   // Reactive state
   const currentView = ref(defaultView);
   const currentDate = ref(selectedDate !== undefined ? selectedDate : _getCurrentDate());
   const modalsEnabled = ref(enableModals);
   const mobileSidebarEnabled = ref(enableMobileSidebar);
+  const desktopSidebarEnabled = ref(enableDesktopSidebar);
+  // null until the calendar is on screen, which then opens it unless it is narrow
+  const desktopSidebarOpen = ref(typeof sidebarOpen === 'boolean' ? sidebarOpen : null);
   const mobileViewSelectorPlacementRef = ref(mobileViewSelectorPlacement);
   const swipeGesturesEnabled = ref(enableSwipeGestures);
   const pinchToZoomEnabled = ref(enablePinchToZoom);
@@ -101,8 +109,7 @@ export function createCalendar(config = {}) {
     const visibleCalendarIds = calendarsService.getVisible().map(c => c.id);
     // Directly access the reactive ref array and map to objects
     const allEvents = eventsService._events.value.map(e => e.toObject());
-    const filtered = allEvents.filter(e => visibleCalendarIds.includes(e.calendarId));
-    return filtered;
+    return allEvents.filter(e => visibleCalendarIds.includes(e.calendarId));
   });
 
   // Methods
@@ -156,9 +163,16 @@ export function createCalendar(config = {}) {
   };
 
   // Ghost event methods (for external control when modals are disabled)
+  // Ghost event dates accept the same formats as events
+  const withPlainDates = (eventData) => ({
+    ...eventData,
+    ...('start' in eventData ? { start: toPlainDateTimeString(eventData.start) } : {}),
+    ...('end' in eventData ? { end: toPlainDateTimeString(eventData.end) } : {})
+  });
+
   const showGhostEvent = (eventData) => {
     ghostEvent.value = {
-      ...eventData,
+      ...withPlainDates(eventData),
       id: eventData.id || 'ghost-event',
       isGhost: true
     };
@@ -168,7 +182,7 @@ export function createCalendar(config = {}) {
     if (ghostEvent.value) {
       ghostEvent.value = {
         ...ghostEvent.value,
-        ...eventData,
+        ...withPlainDates(eventData),
         isGhost: true
       };
     }
@@ -176,6 +190,15 @@ export function createCalendar(config = {}) {
 
   const hideGhostEvent = () => {
     ghostEvent.value = null;
+  };
+
+  // Desktop sidebar, also shown and hidden by the header's menu button
+  const setSidebarOpen = (open) => {
+    desktopSidebarOpen.value = Boolean(open);
+  };
+
+  const toggleSidebar = () => {
+    desktopSidebarOpen.value = !desktopSidebarOpen.value;
   };
 
   // Return calendar instance
@@ -190,6 +213,7 @@ export function createCalendar(config = {}) {
     locale: computed(() => currentLocale.value),
     enableModals: computed(() => modalsEnabled.value),
     enableMobileSidebar: mobileSidebarEnabled,
+    enableDesktopSidebar: desktopSidebarEnabled,
     mobileViewSelectorPlacement: mobileViewSelectorPlacementRef,
     enableSwipeGestures: computed(() => swipeGesturesEnabled.value),
     enablePinchToZoom: computed(() => pinchToZoomEnabled.value),
@@ -198,6 +222,7 @@ export function createCalendar(config = {}) {
     views: computed(() => availableViews.value),
     visibleEvents,
     ghostEvent: computed(() => ghostEvent.value),
+    sidebarOpen: computed(() => Boolean(desktopSidebarOpen.value)),
 
     // Methods
     setView,
@@ -209,6 +234,8 @@ export function createCalendar(config = {}) {
     showGhostEvent,
     updateGhostEvent,
     hideGhostEvent,
+    setSidebarOpen,
+    toggleSidebar,
 
     // Callbacks
     callbacks: {
@@ -229,6 +256,8 @@ export function createCalendar(config = {}) {
       currentLocale,
       modalsEnabled,
       mobileSidebarEnabled,
+      desktopSidebarEnabled,
+      desktopSidebarOpen,
       swipeGesturesEnabled,
       pinchToZoomEnabled,
       currentTimeIndicatorEnabled,

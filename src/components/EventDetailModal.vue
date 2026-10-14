@@ -18,26 +18,32 @@
 
       <v-card-text class="px-6 py-4">
         <!-- Title with color indicator -->
-        <div class="d-flex align-start mb-4">
-          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
-          <h2 class="text-h5 font-weight-regular">{{ event?.title }}</h2>
+        <div class="detail-row mb-4">
+          <div class="detail-row__icon text-headline-small">
+            <div class="color-dot" :style="{ backgroundColor: event?.color || DEFAULT_COLOR }"></div>
+          </div>
+          <h2 class="detail-title text-headline-small">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
-        <div class="d-flex align-start mb-2">
-          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+        <div class="detail-row mb-2">
+          <div class="detail-row__icon text-body-large">
+            <v-icon size="20">mdi-clock-outline</v-icon>
+          </div>
           <div>
-            <div class="text-body-1">{{ dateTimeDisplay }}</div>
-            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+            <div class="text-body-large">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-medium text-medium-emphasis mt-1">
               {{ formatRRule(event.rrule) }}
             </div>
           </div>
         </div>
 
         <!-- Calendar name -->
-        <div v-if="calendarName" class="d-flex align-start">
-          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
-          <div class="text-body-1">{{ calendarName }}</div>
+        <div v-if="calendarName" class="detail-row">
+          <div class="detail-row__icon text-body-large">
+            <v-icon size="20">mdi-calendar-blank</v-icon>
+          </div>
+          <div class="text-body-large">{{ calendarName }}</div>
         </div>
       </v-card-text>
     </v-card>
@@ -64,26 +70,32 @@
 
       <v-card-text class="px-4 pt-4 pb-6">
         <!-- Title with color indicator -->
-        <div class="d-flex align-start mb-4">
-          <div class="color-dot mr-3 mt-1" :style="{ backgroundColor: event?.color }"></div>
-          <h2 class="text-h6 font-weight-regular">{{ event?.title }}</h2>
+        <div class="detail-row mb-4">
+          <div class="detail-row__icon text-title-large">
+            <div class="color-dot" :style="{ backgroundColor: event?.color }"></div>
+          </div>
+          <h2 class="detail-title text-title-large">{{ event?.title }}</h2>
         </div>
 
         <!-- Date and time -->
-        <div class="d-flex align-start mb-2">
-          <v-icon class="mr-3 mt-1" size="20">mdi-clock-outline</v-icon>
+        <div class="detail-row mb-2">
+          <div class="detail-row__icon text-body-large">
+            <v-icon size="20">mdi-clock-outline</v-icon>
+          </div>
           <div>
-            <div class="text-body-1">{{ dateTimeDisplay }}</div>
-            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-2 text-medium-emphasis mt-1">
+            <div class="text-body-large">{{ dateTimeDisplay }}</div>
+            <div v-if="event?.rrule && event.rrule !== ''" class="text-body-medium text-medium-emphasis mt-1">
               {{ formatRRule(event.rrule) }}
             </div>
           </div>
         </div>
 
         <!-- Calendar name -->
-        <div v-if="calendarName" class="d-flex align-start">
-          <v-icon class="mr-3 mt-1" size="20">mdi-calendar-blank</v-icon>
-          <div class="text-body-1">{{ calendarName }}</div>
+        <div v-if="calendarName" class="detail-row">
+          <div class="detail-row__icon text-body-large">
+            <v-icon size="20">mdi-calendar-blank</v-icon>
+          </div>
+          <div class="text-body-large">{{ calendarName }}</div>
         </div>
       </v-card-text>
     </v-card>
@@ -129,13 +141,11 @@ export default {
       const start = Temporal.PlainDateTime.from(props.event.start);
       const end = props.event.end ? Temporal.PlainDateTime.from(props.event.end) : start.add({ hours: 1 });
       
-      // Format the day and date
-      const dayOfWeek = start.toLocaleString(props.locale, { weekday: 'long' });
-      const dayNumber = start.day;
-      const month = start.toLocaleString(props.locale, { month: 'long' });
+      // Weekday and date in the calendar's language: "Monday, January 13" or "segunda-feira, 13 de janeiro"
+      const date = start.toLocaleString(props.locale, { weekday: 'long', day: 'numeric', month: 'long' });
       
       if (props.event.allDay) {
-        return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()}`;
+        return date;
       }
       
       const startTime = start.toLocaleString(props.locale, {
@@ -150,7 +160,7 @@ export default {
         hour12: false
       });
       
-      return `${dayOfWeek}, ${dayNumber} de ${month.toLowerCase()} · ${startTime} – ${endTime}`;
+      return `${date} · ${startTime} – ${endTime}`;
     });
 
     const calendarName = computed(() => {
@@ -186,12 +196,27 @@ export default {
 </script>
 
 <style scoped>
-.event-detail-card {
-  border-radius: 8px;
-}
-
 .border-b {
   border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+/* Icon + text rows: the icon box is one text line tall (1lh, using the text's
+   typography class), so the icon stays centred on the first line of text */
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.detail-row__icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 1lh;
+}
+
+.detail-title {
+  margin: 0;
 }
 
 .color-dot {

@@ -8,36 +8,70 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
-  <!-- Hammer.js for swipe gestures -->
-  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+    /*
+     * Page base styles live in a cascade layer declared before Vuetify's layers,
+     * so Vuetify 4 (which ships all of its CSS in layers) still overrides them,
+     * as Vuetify 3 did. Unlayered rules would win over every Vuetify utility class.
+     */
+    @layer app-base {
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+
+      /* Vuetify 3's reset always showed the vertical scrollbar; Vuetify 4 no longer does */
+      html {
+        overflow-y: scroll;
+      }
+
+      body {
+        font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+        background: #f5f5f5;
+        overscroll-behavior: none;
+      }
+
+      /* The site navigation bar (site/site.css) sits above the calendar */
+      #app {
+        height: calc(100vh - var(--site-nav-height));
+        display: flex;
+        flex-direction: column;
+      }
     }
 
-    html,
-    body {
-      height: 100%;
-      overflow: hidden;
+    /* Vuetify sizes the app to the full screen; make it fit below the navigation bar.
+       Outside the layer above, because it has to override Vuetify's own rule. */
+    #app .v-application__wrap {
+      min-height: 100%;
     }
-    
-    body {
-      font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
-      background: #f5f5f5;
-      overscroll-behavior: none;
-    }
-    
-    #app {
-      height: 100vh;
-      display: flex;
-      flex-direction: column;
+
+    /* Dim the navigation bar too while the mobile side menu is open */
+    #app .v-navigation-drawer__scrim {
+      position: fixed;
     }
   </style>
+  <link rel="stylesheet" href="/site/site.css">
 </head>
 <body>
+  <header class="site-nav">
+    <a class="site-nav__brand" href="./"><span class="site-nav__name">vue-calendarium</span><span class="site-nav__version"></span></a>
+    <nav class="site-nav__links" aria-label="Site">
+      <a href="./" data-nav="demo" aria-current="page">Demo</a>
+      <a href="./docs.html" data-nav="docs">Docs</a>
+      <a href="./docs.html?page=changelog" data-nav="changelog">Changelog</a>
+      <a href="./docs.html?page=upgrade" data-nav="upgrade">Upgrade<span class="site-nav__long"> to v2</span></a>
+      <a href="https://github.com/zehenrique/vue-calendarium">GitHub</a>
+    </nav>
+  </header>
   <div id="app"></div>
+  <script type="module" src="/site/site-nav.js"></script>
   <script type="module" src="/src/main.js"></script>
 </body>
 </html>

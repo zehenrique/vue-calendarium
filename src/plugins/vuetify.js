@@ -10,6 +10,16 @@ import { CALENDAR_FONT_FAMILY } from '../config/theme.js'
 export default createVuetify({
   components,
   directives,
+  // Keep the Vuetify 3 breakpoints: Vuetify 4 lowered md/lg/xl/xxl, which would
+  // change when useDisplay().mobile switches modals to bottom sheets.
+  display: {
+    thresholds: {
+      md: 960,
+      lg: 1280,
+      xl: 1920,
+      xxl: 2560,
+    },
+  },
   locale: {
     locale: 'en',
     fallback: 'en',

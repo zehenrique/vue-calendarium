@@ -25,7 +25,7 @@ async function openEventModal(page, slotIndex) {
 async function createEvent(page, { slot, title }) {
   await openEventModal(page, slot);
   await page.getByPlaceholder(/Event title|Add title/i).fill(title);
-  await page.getByRole('button', { name: /Save/i }).click();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByTestId('event-modal')).not.toBeVisible({ timeout: 2000 });
   // Small wait for Vue reactivity to settle
   await page.waitForTimeout(100);
@@ -72,8 +72,8 @@ test.describe('Event Modals (Desktop)', () => {
     await page.locator('.day-event:has-text("Detail Test Event")').first().click();
     await expect(page.getByTestId('event-detail-modal')).toBeVisible({ timeout: 4000 });
     await expect(page.getByTestId('event-detail-modal').getByText('Detail Test Event', { exact: true })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Edit/i })).toBeVisible();
-    await expect(page.getByRole('button', { name: /Delete/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Delete', exact: true })).toBeVisible();
   });
 
   test('should edit an existing event', async ({ page }) => {
@@ -81,12 +81,12 @@ test.describe('Event Modals (Desktop)', () => {
     await createEvent(page, { slot: 19, title: 'Original Event' });
 
     await page.locator('.day-event:has-text("Original Event")').first().click();
-    await page.getByRole('button', { name: /Edit/i }).click();
+    await page.getByRole('button', { name: 'Edit', exact: true }).click();
     await expect(page.getByTestId('event-modal')).toBeVisible();
 
     const titleInput = page.getByPlaceholder(/Event title|Add title/i);
     await titleInput.fill('Edited Event');
-    await page.getByRole('button', { name: /Save/i }).click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
 
     await expect(page.locator('.day-event:has-text("Edited Event")')).toBeVisible({ timeout: 4000 });
     await expect(page.locator('.day-event:has-text("Original Event")')).toHaveCount(0);
@@ -97,10 +97,10 @@ test.describe('Event Modals (Desktop)', () => {
     await createEvent(page, { slot: 20, title: 'Event to Delete' });
 
     await page.locator('.day-event:has-text("Event to Delete")').first().click();
-    await page.getByRole('button', { name: /Delete/i }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(page.getByTestId('delete-confirm-modal')).toBeVisible();
 
-    await page.getByRole('button', { name: /Yes/i }).click();
+    await page.getByRole('button', { name: 'Yes', exact: true }).click();
     await expect(page.locator('.day-event:has-text("Event to Delete")')).toHaveCount(0);
   });
 
@@ -109,10 +109,10 @@ test.describe('Event Modals (Desktop)', () => {
     await createEvent(page, { slot: 21, title: 'Event to Keep' });
 
     await page.locator('.day-event:has-text("Event to Keep")').first().click();
-    await page.getByRole('button', { name: /Delete/i }).click();
+    await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(page.getByTestId('delete-confirm-modal')).toBeVisible();
 
-    await page.getByRole('button', { name: /No/i }).click();
+    await page.getByRole('button', { name: 'No', exact: true }).click();
     await expect(page.locator('.day-event:has-text("Event to Keep")')).toBeVisible();
   });
 
