@@ -82,6 +82,40 @@ async function swipe(page, from, to) {
   await page.waitForTimeout(800);
 }
 
+// Two fingers moving apart or together around (x, y), with a dot under each finger because a
+// recording does not show touches. The dots are drawn on top of the page for the capture only.
+async function pinch(page, x, y, fromGap, toGap) {
+  const client = await page.context().newCDPSession(page);
+  const points = (gap) => [{ x: x - gap / 2, y, id: 0 }, { x: x + gap / 2, y, id: 1 }];
+  const moveDots = (gap) => page.evaluate(({ points: pts }) => {
+    let dots = document.querySelectorAll('.capture-finger');
+    if (!dots.length) {
+      dots = [0, 1].map(() => {
+        const dot = document.createElement('div');
+        dot.className = 'capture-finger';
+        dot.style.cssText = 'position:fixed;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(25,103,210,.35);border:2px solid rgba(25,103,210,.8);pointer-events:none;z-index:99999';
+        document.body.append(dot);
+        return dot;
+      });
+    }
+    dots.forEach((dot, i) => { dot.style.display = 'block'; dot.style.left = `${pts[i].x}px`; dot.style.top = `${pts[i].y}px`; });
+  }, { points: points(gap) });
+
+  await moveDots(fromGap);
+  await client.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: points(fromGap) });
+  await page.waitForTimeout(250);
+  const steps = 28;
+  for (let i = 1; i <= steps; i++) {
+    const gap = fromGap + ((toGap - fromGap) * i) / steps;
+    await client.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: points(gap) });
+    await moveDots(gap);
+    await page.waitForTimeout(35);
+  }
+  await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await page.evaluate(() => document.querySelectorAll('.capture-finger').forEach(dot => { dot.style.display = 'none'; }));
+  await page.waitForTimeout(900);
+}
+
 // Records the page while `script` runs, then crops the video to the calendar and converts it to a GIF.
 // `prepare` runs first and is left out of the GIF, so it starts on the view the script needs.
 async function recordGif(name, contextOptions, width, prepare, script) {
@@ -196,6 +230,19 @@ await recordGif('mobile-swipe', PHONE, 300, async (page) => {
   await swipe(page, 0.8, 0.2);
   await swipe(page, 0.8, 0.2);
   await swipe(page, 0.2, 0.8);
+});
+
+await recordGif('mobile-pinch', PHONE, 300, async (page) => {
+  await showWeek(page);
+  await scrollGridToHour(page, 7.5);
+}, async (page) => {
+  await page.waitForTimeout(500);
+  const lunch = await page.locator('.week-event').filter({ hasText: 'Lunch Break' }).first().boundingBox();
+  const x = lunch.x + lunch.width / 2;
+  const y = lunch.y + lunch.height / 2;
+  await pinch(page, x, y, 60, 180); // fingers apart: taller hours
+  await page.waitForTimeout(700);
+  await pinch(page, x, y, 180, 60); // fingers together: shorter hours
 });
 
 await browser.close();

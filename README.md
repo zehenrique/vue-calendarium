@@ -41,10 +41,16 @@ Upgrading from version 1? Follow the [upgrade guide](./docs/UPGRADING.md).
   <img src="assets/event-dialog.png" alt="The new event dialog with the repeat menu open" width="440">
 </p>
 
-On a phone, the calendar swipes between periods, pinches to zoom the time grid and moves its views and calendars into a side menu:
+On a phone, swipe sideways to move between periods and pinch the time grid to zoom it, apart for taller hours and together for shorter ones:
 
 <p align="center">
-  <img src="assets/mobile-swipe.gif" alt="Swiping left and right to move between weeks" width="200">
+  <img src="assets/mobile-swipe.gif" alt="Swiping left and right to move between weeks" width="220">
+  <img src="assets/mobile-pinch.gif" alt="Pinching two fingers apart and together to zoom the hours of the week view in and out" width="220">
+</p>
+
+The views and calendars move into a side menu:
+
+<p align="center">
   <img src="assets/mobile-month.png" alt="The month view on a phone" width="200">
   <img src="assets/mobile-week.png" alt="The week view on a phone" width="200">
   <img src="assets/mobile-menu.png" alt="The side menu on a phone, with the views and calendars" width="200">
