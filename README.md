@@ -41,10 +41,6 @@ Upgrading from version 1? Follow the [upgrade guide](./docs/UPGRADING.md).
   <img src="assets/event-dialog.png" alt="The new event dialog with the repeat menu open" width="440">
 </p>
 
-<p align="center">
-  <img src="assets/week-pt.png" alt="The week view in Portuguese (pt-PT)" width="900">
-</p>
-
 On a phone, the calendar swipes between periods, pinches to zoom the time grid and moves its views and calendars into a side menu:
 
 <p align="center">

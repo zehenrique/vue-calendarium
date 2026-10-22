@@ -134,12 +134,6 @@ async function recordGif(name, contextOptions, width, prepare, script) {
   await page.waitForTimeout(400);
   await scrollGridToHour(page, 7.5);
   await shot(page, 'week');
-
-  // Portuguese
-  await page.evaluate(() => window.calendarApp.setLocale('pt-PT'));
-  await page.waitForTimeout(600);
-  await scrollGridToHour(page, 7.5);
-  await shot(page, 'week-pt');
   await context.close();
 }
 
