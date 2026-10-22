@@ -1,7 +1,7 @@
 # vue-calendarium - Makefile
 
 # Phony targets
-.PHONY: all install dev build preview test test-package test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration lint format clean update open setup help
+.PHONY: all install dev build preview test test-package test-ui test-ui-headed test-ui-debug test-ui-report test-gestures test-visual test-visual-update test-integration media lint format clean update open setup help
 
 # Variables
 NODE_VERSION := 20
@@ -67,6 +67,10 @@ test-visual-update: install
 test-integration: install
 	npx playwright test tests/integration/
 
+# Capture the README screenshots and GIFs (needs `make dev` running in another terminal and ffmpeg)
+media: install
+	$(NPM) run media
+
 # Lint code
 lint: install
 	$(NPM) run lint
@@ -113,6 +117,7 @@ help:
 	@echo "  test-visual        - Run visual regression tests"
 	@echo "  test-visual-update - Update visual regression baselines"
 	@echo "  test-integration   - Run integration/persistence tests"
+	@echo "  media              - Capture the README screenshots and GIFs (dev server must be running)"
 	@echo "  lint               - Lint code"
 	@echo "  format             - Format code"
 	@echo "  clean              - Clean build artifacts"

@@ -10,6 +10,10 @@ A full-featured scheduling and calendar component for **Vue 3** and **Vuetify 4*
 
 **[▶ Try the live demo](https://zehenrique.github.io/vue-calendarium/)**. Open it on your phone to try the swipe and pinch gestures, or on a desktop switch your browser to a phone-sized viewport with its device mode (Chrome and Edge: press F12, then Ctrl+Shift+M; hold Shift and drag to pinch). Read the [documentation](https://zehenrique.github.io/vue-calendarium/docs.html) online.
 
+<p align="center">
+  <a href="https://zehenrique.github.io/vue-calendarium/"><img src="assets/week.png" alt="The week view: colour-coded events, a mini calendar and calendar filters" width="900"></a>
+</p>
+
 Upgrading from version 1? Follow the [upgrade guide](./docs/UPGRADING.md).
 
 ---
@@ -22,6 +26,33 @@ Upgrading from version 1? Follow the [upgrade guide](./docs/UPGRADING.md).
 - **Calendars** with colours and show/hide, **drag and drop**, and **iCalendar** import and export
 - **Mobile layout** with swipe between periods, pinch-to-zoom, a side menu and bottom sheets
 - **Theming** with CSS variables and presets, **English and Portuguese**, 24-hour times and the **Temporal API**
+
+---
+
+## See it in action
+
+<p align="center">
+  <img src="assets/create-event.gif" alt="Clicking a time slot, naming the event, choosing a weekly repeat and saving it" width="440">
+  <img src="assets/drag-and-drop.gif" alt="Pressing and dragging an event to a new day and time" width="440">
+</p>
+
+<p align="center">
+  <img src="assets/month.png" alt="The month view" width="440">
+  <img src="assets/event-dialog.png" alt="The new event dialog with the repeat menu open" width="440">
+</p>
+
+<p align="center">
+  <img src="assets/week-pt.png" alt="The week view in Portuguese (pt-PT)" width="900">
+</p>
+
+On a phone, the calendar swipes between periods, pinches to zoom the time grid and moves its views and calendars into a side menu:
+
+<p align="center">
+  <img src="assets/mobile-swipe.gif" alt="Swiping left and right to move between weeks" width="200">
+  <img src="assets/mobile-month.png" alt="The month view on a phone" width="200">
+  <img src="assets/mobile-week.png" alt="The week view on a phone" width="200">
+  <img src="assets/mobile-menu.png" alt="The side menu on a phone, with the views and calendars" width="200">
+</p>
 
 ---
 
@@ -70,62 +101,72 @@ The package includes its own styles and TypeScript types, and loads the touch ge
 
 ## Quick Start
 
-### 1. Register translations
+A complete, copy-paste setup. It is also a runnable project in [`examples/minimal`](./examples/minimal), which you can [open on StackBlitz](https://stackblitz.com/github/zehenrique/vue-calendarium/tree/main/examples/minimal).
+
+### 1. Set up Vuetify and vue-i18n
+
+`src/main.js`:
 
 ```js
+import { createApp } from 'vue';
 import { createI18n } from 'vue-i18n';
+import { createVuetify } from 'vuetify';
+import * as components from 'vuetify/components';
+import * as directives from 'vuetify/directives';
+import 'vuetify/styles';
+import '@mdi/font/css/materialdesignicons.css';
 import { translations } from 'vue-calendarium';
+import App from './App.vue';
 
-export const i18n = createI18n({
+const i18n = createI18n({
   legacy: false,
   locale: 'en',
   fallbackLocale: 'en',
-  messages: {
-    en: translations.en,
-    pt: translations.pt
-  }
+  messages: { en: translations.en, pt: translations.pt }
 });
+
+const vuetify = createVuetify({ components, directives });
+
+createApp(App).use(vuetify).use(i18n).mount('#app');
 ```
 
 ### 2. Render the calendar
 
+`src/App.vue`:
+
 ```vue
 <template>
   <v-app>
-    <v-main>
+    <v-main style="height: 100vh">
       <Calendar :calendar-app="calendarApp" />
     </v-main>
   </v-app>
 </template>
 
 <script setup>
-import {
-  createCalendar,
-  createViewDay,
-  createViewWeek,
-  createViewMonth,
-  Calendar
-} from 'vue-calendarium';
+import { Temporal } from '@js-temporal/polyfill';
+import { Calendar, createCalendar, createViewDay, createViewWeek, createViewMonth } from 'vue-calendarium';
+
+const today = Temporal.Now.plainDateISO().toString();
 
 const calendarApp = createCalendar({
   views: [createViewDay(), createViewWeek(), createViewMonth()],
-  defaultView: 'month',
+  defaultView: 'week',
   locale: 'en-US',
   calendars: [
-    { id: 'work',     name: 'Work',     color: '#1967D2' },
+    { id: 'work', name: 'Work', color: '#1967D2' },
     { id: 'personal', name: 'Personal', color: '#0B8043' }
   ],
-  events: []
-});
-
-calendarApp.eventsService.add({
-  title: 'Team Meeting',
-  start: '2026-01-27T10:00:00',
-  end:   '2026-01-27T10:30:00',
-  calendarId: 'work'
+  events: [
+    { title: 'Team meeting', start: `${today}T10:00:00`, end: `${today}T10:30:00`, calendarId: 'work', color: '#1967D2' },
+    { title: 'Lunch with Sam', start: `${today}T12:30:00`, end: `${today}T13:30:00`, calendarId: 'personal', color: '#0B8043' },
+    { title: 'Weekly standup', start: `${today}T09:00:00`, end: `${today}T09:30:00`, calendarId: 'work', color: '#1967D2', rrule: 'FREQ=WEEKLY;COUNT=8' }
+  ]
 });
 </script>
 ```
+
+The calendar fills its parent, so the parent needs a height (`100vh` above). `@js-temporal/polyfill` is installed with the calendar. Add more events later with `calendarApp.eventsService.add({ ... })`.
 
 ---
 
@@ -167,6 +208,7 @@ All guides are also on the [documentation website](https://zehenrique.github.io/
 make dev        # start the dev server
 make test       # unit tests (Vitest)
 make test-ui    # end-to-end tests (Playwright)
+make media      # redo the README screenshots and GIFs in assets/ (run `make dev` first; needs ffmpeg)
 ```
 
 `npm run build:lib` builds the npm package into `lib/` (it also runs automatically before `npm publish`). The type definitions in [`types/index.d.ts`](./types/index.d.ts) are written by hand: update them whenever the public API changes.
