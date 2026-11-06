@@ -10,6 +10,18 @@ const STEPS = {
 
 const TIME_FORMAT = { hour: '2-digit', minute: '2-digit', hour12: false };
 
+// Formatting a time is slow and each event label needs two, on every render. There are at most
+// 1440 different times per locale, so the labels are kept.
+const timeLabels = new Map();
+
+function formatTimeLabel(dateTime, locale) {
+  const key = `${locale}|${dateTime.hour}:${dateTime.minute}`;
+  if (!timeLabels.has(key)) {
+    timeLabels.set(key, dateTime.toLocaleString(locale, TIME_FORMAT));
+  }
+  return timeLabels.get(key);
+}
+
 /**
  * Keyboard access to the hour slots of a time grid (week and day views).
  * One slot is in the tab order; the arrow keys move between hours and days, and
@@ -76,5 +88,5 @@ export function getEventLabel(event, locale, t) {
 
   const start = Temporal.PlainDateTime.from(event.start);
   const end = event.end ? Temporal.PlainDateTime.from(event.end) : start.add({ hours: 1 });
-  return `${title}, ${start.toLocaleString(locale, TIME_FORMAT)} – ${end.toLocaleString(locale, TIME_FORMAT)}`;
+  return `${title}, ${formatTimeLabel(start, locale)} – ${formatTimeLabel(end, locale)}`;
 }
