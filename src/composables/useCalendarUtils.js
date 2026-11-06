@@ -36,9 +36,8 @@ export function getEventColorStyle(hexColor, isPast = false) {
  */
 export function isEventPast(event) {
   try {
-    const now = Temporal.Now.plainDateTimeISO();
-    const eventEnd = event.end ? Temporal.PlainDateTime.from(event.end) : Temporal.PlainDateTime.from(event.start);
-    return Temporal.PlainDateTime.compare(eventEnd, now) < 0;
+    // Event dates are normalized ISO strings, which sort in date order
+    return (event.end || event.start) < Temporal.Now.plainDateTimeISO().toString();
   } catch (error) {
     console.error('[isEventPast] Error checking if event is past:', error, event);
     return false; // Default to not past if there's an error
@@ -60,16 +59,23 @@ export function formatEventTime(event, locale = 'en-US', allDayLabel = 'All day'
   });
 }
 
+// Formatting is slow and the time column asks for every hour on each render
+const hourLabels = new Map();
+
 /**
  * Format hour for time labels (24-hour format)
  */
 export function formatHour(hour, locale = 'en-US') {
-  const time = Temporal.PlainTime.from({ hour });
-  return time.toLocaleString(locale, { 
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false
-  });
+  const key = `${locale}|${hour}`;
+  if (!hourLabels.has(key)) {
+    const time = Temporal.PlainTime.from({ hour });
+    hourLabels.set(key, time.toLocaleString(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    }));
+  }
+  return hourLabels.get(key);
 }
 
 /**

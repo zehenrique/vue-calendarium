@@ -45,22 +45,29 @@ export function ensureDraftCalendar(draft, calendars) {
   return nextDraft;
 }
 
-export function summarizeEventsForDate(date, events) {
-  const plainDate = Temporal.PlainDate.from(date);
-  const eventsForDate = events
-    .filter((event) => {
-      const eventStart = Temporal.PlainDate.from(event.start);
-      const eventEnd = event.end ? Temporal.PlainDate.from(event.end) : eventStart;
+/**
+ * Whether an event falls on any day from firstDay to lastDay, inclusive.
+ * Event dates are normalized ISO strings, which sort in date order. Comparing them as text keeps
+ * this cheap: it runs for every event on every visible day, and parsing with Temporal there is
+ * what made large calendars slow.
+ * @param {{ start: string, end?: string }} event
+ * @param {string} firstDay - 'YYYY-MM-DD'
+ * @param {string} lastDay - 'YYYY-MM-DD'
+ * @returns {boolean}
+ */
+export function eventOverlapsDays(event, firstDay, lastDay) {
+  const startDay = event.start.slice(0, 10);
+  const endDay = (event.end || event.start).slice(0, 10);
+  return startDay <= lastDay && endDay >= firstDay;
+}
 
-      return (
-        Temporal.PlainDate.compare(plainDate, eventStart) >= 0 &&
-        Temporal.PlainDate.compare(plainDate, eventEnd) <= 0
-      );
-    })
+export function summarizeEventsForDate(date, events) {
+  const day = Temporal.PlainDate.from(date).toString();
+  const eventsForDate = events
+    .filter((event) => eventOverlapsDays(event, day, day))
     .sort((a, b) => {
-      const aTime = Temporal.PlainDateTime.from(a.start);
-      const bTime = Temporal.PlainDateTime.from(b.start);
-      return Temporal.PlainDateTime.compare(aTime, bTime);
+      if (a.start === b.start) return 0;
+      return a.start < b.start ? -1 : 1;
     });
 
   const allDayEvents = eventsForDate.filter((event) => event.allDay);

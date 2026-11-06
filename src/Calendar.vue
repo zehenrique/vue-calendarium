@@ -276,6 +276,7 @@ import { CALENDAR_DEFAULTS } from './config/vuetifyDefaults.js';
 import {
   createDefaultEventDraft,
   ensureDraftCalendar,
+  eventOverlapsDays,
   summarizeEventsForDate,
   createMonthGrid,
   createWeekViewDays,
@@ -493,6 +494,8 @@ function getViewRange(view, date) {
 
 function buildDisplayEventsFor(view, date) {
   const range = getViewRange(view, date);
+  const firstDay = range.start.slice(0, 10);
+  const lastDay = range.end.slice(0, 10);
   const expanded = [];
 
   // Add ghost event if it exists
@@ -503,7 +506,7 @@ function buildDisplayEventsFor(view, date) {
   for (const e of events.value) {
     if (e && e.rrule) {
       expanded.push(...expandRecurrence(e, range.start, range.end, { exceptions: storedExceptions.value }));
-    } else {
+    } else if (e && eventOverlapsDays(e, firstDay, lastDay)) {
       expanded.push(e);
     }
   }

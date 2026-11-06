@@ -5,6 +5,12 @@ All notable changes to this project are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-11-06
+
+### Fixed
+
+- Calendars with many events are much faster to draw and navigate. Each view now only works on the events in its date range, instead of checking every event for every visible day, and time labels are formatted once. With about 2,000 events, moving between weeks went from about 650 ms to about 230 ms, and moving between months from over a second to about 200 ms.
+
 ## [2.0.0] - 2026-10-14
 
 Upgrading from 1.x? Follow the [upgrade guide](docs/UPGRADING.md).
