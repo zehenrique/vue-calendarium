@@ -32,6 +32,7 @@
     "lint": "eslint src --ext .js,.vue",
     "test": "vitest run tests/unit",
     "test:package": "npm run build:lib && node scripts/check-node-import.mjs",
+    "media": "node scripts/capture-media.mjs",
     "test:ui": "playwright test",
     "test:ui:headed": "playwright test --headed",
     "test:ui:debug": "playwright test --debug",
